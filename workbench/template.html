@@ -757,22 +757,25 @@
       display: flex; flex-direction: column; gap: 3px;
     }
     .gh-cell {
-      width: 12px; height: 12px; border-radius: 2.5px; background: #ebdcc4; cursor: pointer;
-      position: relative; transition: transform .1s ease, outline .1s ease;
-      box-sizing: border-box;
+      width: 12px; height: 12px; border-radius: 2.5px; background: #ede5d5; cursor: pointer;
+      position: relative; transition: transform .1s ease, outline .1s ease, box-shadow .1s ease;
+      box-sizing: border-box; border: 1px solid rgba(0,0,0,0.06);
     }
     .gh-cell:hover {
-      outline: 1.5px solid var(--sumi); z-index: 2; transform: scale(1.15);
+      outline: 1.5px solid var(--sumi); z-index: 2; transform: scale(1.2);
     }
     .gh-cell.selected {
       outline: 2px solid var(--accent); z-index: 3;
     }
-    .gh-cell.lvl-0 { background: #ebdcc4; }
-    .gh-cell.lvl-1 { background: #9ecaa7; }
-    .gh-cell.lvl-2 { background: #5ea46e; }
-    .gh-cell.lvl-3 { background: #276735; }
-    .gh-cell.has-overdue { outline: 1.5px solid #c93b2b; }
-    .gh-cell.has-sched { background: #f1d8ab; }
+    .gh-cell.is-today-cell {
+      box-shadow: 0 0 0 1.5px var(--accent);
+    }
+    .gh-cell.lvl-0 { background: #ede5d5; }
+    .gh-cell.lvl-1 { background: #39d353; border-color: #26a641; box-shadow: 0 0 4px rgba(57, 211, 83, 0.45); }
+    .gh-cell.lvl-2 { background: #26a641; border-color: #1a7f37; box-shadow: 0 0 4px rgba(38, 166, 65, 0.5); }
+    .gh-cell.lvl-3 { background: #006d32; border-color: #0d4420; box-shadow: 0 0 5px rgba(0, 109, 50, 0.6); }
+    .gh-cell.has-overdue { outline: 1.5px solid #cf4436; }
+    .gh-cell.has-sched { background: #f0a500; border-color: #c87a14; }
     .gh-footer {
       display: flex; align-items: center; justify-content: space-between; margin-top: 12px;
       font-size: 11px; color: var(--muted);
@@ -791,64 +794,67 @@
       font-size: 13px; font-weight: 600; color: var(--sumi); display: flex; align-items: center; gap: 8px;
     }
 
-    /* Cadence Matrix Styles */
-    .cadence-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;
-      margin-bottom: 20px;
+    /* Unified Calendar Cadence Strip & Upcoming Queue */
+    .cal-cadence-strip {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;
+      margin-bottom: 14px;
     }
-    .cadence-plat-card {
-      background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
-      padding: 16px; display: flex; flex-direction: column; gap: 10px; cursor: pointer;
+    .cal-cadence-card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+      padding: 8px 10px; cursor: pointer; transition: all .15s ease;
+      display: flex; flex-direction: column; gap: 4px;
       box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
     }
-    .cadence-plat-card:hover {
-      border-color: #b8a888; transform: translateY(-1px);
+    .cal-cadence-card:hover {
+      border-color: #bfae8e; transform: translateY(-1px);
     }
-    .cadence-plat-card.active-filter {
-      border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
+    .cal-cadence-card.active-filter {
+      border-color: var(--accent); background: #fffcf2;
+      box-shadow: 0 0 0 1.5px var(--accent);
     }
-    .cadence-plat-head {
-      display: flex; align-items: center; justify-content: space-between;
+    .cal-cadence-card-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 4px;
     }
-    .cadence-plat-name {
-      font-size: 14px; font-weight: 600; color: var(--sumi); display: flex; align-items: center; gap: 8px;
+    .cal-cadence-card-name {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--sumi);
     }
-    .cadence-stat-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; color: var(--muted);
-      background: var(--bg-2); padding: 8px 10px; border-radius: 8px;
+    .cal-cadence-card-cnt {
+      font-size: 11px; font-weight: 700; color: #20572b; background: #eaf3ec;
+      padding: 1px 6px; border-radius: 999px;
     }
-    .cadence-stat-val {
-      font-weight: 700; color: var(--sumi); font-size: 13px; font-variant-numeric: tabular-nums;
+    .cal-cadence-card-stats {
+      font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 6px; line-height: 1.3;
     }
-    .cadence-group {
-      background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
-      padding: 16px; margin-bottom: 14px;
+    .cal-cadence-card-stats b {
+      color: var(--sumi); font-variant-numeric: tabular-nums;
     }
-    .cadence-group-head {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
-      padding-bottom: 8px; border-bottom: 1px solid var(--bg-3);
+
+    .cal-queue-box {
+      margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line);
     }
-    .cadence-group-title {
-      font-size: 14px; font-weight: 600; color: var(--sumi); display: flex; align-items: center; gap: 8px;
+    .cal-queue-head {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
     }
-    .cadence-ratio-bar {
-      display: flex; height: 6px; border-radius: 999px; overflow: hidden; background: var(--bg-3); margin-bottom: 12px;
+    .cal-queue-title {
+      font-size: 13px; font-weight: 700; color: var(--sumi); display: flex; align-items: center; gap: 6px;
     }
-    .cadence-ratio-seg {
-      height: 100%; transition: width .3s ease;
+    .cal-queue-card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+      padding: 9px 12px; margin-bottom: 7px; display: flex; align-items: center;
+      justify-content: space-between; gap: 10px; cursor: pointer; transition: all .12s ease;
+      box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
     }
-    .cadence-item-row {
-      display: grid; grid-template-columns: 90px auto 1fr auto; gap: 10px; align-items: center;
-      padding: 7px 8px; border-radius: 8px; font-size: 12px; color: var(--text);
+    .cal-queue-card:hover {
+      border-color: #bfae8e; transform: translateY(-1px);
     }
-    .cadence-item-row:hover {
-      background: var(--bg-2);
+    .cal-queue-card.is-overdue {
+      border-left: 3px solid #c93b2b;
     }
-    .cadence-item-row .c-date {
-      font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums;
+    .cal-queue-card.is-today {
+      border-left: 3px solid #c87a14;
     }
-    .cadence-item-row .c-link {
-      font-size: 11px; color: var(--accent); white-space: nowrap;
+    .cal-queue-card.is-soon {
+      border-left: 3px solid #164673;
     }
     footer.hint { margin-top: 28px; color: var(--faint); font-size: 12px; }
     .stages { margin: 8px 0 14px; }
@@ -1143,9 +1149,13 @@
         overview: "总览", needs: "需求库", hits: "Hits", products: "产品库", recommendations: "推荐库", topics: "选题库", notes: "记录与知识", runs: "Run 档案", pub: "发布与复盘",
         runs_sub_calendar: "📅 日历排期",
         runs_sub_heatmap: "🟩 发布热力图",
-        runs_sub_sched: "📋 排期清单",
-        runs_sub_cadence: "📊 平台节奏",
         runs_sub_all: "🗂 全部 Run",
+        cadence_month: "本月",
+        cadence_week: "本周",
+        cadence_sched: "待发",
+        queue_upcoming_title: "待发布排期队列",
+        queue_empty_title: "暂无待发排期任务",
+        queue_empty_hint: "发布动作由你手动完成；在 runs/ 或选题中安排目标时间后将在此处提醒。",
         sched_kpi_sched: "已排期待发",
         sched_kpi_ready: "待排期就绪池",
         sched_kpi_next: "下一单发布",
@@ -1346,11 +1356,15 @@
         brand: "Observatory",
         search: "Search ID, one-liner, source…",
         overview: "Overview", needs: "Needs", hits: "Hits", products: "Products", recommendations: "Recommendations", topics: "Topics", notes: "Notes & library", runs: "Run files", pub: "Shipped & review",
-        runs_sub_calendar: "📅 Calendar",
+        runs_sub_calendar: "📅 Calendar & Schedule",
         runs_sub_heatmap: "🟩 Heatmap",
-        runs_sub_sched: "📋 Schedule",
-        runs_sub_cadence: "📊 Cadence",
         runs_sub_all: "🗂 All Runs",
+        cadence_month: "This Month",
+        cadence_week: "This Week",
+        cadence_sched: "Sched",
+        queue_upcoming_title: "Upcoming Publishing Queue",
+        queue_empty_title: "No upcoming scheduled posts",
+        queue_empty_hint: "Publishing is done manually by you; set target dates on runs to track them here.",
         sched_kpi_sched: "Scheduled",
         sched_kpi_ready: "Ready Queue",
         sched_kpi_next: "Next Upcoming",
@@ -1636,8 +1650,7 @@
     let calPlatFilter = "";
     let calSelectedDate = `${_nowInit.getFullYear()}-${String(_nowInit.getMonth() + 1).padStart(2, '0')}-${String(_nowInit.getDate()).padStart(2, '0')}`;
     let heatmapSelectedDate = "";
-    let cadenceMode = "platforms";
-    let cadencePlatFilter = "";
+    let heatmapPlatFilter = "";
     let pubTopic = "";
     let pubPlat = "";
     let topicStatus = "";
@@ -3152,13 +3165,13 @@
 
     function renderRuns() {
       $list.innerHTML = "";
+      if (runTab === "schedule" || runTab === "cadence") runTab = "calendar";
+
       const sub = document.createElement("div");
       sub.className = "subtabs";
       sub.innerHTML = `
         <button data-t="calendar">${t("runs_sub_calendar")}</button>
         <button data-t="heatmap">${t("runs_sub_heatmap")}</button>
-        <button data-t="schedule">${t("runs_sub_sched")}</button>
-        <button data-t="cadence">${t("runs_sub_cadence")}</button>
         <button data-t="all">${t("runs_sub_all")}</button>
       `;
       $list.appendChild(sub);
@@ -3175,10 +3188,6 @@
         renderRunCalendar();
       } else if (runTab === "heatmap") {
         renderRunHeatmap();
-      } else if (runTab === "schedule") {
-        renderRunSchedule();
-      } else if (runTab === "cadence") {
-        renderRunCadence();
       } else {
         renderRunAll();
       }
@@ -3187,13 +3196,62 @@
     function renderRunCalendar() {
       const allItems = getUnifiedCalendarItems();
       const todayStr = getTodayStr();
+      const currentMonthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+      const currentWeekKey = getWeekKey(todayStr).key;
+
+      const activePlats = ["x", "xiaohongshu", "linkedin", "instagram", "threads", "tiktok"];
+      const platLabels = {
+        x: "𝕏 (Twitter)",
+        xiaohongshu: "小红书",
+        linkedin: "LinkedIn",
+        instagram: "Instagram",
+        threads: "Threads",
+        tiktok: "TikTok"
+      };
+
+      // 1. Cadence strip at top
+      const cadenceStrip = document.createElement("div");
+      cadenceStrip.className = "cal-cadence-strip";
+
+      activePlats.forEach(p => {
+        const pItems = allItems.filter(it => it.platform === p);
+        const pPubs = pItems.filter(it => it.is_published || it.status === "published");
+        const monthCount = pPubs.filter(it => (it.date || "").startsWith(currentMonthPrefix)).length;
+        const weekCount = pPubs.filter(it => getWeekKey(it.date || "").key === currentWeekKey).length;
+        const schedCount = pItems.filter(it => !it.is_published && (it.status === "scheduled" || it.scheduled_date)).length;
+
+        const card = document.createElement("div");
+        card.className = "cal-cadence-card" + (calPlatFilter === p ? " active-filter" : "");
+        card.onclick = () => {
+          calPlatFilter = (calPlatFilter === p ? "" : p);
+          renderRuns();
+          renderInsp();
+        };
+
+        card.innerHTML = `
+          <div class="cal-cadence-card-head">
+            <div class="cal-cadence-card-name">
+              ${getPlatformSvg(p, 14, "brand")}
+              <span>${esc(p === "x" ? "𝕏" : platLabels[p] || p)}</span>
+            </div>
+            <span class="cal-cadence-card-cnt">${pPubs.length}</span>
+          </div>
+          <div class="cal-cadence-card-stats">
+            <span>${t("cadence_month")}: <b>${monthCount}</b></span>
+            <span>${t("cadence_week")}: <b>${weekCount}</b></span>
+            ${schedCount > 0 ? `<span style="color:#b8741a;">${t("cadence_sched")}: <b>${schedCount}</b></span>` : ""}
+          </div>
+        `;
+        cadenceStrip.appendChild(card);
+      });
+
+      $list.appendChild(cadenceStrip);
 
       let filteredItems = allItems;
       if (calPlatFilter) {
         filteredItems = filteredItems.filter(it => it.platform === calPlatFilter);
       }
 
-      const currentMonthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
       const monthItems = filteredItems.filter(it => (it.date || "").startsWith(currentMonthPrefix));
       let pubCount = 0;
       let schedCount = 0;
@@ -3246,7 +3304,6 @@
               <option value="instagram" ${calPlatFilter === "instagram" ? "selected" : ""}>Instagram</option>
               <option value="threads" ${calPlatFilter === "threads" ? "selected" : ""}>Threads</option>
               <option value="tiktok" ${calPlatFilter === "tiktok" ? "selected" : ""}>TikTok</option>
-              <option value="wechat" ${calPlatFilter === "wechat" ? "selected" : ""}>微信公众号 (WeChat)</option>
             </select>
           </div>
           <div class="cal-legend">
@@ -3409,14 +3466,74 @@
         $grid.appendChild(cell);
       }
 
-      const banner = document.createElement("div");
-      banner.className = "sched-banner";
-      banner.style.marginTop = "16px";
-      banner.innerHTML = `
-        <div>💡 ${t("sched_banner_hint")}</div>
-        <button type="button" class="ghost-link" data-md="runs/_index.md" data-md-title="runs/_index.md">打开 runs/_index.md</button>
+      // 3. Upcoming Queue section below calendar
+      const queueBox = document.createElement("div");
+      queueBox.className = "cal-queue-box";
+
+      const upcomingItems = filteredItems.filter(it => !it.is_published && (it.status === "scheduled" || it.scheduled_date));
+      upcomingItems.sort((a, b) => (a.scheduled_date || a.date || "").localeCompare(b.scheduled_date || b.date || ""));
+
+      let queueCardsHtml = "";
+      if (upcomingItems.length === 0) {
+        queueCardsHtml = `
+          <div style="background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:16px 14px; text-align:center; color:var(--muted); font-size:12px;">
+            <div style="font-weight:600; color:var(--sumi); margin-bottom:3px;">${esc(t("queue_empty_title"))}</div>
+            <div style="font-size:11px; margin-bottom:8px;">${esc(t("queue_empty_hint"))}</div>
+            <button type="button" class="ghost-link" data-md="runs/_index.md" data-md-title="runs/_index.md" style="font-size:11px;">打开 runs/_index.md</button>
+          </div>
+        `;
+      } else {
+        queueCardsHtml = upcomingItems.map(item => {
+          const dt = item.scheduled_date || item.date;
+          const diff = getDiffDaysFromToday(dt);
+          let badgeText = dt;
+          let cls = "is-soon";
+          if (diff !== null && diff < 0) {
+            badgeText = `🔴 逾期 ${Math.abs(diff)} 天 (${dt})`;
+            cls = "is-overdue";
+          } else if (diff === 0) {
+            badgeText = `🟡 今天待发`;
+            cls = "is-today";
+          } else if (diff === 1) {
+            badgeText = `明天 (${dt})`;
+          } else if (diff !== null) {
+            badgeText = `${diff} 天后 (${dt})`;
+          }
+
+          return `
+            <div class="cal-queue-card ${cls}" data-run-id="${esc(item.run_id || item.id)}">
+              <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+                <span style="font-size:11px; font-weight:700; color:var(--sumi); background:var(--bg-2); padding:2px 6px; border-radius:4px; flex-shrink:0;">${esc(badgeText)}</span>
+                <span class="plat-mark-svg" style="width:18px; height:18px; flex-shrink:0;">${getPlatformSvg(item.platform, 13, "brand")}</span>
+                <span style="font-size:12px; font-weight:600; color:var(--sumi); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(item.label)}</span>
+              </div>
+              <button type="button" class="ghost-link" style="font-size:11px; color:var(--accent); flex-shrink:0;">查看 →</button>
+            </div>
+          `;
+        }).join("");
+      }
+
+      queueBox.innerHTML = `
+        <div class="cal-queue-head">
+          <div class="cal-queue-title">
+            <span>📋 ${esc(t("queue_upcoming_title"))}</span>
+            <span class="pill">${upcomingItems.length} 篇</span>
+          </div>
+          <button type="button" class="ghost-link" data-md="runs/_index.md" data-md-title="runs/_index.md" style="font-size:11px;">打开 runs/_index.md</button>
+        </div>
+        <div class="cal-queue-list">
+          ${queueCardsHtml}
+        </div>
       `;
-      $list.appendChild(banner);
+
+      queueBox.querySelectorAll(".cal-queue-card").forEach(card => {
+        card.onclick = () => {
+          const rid = card.dataset.runId;
+          if (rid) select(rid);
+        };
+      });
+
+      $list.appendChild(queueBox);
     }
 
     function renderCalendarSidebar(dateStr) {
@@ -3557,12 +3674,16 @@
     }
 
     function renderRunHeatmap() {
-      const allItems = getUnifiedCalendarItems();
+      const allUnified = getUnifiedCalendarItems();
       const todayStr = getTodayStr();
+
+      let allItems = allUnified;
+      if (heatmapPlatFilter) {
+        allItems = allItems.filter(it => it.platform === heatmapPlatFilter);
+      }
 
       const shippedDates = new Set();
       const itemsByDate = new Map();
-      const platCounts = {};
 
       allItems.forEach(it => {
         if (!it.date) return;
@@ -3571,31 +3692,18 @@
 
         if (it.is_published || it.status === "published") {
           shippedDates.add(it.date);
-          const p = (it.platform || "x").toLowerCase();
-          platCounts[p] = (platCounts[p] || 0) + 1;
         }
       });
 
       const streakInfo = calculatePublishingStreaks(shippedDates, todayStr);
       const totalShipped = Array.from(allItems).filter(it => it.is_published || it.status === "published").length;
 
-      let topPlat = "—";
-      let topPlatCnt = 0;
-      Object.entries(platCounts).forEach(([p, cnt]) => {
-        if (cnt > topPlatCnt) {
-          topPlatCnt = cnt;
-          topPlat = p;
-        }
-      });
-      const topPlatStr = topPlatCnt > 0 ? `${topPlat.toUpperCase()} (${Math.round(topPlatCnt / (totalShipped || 1) * 100)}%)` : "—";
-
       const now = new Date();
       const dayOfWeek = now.getDay();
-      const daysToSunday = (7 - dayOfWeek) % 7;
+      const dayOffsetFromMonday = (dayOfWeek + 6) % 7;
+      const daysToSunday = 6 - dayOffsetFromMonday;
       const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToSunday);
-
-      const startDate = new Date(endDate);
-      startDate.setDate(endDate.getDate() - (52 * 7) + 1);
+      const startDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() - (52 * 7 - 1));
 
       const ghCard = document.createElement("div");
       ghCard.className = "gh-card";
@@ -3603,7 +3711,21 @@
       ghCard.innerHTML = `
         <div class="gh-header">
           <div class="gh-title">🟩 ${esc(t("gh_annual_title"))}</div>
-          <button type="button" class="ghost-link" data-md="published/_index.md" data-md-title="published/_index.md">打开 published/_index.md</button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="cal-select-group">
+              <span class="cal-select-icon" id="ghPlatIcon">${getPlatformSvg(heatmapPlatFilter, 15, "brand")}</span>
+              <select id="ghPlatSelect" class="cal-platform-dropdown" aria-label="${esc(t("cal_all_plats"))}">
+                <option value="" ${!heatmapPlatFilter ? "selected" : ""}>${esc(t("cal_all_plats"))}</option>
+                <option value="x" ${heatmapPlatFilter === "x" ? "selected" : ""}>X (Twitter)</option>
+                <option value="xiaohongshu" ${heatmapPlatFilter === "xiaohongshu" ? "selected" : ""}>小红书 (Xiaohongshu)</option>
+                <option value="linkedin" ${heatmapPlatFilter === "linkedin" ? "selected" : ""}>LinkedIn</option>
+                <option value="instagram" ${heatmapPlatFilter === "instagram" ? "selected" : ""}>Instagram</option>
+                <option value="threads" ${heatmapPlatFilter === "threads" ? "selected" : ""}>Threads</option>
+                <option value="tiktok" ${heatmapPlatFilter === "tiktok" ? "selected" : ""}>TikTok</option>
+              </select>
+            </div>
+            <button type="button" class="ghost-link" data-md="published/_index.md" data-md-title="published/_index.md">打开 published/_index.md</button>
+          </div>
         </div>
 
         <div class="gh-stats-strip">
@@ -3623,13 +3745,9 @@
             <div class="gh-stat-val">${streakInfo.totalActiveDays} <span style="font-size:12px; font-weight:normal;">天</span></div>
             <div class="gh-stat-lab">${esc(t("gh_stat_active_days"))}</div>
           </div>
-          <div class="gh-stat-box">
-            <div class="gh-stat-val" style="font-size:14px; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${topPlatStr}</div>
-            <div class="gh-stat-lab">${esc(t("gh_stat_top_plat"))}</div>
-          </div>
         </div>
 
-        <div class="gh-scroll-container">
+        <div class="gh-scroll-container" id="ghScrollContainer">
           <div class="gh-matrix-wrap">
             <div class="gh-months-row" id="ghMonthsRow"></div>
             <div class="gh-body">
@@ -3651,16 +3769,24 @@
           <div class="note">${heatmapSelectedDate ? `当前已锁定日期：<b>${heatmapSelectedDate}</b> · 点击格子可取消锁定` : "点击任意小方格，查看该日发布与排期详情"}</div>
           <div class="gh-legend">
             <span>少</span>
-            <span class="gh-legend-cell lvl-0" style="background:#ebdcc4;"></span>
-            <span class="gh-legend-cell lvl-1" style="background:#9ecaa7;"></span>
-            <span class="gh-legend-cell lvl-2" style="background:#5ea46e;"></span>
-            <span class="gh-legend-cell lvl-3" style="background:#276735;"></span>
+            <span class="gh-legend-cell lvl-0" style="background:#ede5d5;"></span>
+            <span class="gh-legend-cell lvl-1" style="background:#39d353;"></span>
+            <span class="gh-legend-cell lvl-2" style="background:#26a641;"></span>
+            <span class="gh-legend-cell lvl-3" style="background:#006d32;"></span>
             <span>多</span>
           </div>
         </div>
       `;
 
       $list.appendChild(ghCard);
+
+      const ghSel = ghCard.querySelector("#ghPlatSelect");
+      if (ghSel) {
+        ghSel.onchange = (e) => {
+          heatmapPlatFilter = e.target.value;
+          renderRuns();
+        };
+      }
 
       const $monthsRow = ghCard.querySelector("#ghMonthsRow");
       const $weeksGrid = ghCard.querySelector("#ghWeeksGrid");
@@ -3671,8 +3797,7 @@
       let prevMonth = -1;
 
       for (let w = 0; w < 52; w++) {
-        const weekMon = new Date(startDate);
-        weekMon.setDate(startDate.getDate() + (w * 7));
+        const weekMon = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + (w * 7));
         const curM = weekMon.getMonth();
 
         if (curM !== prevMonth) {
@@ -3688,10 +3813,10 @@
         weekCol.className = "gh-week-col";
 
         for (let d = 0; d < 7; d++) {
-          const cellDate = new Date(startDate);
-          cellDate.setDate(startDate.getDate() + (w * 7 + d));
+          const cellDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + (w * 7 + d));
           const dateStr = `${cellDate.getFullYear()}-${String(cellDate.getMonth() + 1).padStart(2, '0')}-${String(cellDate.getDate()).padStart(2, '0')}`;
           const isSelected = (heatmapSelectedDate === dateStr);
+          const isToday = (dateStr === todayStr);
 
           const dayItems = itemsByDate.get(dateStr) || [];
           const shipped = dayItems.filter(it => it.is_published || it.status === "published");
@@ -3706,7 +3831,7 @@
           else if (sched.length > 0) lvlClass = "has-sched";
 
           const cell = document.createElement("div");
-          cell.className = `gh-cell ${lvlClass}` + (isSelected ? " selected" : "");
+          cell.className = `gh-cell ${lvlClass}` + (isSelected ? " selected" : "") + (isToday ? " is-today-cell" : "");
 
           let tip = `${formatFriendlyDate(dateStr, lang)}: ${shipped.length} 篇已发布`;
           if (sched.length) tip += ` · ${sched.length} 篇待发布`;
@@ -3727,6 +3852,14 @@
         $weeksGrid.appendChild(weekCol);
       }
 
+      // Auto-scroll to end so recent activity is immediately visible!
+      const scrollWrap = ghCard.querySelector("#ghScrollContainer");
+      if (scrollWrap) {
+        setTimeout(() => {
+          scrollWrap.scrollLeft = scrollWrap.scrollWidth;
+        }, 30);
+      }
+
       const feedSec = document.createElement("div");
       feedSec.className = "gh-feed-sec";
 
@@ -3738,7 +3871,7 @@
         displayItems = itemsByDate.get(heatmapSelectedDate) || [];
       } else {
         feedTitle = t("gh_feed_recent");
-        displayItems = [...allItems].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 15);
+        displayItems = [...allItems].filter(it => it.is_published || it.status === "published").sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 15);
       }
 
       feedSec.innerHTML = `
@@ -3770,7 +3903,7 @@
               <div class="month-day">${esc(monthDay)}</div>
               <div class="weekday">${esc(weekday)}</div>
             </div>
-            <div style="min-width:0;">
+            <div style="min-width:0; flex:1;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
                 ${platMarkHtml({platform: item.platform})}
                 <span style="font-weight:600; font-size:13px; color:var(--sumi);">${esc(item.platform.toUpperCase())}</span>
@@ -3792,432 +3925,6 @@
       }
 
       $list.appendChild(feedSec);
-    }
-
-    function renderRunSchedule() {
-      const runs = nodesOf("run").filter(qmatch);
-      const scheduledRuns = runs.filter(r => r.is_scheduled && !r.is_published && r.status !== "published");
-      const readyRuns = runs.filter(r => (r.status === "ready" || r.status === "scored" || r.status === "open" || r.status === "draft") && !r.is_scheduled && !r.is_published && r.status !== "published");
-      const shippedRuns = runs.filter(r => r.is_published || r.status === "published");
-
-      scheduledRuns.sort((a, b) => (a.scheduled_date || a.date || "").localeCompare(b.scheduled_date || b.date || ""));
-
-      const nextRun = scheduledRuns.find(r => {
-        const diff = getDiffDaysFromToday(r.scheduled_date || r.date);
-        return diff !== null && diff >= 0;
-      }) || scheduledRuns[0];
-
-      const kpis = document.createElement("div");
-      kpis.className = "kpi-strip";
-      kpis.innerHTML = `
-        <div class="kpi-card">
-          <div class="kpi-num">${scheduledRuns.length}</div>
-          <div class="kpi-lab">${t("sched_kpi_sched")}</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-num">${readyRuns.length}</div>
-          <div class="kpi-lab">${t("sched_kpi_ready")}</div>
-        </div>
-        <div class="kpi-card" style="grid-column: span 2;">
-          <div class="kpi-num" style="font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ${nextRun ? `${formatFriendlyDate(nextRun.scheduled_date || nextRun.date, lang)} @ ${platMarkHtml(nextRun)} ${esc(nextRun.label)}` : "暂无已定档任务"}
-          </div>
-          <div class="kpi-lab">${t("sched_kpi_next")}</div>
-        </div>
-      `;
-      $list.appendChild(kpis);
-
-      const banner = document.createElement("div");
-      banner.className = "sched-banner";
-      banner.innerHTML = `
-        <div>💡 ${t("sched_banner_hint")}</div>
-        <button type="button" class="ghost-link" data-md="runs/_index.md" data-md-title="runs/_index.md">打开 runs/_index.md</button>
-      `;
-      $list.appendChild(banner);
-
-      const buckets = {
-        overdue: [],
-        today: [],
-        tomorrow: [],
-        this_week: [],
-        later: []
-      };
-
-      scheduledRuns.forEach(r => {
-        const dt = r.scheduled_date || r.date;
-        const diff = getDiffDaysFromToday(dt);
-        if (diff === null) {
-          buckets.later.push(r);
-        } else if (diff < 0) {
-          buckets.overdue.push(r);
-        } else if (diff === 0) {
-          buckets.today.push(r);
-        } else if (diff === 1) {
-          buckets.tomorrow.push(r);
-        } else if (diff <= 7) {
-          buckets.this_week.push(r);
-        } else {
-          buckets.later.push(r);
-        }
-      });
-
-      const bucketDefs = [
-        { id: "today", title: t("sched_b_today"), items: buckets.today, badge: "Today", isToday: true },
-        { id: "tomorrow", title: t("sched_b_tomorrow"), items: buckets.tomorrow, badge: "Tomorrow" },
-        { id: "overdue", title: t("sched_b_overdue"), items: buckets.overdue, badge: "Overdue" },
-        { id: "this_week", title: t("sched_b_this_week"), items: buckets.this_week, badge: "Next 7 Days" },
-        { id: "later", title: t("sched_b_later"), items: buckets.later, badge: "Upcoming" }
-      ];
-
-      let renderedAny = false;
-      bucketDefs.forEach(b => {
-        if (!b.items.length) return;
-        renderedAny = true;
-        const sec = document.createElement("div");
-        sec.className = "sched-bucket";
-        sec.innerHTML = `<div class="sched-bucket-title">${esc(b.title)} <span class="badge">${b.items.length}</span></div>`;
-        b.items.forEach(r => {
-          sec.appendChild(createScheduleCard(r, { isToday: b.isToday, isOverdue: b.id === "overdue" }));
-        });
-        $list.appendChild(sec);
-      });
-
-      if (!renderedAny) {
-        const emptyP = document.createElement("p");
-        emptyP.className = "empty";
-        emptyP.style.margin = "20px 0";
-        emptyP.textContent = t("sched_empty");
-        $list.appendChild(emptyP);
-      }
-
-      if (readyRuns.length > 0) {
-        const readySec = document.createElement("div");
-        readySec.className = "sched-bucket";
-        readySec.innerHTML = `<div class="sched-bucket-title">⚡ ${t("sched_b_ready_pool")} <span class="badge">${readyRuns.length}</span></div>`;
-        readyRuns.slice(0, 10).forEach(r => {
-          readySec.appendChild(createScheduleCard(r, { isReady: true }));
-        });
-        $list.appendChild(readySec);
-      }
-
-      if (shippedRuns.length > 0) {
-        const shipSec = document.createElement("div");
-        shipSec.className = "sched-bucket";
-        shipSec.innerHTML = `<div class="sched-bucket-title">✅ ${t("sched_b_recent_pub")} <span class="badge">${shippedRuns.length}</span></div>`;
-        shippedRuns.slice(0, 5).forEach(r => {
-          shipSec.appendChild(createScheduleCard(r, { isShipped: true }));
-        });
-        $list.appendChild(shipSec);
-      }
-    }
-
-    function createScheduleCard(r, opts = {}) {
-      const card = document.createElement("div");
-      const st = getPostStatusInfo(r, getTodayStr());
-      let cardClass = "sched-card";
-      if (opts.isToday) cardClass += " today";
-      else if (st.code === "overdue" || opts.isOverdue) cardClass += " overdue";
-      else if (st.code === "published" || st.code === "reviewed" || opts.isShipped) cardClass += " shipped";
-      else if (st.code === "scheduled") cardClass += " scheduled";
-      if (selected === r.id) cardClass += " sel";
-      card.className = cardClass;
-      card.onclick = () => select(r.id);
-
-      const dt = r.scheduled_date || r.published_date || r.date || "";
-      const p = parseDateParts(dt);
-      const monthDay = p ? `${p.m}/${p.d}` : "--";
-      const wDays = lang === "zh" ? ["周日", "周一", "周二", "周三", "周四", "周五", "周六"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      const weekday = p ? wDays[new Date(p.y, p.m - 1, p.d).getDay()] : "";
-
-      let tagClass = st.badgeClass;
-      let tagText = st.label;
-      if (opts.isReady) {
-        tagClass = "tag-ready";
-        tagText = t("status_ready");
-      }
-
-      card.innerHTML = `
-        <div class="sched-date-badge">
-          <div class="month-day">${esc(monthDay)}</div>
-          <div class="weekday">${esc(weekday)}</div>
-        </div>
-        <div style="min-width:0;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
-            ${platMarkHtml(r)}
-            <span style="font-weight:600; font-size:13px; color:var(--sumi);">${esc(runPlatform(r).toUpperCase())}</span>
-            <span class="sched-status-tag ${tagClass}">${esc(tagText)}</span>
-            ${r.topic_id ? `<span class="pill" style="font-size:10px;">${esc(r.topic_id)}</span>` : ""}
-            ${r.pillar ? `<span class="pill" style="font-size:10px;">${esc(formatPillar(r.pillar))}</span>` : ""}
-            ${r.published_result && r.published_result !== "unknown" ? `<span class="pill" style="font-size:10px; font-weight:600;">复盘: ${esc(r.published_result)}</span>` : ""}
-          </div>
-          <div style="font-size:13px; color:var(--text); line-height:1.4; overflow:hidden; text-overflow:ellipsis;">${esc(r.label)}</div>
-          ${r.notes ? `<div class="note" style="margin-top:4px;">${esc(r.notes.slice(0, 70))}</div>` : ""}
-        </div>
-        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-          <button type="button" class="ghost-link" data-run-open="${esc(r.id)}" style="font-size:11px;">查看内容</button>
-          ${r.published_url ? `<a href="${esc(r.published_url)}" target="_blank" rel="noreferrer" class="ghost-link" style="font-size:11px;" onclick="event.stopPropagation();">查看原帖 ↗</a>` : ""}
-        </div>
-      `;
-      return card;
-    }
-
-    function renderRunCadence() {
-      const pubs = nodesOf("published").filter(qmatch);
-      const runs = nodesOf("run").filter(qmatch);
-      const plats = ["x", "linkedin", "xiaohongshu", "instagram", "threads", "tiktok"];
-
-      const modeBox = document.createElement("div");
-      modeBox.className = "filt";
-      modeBox.style.padding = "10px 14px";
-      modeBox.innerHTML = `
-        <div class="subtabs" style="margin:0;">
-          <button data-m="platforms">${t("cadence_m_plat")}</button>
-          <button data-m="daily">${t("cadence_m_day")}</button>
-          <button data-m="weekly">${t("cadence_m_week")}</button>
-          <button data-m="monthly">${t("cadence_m_month")}</button>
-        </div>
-      `;
-      modeBox.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.m === cadenceMode));
-      modeBox.onclick = (e) => {
-        const m = e.target.dataset.m;
-        if (!m) return;
-        cadenceMode = m;
-        renderRuns();
-        renderInsp();
-      };
-      $list.appendChild(modeBox);
-
-      const now = new Date();
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const currentWeek = getWeekKey(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`).key;
-
-      if (cadenceMode === "platforms") {
-        const grid = document.createElement("div");
-        grid.className = "cadence-grid";
-
-        plats.forEach(p => {
-          const platPubs = pubs.filter(x => (x.platform || "").toLowerCase() === p);
-          const platRuns = runs.filter(x => runPlatform(x) === p);
-          const monthCount = platPubs.filter(x => (x.date || "").startsWith(currentMonth)).length;
-          const weekCount = platPubs.filter(x => getWeekKey(x.date || "").key === currentWeek).length;
-          const schedCount = platRuns.filter(x => x.is_scheduled && !x.is_published).length;
-          const lastPub = platPubs.sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0];
-
-          const card = document.createElement("div");
-          card.className = "cadence-plat-card" + (cadencePlatFilter === p ? " active-filter" : "");
-          card.onclick = () => {
-            cadencePlatFilter = cadencePlatFilter === p ? "" : p;
-            renderRuns();
-            renderInsp();
-          };
-
-          const pNames = {
-            x: "𝕏 (Twitter)",
-            linkedin: "LinkedIn",
-            xiaohongshu: "小红书",
-            instagram: "Instagram",
-            threads: "Threads",
-            tiktok: "TikTok"
-          };
-
-          card.innerHTML = `
-            <div class="cadence-plat-head">
-              <div class="cadence-plat-name">${platMarkHtml({ platform: p })} ${pNames[p] || p}</div>
-              <span class="sched-status-tag tag-shipped">${platPubs.length} 篇</span>
-            </div>
-            <div class="cadence-stat-row">
-              <div>${t("cadence_plat_month")}: <span class="cadence-stat-val">${monthCount}</span></div>
-              <div>${t("cadence_plat_week")}: <span class="cadence-stat-val">${weekCount}</span></div>
-              <div>${t("cadence_plat_sched")}: <span class="cadence-stat-val" style="color:#b8741a;">${schedCount}</span></div>
-              <div>总已发: <span class="cadence-stat-val">${platPubs.length}</span></div>
-            </div>
-            ${lastPub ? `<div class="note" style="font-size:11px; margin-top:2px;">${t("cadence_plat_last")}: ${esc(lastPub.date)} <a href="${esc(lastPub.url)}" target="_blank" onclick="event.stopPropagation();" class="c-link">查看 ↗</a></div>` : `<div class="vacant" style="font-size:11px;">尚无发布记录</div>`}
-          `;
-          grid.appendChild(card);
-        });
-        $list.appendChild(grid);
-
-        let filteredPubs = pubs;
-        if (cadencePlatFilter) {
-          filteredPubs = pubs.filter(x => (x.platform || "").toLowerCase() === cadencePlatFilter);
-        }
-        const filteredGroup = document.createElement("div");
-        filteredGroup.className = "cadence-group";
-        filteredGroup.innerHTML = `
-          <div class="cadence-group-head">
-            <div class="cadence-group-title">
-              ${cadencePlatFilter ? `平台 ${cadencePlatFilter.toUpperCase()} 发布明细` : "近期全平台发布明细"}
-              <span class="pill">${filteredPubs.length} 篇</span>
-            </div>
-            ${cadencePlatFilter ? `<button type="button" class="ghost-link" style="font-size:11px;" onclick="cadencePlatFilter=''; renderRuns();">清除筛选</button>` : ""}
-          </div>
-        `;
-        filteredPubs.sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach(item => {
-          filteredGroup.appendChild(createCadenceItemRow(item));
-        });
-        if (!filteredPubs.length) {
-          filteredGroup.innerHTML += `<p class="vacant" style="padding:10px;">${t("cadence_empty")}</p>`;
-        }
-        $list.appendChild(filteredGroup);
-
-      } else if (cadenceMode === "weekly") {
-        const weeksMap = new Map();
-        pubs.forEach(p => {
-          const wInfo = getWeekKey(p.date || "");
-          if (!weeksMap.has(wInfo.key)) {
-            weeksMap.set(wInfo.key, { label: wInfo.label, items: [] });
-          }
-          weeksMap.get(wInfo.key).items.push(p);
-        });
-
-        const sortedKeys = Array.from(weeksMap.keys()).sort((a, b) => b.localeCompare(a));
-        sortedKeys.forEach(wk => {
-          const { label, items } = weeksMap.get(wk);
-          const grp = document.createElement("div");
-          grp.className = "cadence-group";
-
-          const pCounts = {};
-          items.forEach(it => {
-            const plat = (it.platform || "unknown").toLowerCase();
-            pCounts[plat] = (pCounts[plat] || 0) + 1;
-          });
-          const summaryStr = Object.entries(pCounts).map(([p, cnt]) => `${platMarkHtml({ platform: p })} ${cnt}`).join(" · ");
-
-          grp.innerHTML = `
-            <div class="cadence-group-head">
-              <div class="cadence-group-title">
-                <span>${esc(label)}</span>
-                <span class="pill">${items.length} 篇</span>
-              </div>
-              <div style="font-size:12px; display:flex; align-items:center; gap:6px;">${summaryStr}</div>
-            </div>
-          `;
-          items.sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach(it => {
-            grp.appendChild(createCadenceItemRow(it));
-          });
-          $list.appendChild(grp);
-        });
-        if (!sortedKeys.length) {
-          $list.innerHTML += `<p class="empty">${t("cadence_empty")}</p>`;
-        }
-
-      } else if (cadenceMode === "monthly") {
-        const monthsMap = new Map();
-        pubs.forEach(p => {
-          const mKey = getMonthKey(p.date || "");
-          if (!monthsMap.has(mKey)) {
-            monthsMap.set(mKey, []);
-          }
-          monthsMap.get(mKey).push(p);
-        });
-
-        const sortedMonths = Array.from(monthsMap.keys()).sort((a, b) => b.localeCompare(a));
-        sortedMonths.forEach(mKey => {
-          const items = monthsMap.get(mKey);
-          const grp = document.createElement("div");
-          grp.className = "cadence-group";
-
-          const pCounts = {};
-          items.forEach(it => {
-            const plat = (it.platform || "unknown").toLowerCase();
-            pCounts[plat] = (pCounts[plat] || 0) + 1;
-          });
-
-          const platColors = {
-            x: "#171411",
-            linkedin: "#0a66c2",
-            xiaohongshu: "#ff2442",
-            instagram: "#c13584",
-            threads: "#1c1915",
-            tiktok: "#111111"
-          };
-          let ratioBarHtml = '<div class="cadence-ratio-bar">';
-          Object.entries(pCounts).forEach(([p, cnt]) => {
-            const pct = (cnt / items.length * 100).toFixed(1);
-            ratioBarHtml += `<div class="cadence-ratio-seg" style="width:${pct}%; background:${platColors[p] || '#888'};" title="${p}: ${cnt}篇 (${pct}%)"></div>`;
-          });
-          ratioBarHtml += '</div>';
-
-          const summaryStr = Object.entries(pCounts).map(([p, cnt]) => `${platMarkHtml({ platform: p })} ${cnt}`).join(" · ");
-
-          grp.innerHTML = `
-            <div class="cadence-group-head">
-              <div class="cadence-group-title">
-                <span>${esc(mKey)}</span>
-                <span class="pill">${items.length} 篇</span>
-              </div>
-              <div style="font-size:12px; display:flex; align-items:center; gap:6px;">${summaryStr}</div>
-            </div>
-            ${ratioBarHtml}
-          `;
-          items.sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach(it => {
-            grp.appendChild(createCadenceItemRow(it));
-          });
-          $list.appendChild(grp);
-        });
-        if (!sortedMonths.length) {
-          $list.innerHTML += `<p class="empty">${t("cadence_empty")}</p>`;
-        }
-
-      } else {
-        const daysMap = new Map();
-        pubs.forEach(p => {
-          const dKey = p.date || "unknown";
-          if (!daysMap.has(dKey)) {
-            daysMap.set(dKey, []);
-          }
-          daysMap.get(dKey).push(p);
-        });
-
-        const sortedDays = Array.from(daysMap.keys()).sort((a, b) => b.localeCompare(a));
-        sortedDays.forEach(dKey => {
-          const items = daysMap.get(dKey);
-          const grp = document.createElement("div");
-          grp.className = "cadence-group";
-          grp.innerHTML = `
-            <div class="cadence-group-head">
-              <div class="cadence-group-title">
-                <span>📅 ${esc(formatFriendlyDate(dKey, lang))}</span>
-                <span class="pill">${items.length} 篇</span>
-              </div>
-            </div>
-          `;
-          items.forEach(it => {
-            grp.appendChild(createCadenceItemRow(it));
-          });
-          $list.appendChild(grp);
-        });
-        if (!sortedDays.length) {
-          $list.innerHTML += `<p class="empty">${t("cadence_empty")}</p>`;
-        }
-      }
-    }
-
-    function createCadenceItemRow(it) {
-      const d = document.createElement("div");
-      d.className = "cadence-item-row";
-      d.onclick = () => {
-        if (it.run_id && byId[it.run_id]) {
-          select(it.run_id);
-        } else {
-          select(it.id);
-        }
-      };
-
-      const resultPill = it.result && it.result !== "unknown" ? `<span class="pill" style="font-size:10px;">${esc(it.result)}</span>` : "";
-
-      d.innerHTML = `
-        <span class="c-date">${esc(it.date)}</span>
-        <span>${platMarkHtml(it)}</span>
-        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500;">
-          ${esc(it.notes || it.label || it.ident)}
-        </span>
-        <span style="display:flex; align-items:center; gap:8px;">
-          ${resultPill}
-          ${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noreferrer" class="c-link" onclick="event.stopPropagation();">直达 ↗</a>` : ""}
-        </span>
-      `;
-      return d;
     }
 
     function renderRunAll() {
