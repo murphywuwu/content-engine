@@ -488,7 +488,10 @@
       background: linear-gradient(90deg, #fffcf6, var(--paper));
     }
     .sched-card.scheduled {
-      border-left: 4px solid #d48817;
+      border-left: 4px solid #c87a14;
+    }
+    .sched-card.overdue {
+      border-left: 4px solid #c93b2b;
     }
     .sched-card.shipped {
       border-left: 4px solid var(--ok); opacity: .88;
@@ -508,16 +511,253 @@
       font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; white-space: nowrap;
     }
     .sched-status-tag.tag-sched {
-      background: #fbf0dc; color: #9c6008; border: 1px solid #ebd5b0;
+      background: #fcf3e3; color: #8a4f00; border: 1px solid #f1d8ab;
     }
     .sched-status-tag.tag-ready {
       background: #e9f0f8; color: #23527c; border: 1px solid #c7dcee;
     }
     .sched-status-tag.tag-shipped {
-      background: #eaf3ec; color: #2e6939; border: 1px solid #c9e2cf;
+      background: #eaf3ec; color: #20572b; border: 1px solid #b7d8be;
+    }
+    .sched-status-tag.tag-reviewed {
+      background: #e8f1f8; color: #164673; border: 1px solid #bad5ec;
+    }
+    .sched-status-tag.tag-overdue {
+      background: #fdeeed; color: #9e2319; border: 1px solid #f5c4c0;
     }
     .sched-status-tag.tag-draft {
-      background: var(--bg-3); color: var(--muted); border: 1px solid var(--line);
+      background: #f0ebd9; color: #5c5549; border: 1px solid #d5cbb8;
+    }
+
+    /* Calendar View Styles */
+    .cal-container {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+      padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
+    }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--bg-3);
+    }
+    .cal-nav {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .cal-title {
+      font-size: 16px; font-weight: 700; color: var(--sumi); min-width: 140px; text-align: center;
+      letter-spacing: .02em; font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
+    }
+    .cal-btn-arrow, .cal-btn-today {
+      background: var(--bg-2); border: 1px solid var(--line); color: var(--text);
+      border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: 600;
+      transition: all .15s ease;
+    }
+    .cal-btn-arrow:hover, .cal-btn-today:hover {
+      background: var(--chip); border-color: #b8a888;
+    }
+    .cal-kpis {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .cal-kpi-pill {
+      font-size: 11px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line);
+      background: var(--bg-2); color: var(--muted);
+    }
+    .cal-kpi-pill b { color: var(--sumi); font-variant-numeric: tabular-nums; margin-left: 2px; }
+    .cal-kpi-pill.kpi-pub b { color: #20572b; }
+    .cal-kpi-pill.kpi-sched b { color: #8a4f00; }
+    .cal-kpi-pill.kpi-rev b { color: #164673; }
+    .cal-kpi-pill.kpi-overdue { background: #fdeeed; border-color: #f5c4c0; color: #9e2319; }
+    .cal-kpi-pill.kpi-overdue b { color: #9e2319; }
+
+    .cal-toolbar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 10px; margin-bottom: 12px;
+    }
+    .cal-filter-plats {
+      display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    }
+    .cal-plat-btn {
+      background: transparent; border: 1px solid transparent; color: var(--muted);
+      border-radius: 999px; padding: 3px 9px; font-size: 11px; cursor: pointer;
+    }
+    .cal-plat-btn.on {
+      background: var(--sumi); color: var(--paper); font-weight: 600;
+    }
+    .cal-plat-btn:not(.on):hover {
+      background: var(--bg-3); color: var(--text);
+    }
+    .cal-legend {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--muted);
+    }
+    .legend-item {
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .legend-dot {
+      width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+    }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    }
+    .cal-day-name {
+      text-align: center; font-size: 11px; font-weight: 600; color: var(--faint);
+      padding: 6px 0; letter-spacing: .05em; text-transform: uppercase;
+    }
+    .cal-cell {
+      min-height: 86px; max-height: 140px; overflow-y: auto; background: var(--bg-1, #fcf8ee);
+      border: 1px solid var(--line); border-radius: 8px; padding: 6px;
+      display: flex; flex-direction: column; gap: 4px; position: relative;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .cal-cell:hover {
+      border-color: #bfae8e;
+    }
+    .cal-cell.other-month {
+      opacity: .45; background: var(--bg-2);
+    }
+    .cal-cell.is-today {
+      border: 1.5px solid var(--accent); background: #fffcf5;
+      box-shadow: 0 0 0 1px var(--accent-dim) inset;
+    }
+    .cal-cell-head {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;
+    }
+    .cal-cell-daynum {
+      font-size: 12px; font-weight: 700; color: var(--sumi); font-variant-numeric: tabular-nums;
+    }
+    .cal-cell.is-today .cal-cell-daynum {
+      color: var(--accent);
+    }
+    .cal-cell-badge {
+      font-size: 9px; font-weight: 600; padding: 1px 4px; border-radius: 4px;
+      background: var(--accent); color: #fff; line-height: 1.2;
+    }
+    .cal-cell-cnt {
+      font-size: 10px; color: var(--faint); font-weight: 600;
+    }
+    .cal-post-pill {
+      font-size: 11px; padding: 3px 6px; border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; gap: 5px; line-height: 1.3;
+      border: 1px solid transparent; transition: transform .1s ease, box-shadow .1s ease;
+      overflow: hidden;
+    }
+    .cal-post-pill:hover {
+      transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,.08);
+    }
+    .cal-post-pill.status-published {
+      background: #eaf3ec; border-color: #b7d8be; color: #20572b;
+    }
+    .cal-post-pill.status-reviewed {
+      background: #e8f1f8; border-color: #bad5ec; color: #164673;
+    }
+    .cal-post-pill.status-scheduled {
+      background: #fcf3e3; border-color: #f1d8ab; color: #8a4f00;
+    }
+    .cal-post-pill.status-overdue {
+      background: #fdeeed; border-color: #f5c4c0; color: #9e2319;
+    }
+    .cal-post-pill.status-draft {
+      background: #f0ebd9; border-color: #d5cbb8; color: #5c5549;
+    }
+    .cal-post-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .cal-post-plat {
+      display: inline-flex; align-items: center; flex-shrink: 0; font-size: 10px;
+    }
+    .cal-post-title {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
+    }
+    .cal-ext-link {
+      font-size: 10px; color: inherit; opacity: .7; text-decoration: none; flex-shrink: 0;
+    }
+    .cal-ext-link:hover { opacity: 1; text-decoration: underline; }
+
+    /* GitHub Heatmap Styles */
+    .gh-card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+      padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
+    }
+    .gh-header {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--bg-3);
+    }
+    .gh-title {
+      font-size: 15px; font-weight: 700; color: var(--sumi); display: flex; align-items: center; gap: 8px;
+    }
+    .gh-stats-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;
+      margin-bottom: 16px;
+    }
+    .gh-stat-box {
+      background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+      padding: 8px 12px; text-align: left;
+    }
+    .gh-stat-val {
+      font-size: 18px; font-weight: 700; color: var(--sumi); font-variant-numeric: tabular-nums;
+      font-family: "Iowan Old Style", "Songti SC", Georgia, serif; line-height: 1.1; margin-bottom: 2px;
+    }
+    .gh-stat-lab {
+      font-size: 10px; color: var(--muted); letter-spacing: .04em;
+    }
+    .gh-scroll-container {
+      overflow-x: auto; padding-bottom: 8px;
+    }
+    .gh-matrix-wrap {
+      display: inline-flex; flex-direction: column; gap: 4px; min-width: 680px;
+    }
+    .gh-months-row {
+      display: flex; height: 16px; margin-left: 28px; position: relative;
+    }
+    .gh-month-label {
+      position: absolute; font-size: 10px; color: var(--faint); font-weight: 500;
+    }
+    .gh-body {
+      display: flex; gap: 6px;
+    }
+    .gh-days-col {
+      display: flex; flex-direction: column; gap: 3px; width: 24px; padding-top: 1px;
+    }
+    .gh-day-label {
+      height: 12px; font-size: 9px; color: var(--faint); line-height: 12px;
+    }
+    .gh-weeks-grid {
+      display: flex; gap: 3px;
+    }
+    .gh-week-col {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .gh-cell {
+      width: 12px; height: 12px; border-radius: 2.5px; background: #ebdcc4; cursor: pointer;
+      position: relative; transition: transform .1s ease, outline .1s ease;
+      box-sizing: border-box;
+    }
+    .gh-cell:hover {
+      outline: 1.5px solid var(--sumi); z-index: 2; transform: scale(1.15);
+    }
+    .gh-cell.selected {
+      outline: 2px solid var(--accent); z-index: 3;
+    }
+    .gh-cell.lvl-0 { background: #ebdcc4; }
+    .gh-cell.lvl-1 { background: #9ecaa7; }
+    .gh-cell.lvl-2 { background: #5ea46e; }
+    .gh-cell.lvl-3 { background: #276735; }
+    .gh-cell.has-overdue { outline: 1.5px solid #c93b2b; }
+    .gh-cell.has-sched { background: #f1d8ab; }
+    .gh-footer {
+      display: flex; align-items: center; justify-content: space-between; margin-top: 12px;
+      font-size: 11px; color: var(--muted);
+    }
+    .gh-legend {
+      display: flex; align-items: center; gap: 4px;
+    }
+    .gh-legend-cell {
+      width: 10px; height: 10px; border-radius: 2px;
+    }
+    .gh-feed-header {
+      display: flex; align-items: center; justify-content: space-between; margin: 16px 0 10px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--bg-3);
+    }
+    .gh-feed-title {
+      font-size: 13px; font-weight: 600; color: var(--sumi); display: flex; align-items: center; gap: 8px;
     }
 
     /* Cadence Matrix Styles */
@@ -870,9 +1110,11 @@
         brand: "观察台",
         search: "搜索 ID、一句话、来源…",
         overview: "总览", needs: "需求库", hits: "Hits", products: "产品库", recommendations: "推荐库", topics: "选题库", notes: "记录与知识", runs: "Run 档案", pub: "发布与复盘",
-        runs_sub_sched: "📅 发布排期",
-        runs_sub_cadence: "📊 平台发布频率",
-        runs_sub_all: "📋 全部 Run",
+        runs_sub_calendar: "📅 日历排期",
+        runs_sub_heatmap: "🟩 发布热力图",
+        runs_sub_sched: "📋 排期清单",
+        runs_sub_cadence: "📊 平台节奏",
+        runs_sub_all: "🗂 全部 Run",
         sched_kpi_sched: "已排期待发",
         sched_kpi_ready: "待排期就绪池",
         sched_kpi_next: "下一单发布",
@@ -896,9 +1138,26 @@
         cadence_plat_sched: "已排期",
         cadence_plat_last: "最近发布",
         cadence_empty: "暂无发布记录",
-        status_scheduled: "已排期",
+        status_scheduled: "待发布",
         status_ready: "待排期",
         status_published: "已发布",
+        status_reviewed: "已复盘",
+        status_overdue: "过期未发",
+        status_draft: "制作中",
+        cal_today: "今天",
+        cal_prev_month: "上个月",
+        cal_next_month: "下个月",
+        cal_all_plats: "全部平台",
+        gh_annual_title: "内容发布热力追踪 (近 1 年)",
+        gh_stat_shipped: "累计发布",
+        gh_stat_streak_cur: "当前连续",
+        gh_stat_streak_max: "最长连续",
+        gh_stat_active_days: "活跃天数",
+        gh_stat_top_plat: "主发平台",
+        gh_feed_recent: "近期全平台动态",
+        gh_feed_day: "{date} 发布与排期明细",
+        gh_feed_empty: "该日暂无发布或排期记录",
+        gh_feed_clear: "查看全部动态",
         notes_in: "记下的", notes_lib: "进库的",
         lead: "先认 IP，再看库存。",
         kpi_cap: "记下的", kpi_needs: "需求", kpi_hits: "Hits", kpi_lib: "进库的", kpi_topics: "选题", kpi_out: "下场",
@@ -1048,9 +1307,11 @@
         brand: "Observatory",
         search: "Search ID, one-liner, source…",
         overview: "Overview", needs: "Needs", hits: "Hits", products: "Products", recommendations: "Recommendations", topics: "Topics", notes: "Notes & library", runs: "Run files", pub: "Shipped & review",
-        runs_sub_sched: "📅 Schedule",
-        runs_sub_cadence: "📊 Platform Cadence",
-        runs_sub_all: "📋 All Runs",
+        runs_sub_calendar: "📅 Calendar",
+        runs_sub_heatmap: "🟩 Heatmap",
+        runs_sub_sched: "📋 Schedule",
+        runs_sub_cadence: "📊 Cadence",
+        runs_sub_all: "🗂 All Runs",
         sched_kpi_sched: "Scheduled",
         sched_kpi_ready: "Ready Queue",
         sched_kpi_next: "Next Upcoming",
@@ -1077,6 +1338,23 @@
         status_scheduled: "Scheduled",
         status_ready: "Ready",
         status_published: "Published",
+        status_reviewed: "Reviewed",
+        status_overdue: "Overdue",
+        status_draft: "Draft",
+        cal_today: "Today",
+        cal_prev_month: "Prev Month",
+        cal_next_month: "Next Month",
+        cal_all_plats: "All Platforms",
+        gh_annual_title: "Publishing Activity (Past 12 Months)",
+        gh_stat_shipped: "Total Shipped",
+        gh_stat_streak_cur: "Current Streak",
+        gh_stat_streak_max: "Longest Streak",
+        gh_stat_active_days: "Active Days",
+        gh_stat_top_plat: "Top Channel",
+        gh_feed_recent: "Recent Activity",
+        gh_feed_day: "Posts for {date}",
+        gh_feed_empty: "No posts on this date",
+        gh_feed_clear: "Show All Activity",
         notes_in: "Captured", notes_lib: "Catalog",
         lead: "Pick an IP, then inspect the stock.",
         kpi_cap: "Captured", kpi_needs: "Needs", kpi_hits: "Hits", kpi_lib: "Catalog", kpi_topics: "Topics", kpi_out: "Outcomes",
@@ -1304,7 +1582,12 @@
     let runShip = "";
     let runPlat = "";
     let runTopic = "";
-    let runTab = "schedule";
+    let runTab = "calendar";
+    const _nowInit = new Date();
+    let calYear = _nowInit.getFullYear();
+    let calMonth = _nowInit.getMonth();
+    let calPlatFilter = "";
+    let heatmapSelectedDate = "";
     let cadenceMode = "platforms";
     let cadencePlatFilter = "";
     let pubTopic = "";
@@ -1609,11 +1892,18 @@
       const files = n.stage_files || {};
       const have = STAGE_ORDER.filter(k => files[k]).join(" · ") || t("no_stage");
       const sel = n.selection || {};
+      const todayStr = getTodayStr();
+      const st = getPostStatusInfo(n, todayStr);
+
       let schedHtml = "";
-      if (n.is_published) {
-        schedHtml = `<p class="note" style="color:#2e6939; font-weight:600;">✅ 已发布于：${esc(n.published_date || n.date)} ${n.published_url ? `· <a href="${esc(n.published_url)}" target="_blank" rel="noreferrer">查看帖子 ↗</a>` : ""}</p>`;
-      } else if (n.is_scheduled) {
-        schedHtml = `<p class="note" style="color:#9c6008; font-weight:600;">🕒 计划发布时间：${esc(n.scheduled_date || n.date)}（待手动发布）</p>`;
+      if (st.code === "reviewed") {
+        schedHtml = `<p class="note" style="color:#164673; font-weight:600;">🔵 已复盘 (结果: ${esc(n.published_result || "unknown")}) · 发布于 ${esc(n.published_date || n.date)} ${n.published_url ? `· <a href="${esc(n.published_url)}" target="_blank" rel="noreferrer">查看帖子 ↗</a>` : ""}</p>`;
+      } else if (st.code === "published") {
+        schedHtml = `<p class="note" style="color:#20572b; font-weight:600;">🟢 已发布于 ${esc(n.published_date || n.date)} ${n.published_url ? `· <a href="${esc(n.published_url)}" target="_blank" rel="noreferrer">查看帖子 ↗</a>` : ""}</p>`;
+      } else if (st.code === "overdue") {
+        schedHtml = `<p class="note" style="color:#9e2319; font-weight:600;">🔴 过期未发 · 原定时间 ${esc(n.scheduled_date || n.date)}（待手动发布）</p>`;
+      } else if (st.code === "scheduled") {
+        schedHtml = `<p class="note" style="color:#8a4f00; font-weight:600;">🟠 计划发布时间：${esc(n.scheduled_date || n.date)}（待手动发布）</p>`;
       } else {
         schedHtml = `<p class="note">⚪ 当前状态：${esc(n.status)}（尚未设定具体排期）</p>`;
       }
@@ -2570,11 +2860,192 @@
       return Math.round((targetUtc - todayUtc) / (24 * 3600 * 1000));
     }
 
+    function getTodayStr() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    function getPostStatusInfo(item, todayStr) {
+      if (!todayStr) todayStr = getTodayStr();
+      const isShipped = item.kind === "published" || item.is_published || item.status === "published";
+      const res = item.result || item.published_result || "";
+
+      if (isShipped) {
+        if (res && res !== "unknown") {
+          return {
+            code: "reviewed",
+            label: t("status_reviewed"),
+            color: "#164673",
+            bg: "#e8f1f8",
+            border: "#bad5ec",
+            dot: "🔵",
+            badgeClass: "tag-reviewed"
+          };
+        }
+        return {
+          code: "published",
+          label: t("status_published"),
+          color: "#20572b",
+          bg: "#eaf3ec",
+          border: "#b7d8be",
+          dot: "🟢",
+          badgeClass: "tag-shipped"
+        };
+      }
+
+      const schedDate = item.scheduled_date || (item.status === "scheduled" ? item.date : "");
+      if (schedDate) {
+        if (schedDate < todayStr) {
+          return {
+            code: "overdue",
+            label: t("status_overdue"),
+            color: "#9e2319",
+            bg: "#fdeeed",
+            border: "#f5c4c0",
+            dot: "🔴",
+            badgeClass: "tag-overdue"
+          };
+        }
+        return {
+          code: "scheduled",
+          label: t("status_scheduled"),
+          color: "#8a4f00",
+          bg: "#fcf3e3",
+          border: "#f1d8ab",
+          dot: "🟠",
+          badgeClass: "tag-sched"
+        };
+      }
+
+      return {
+        code: "draft",
+        label: t("status_draft"),
+        color: "#5c5549",
+        bg: "#f0ebd9",
+        border: "#d5cbb8",
+        dot: "⚪",
+        badgeClass: "tag-draft"
+      };
+    }
+
+    function getUnifiedCalendarItems() {
+      const runs = nodesOf("run").filter(qmatch);
+      const pubs = nodesOf("published").filter(qmatch);
+      const items = [];
+      const handledRunIds = new Set();
+
+      pubs.forEach(p => {
+        const runId = p.run_id || "";
+        const runNode = runId ? byId[runId] : null;
+        if (runId) handledRunIds.add(runId);
+
+        const dateStr = p.date || (runNode ? (runNode.published_date || runNode.date) : "") || "";
+        const plat = (p.platform || (runNode ? runPlatform(runNode) : "") || "x").toLowerCase();
+
+        items.push({
+          id: p.id,
+          run_id: runId || (runNode ? runNode.id : ""),
+          is_published: true,
+          status: "published",
+          result: p.result || (runNode ? runNode.published_result : "") || "unknown",
+          date: dateStr,
+          scheduled_date: "",
+          platform: plat,
+          label: p.notes || (runNode ? runNode.label : "") || p.ident || "已发帖",
+          url: p.url || (runNode ? runNode.published_url : ""),
+          notes: p.notes || (runNode ? runNode.notes : "") || "",
+          topic_id: p.topic_id || (runNode ? runNode.topic_id : ""),
+          pillar: p.pillar || (runNode ? runNode.pillar : ""),
+          raw: p
+        });
+      });
+
+      runs.forEach(r => {
+        const isPub = r.is_published || r.status === "published";
+        if (isPub && handledRunIds.has(r.id)) {
+          return;
+        }
+        const plat = (runPlatform(r) || "x").toLowerCase();
+        const dateStr = (isPub ? (r.published_date || r.date) : (r.scheduled_date || r.date)) || "";
+
+        items.push({
+          id: r.id,
+          run_id: r.id,
+          is_published: isPub,
+          status: r.status || (r.is_scheduled ? "scheduled" : "open"),
+          result: r.published_result || "",
+          date: dateStr,
+          scheduled_date: r.scheduled_date || (r.status === "scheduled" ? r.date : ""),
+          platform: plat,
+          label: r.label || r.ident || "Run",
+          url: r.published_url || "",
+          notes: r.notes || "",
+          topic_id: r.topic_id || "",
+          pillar: r.pillar || "",
+          raw: r
+        });
+      });
+
+      return items;
+    }
+
+    function calculatePublishingStreaks(shippedDates, todayStr) {
+      const sortedDates = Array.from(shippedDates).filter(Boolean).sort();
+      let maxStreak = 0;
+      let curRunningStreak = 0;
+      let prevDate = null;
+
+      sortedDates.forEach(dStr => {
+        if (!prevDate) {
+          curRunningStreak = 1;
+        } else {
+          const p1 = parseDateParts(prevDate);
+          const p2 = parseDateParts(dStr);
+          if (p1 && p2) {
+            const d1 = new Date(Date.UTC(p1.y, p1.m - 1, p1.d));
+            const d2 = new Date(Date.UTC(p2.y, p2.m - 1, p2.d));
+            const diffDays = Math.round((d2 - d1) / (24 * 3600 * 1000));
+            if (diffDays === 1) {
+              curRunningStreak += 1;
+            } else if (diffDays > 1) {
+              curRunningStreak = 1;
+            }
+          }
+        }
+        if (curRunningStreak > maxStreak) {
+          maxStreak = curRunningStreak;
+        }
+        prevDate = dStr;
+      });
+
+      let currentStreak = 0;
+      let checkDate = new Date();
+      let checkStr = todayStr;
+      if (!shippedDates.has(checkStr)) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        checkStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+      }
+
+      while (shippedDates.has(checkStr)) {
+        currentStreak += 1;
+        checkDate.setDate(checkDate.getDate() - 1);
+        checkStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+      }
+
+      return {
+        totalActiveDays: sortedDates.length,
+        maxStreak: maxStreak,
+        currentStreak: currentStreak
+      };
+    }
+
     function renderRuns() {
       $list.innerHTML = "";
       const sub = document.createElement("div");
       sub.className = "subtabs";
       sub.innerHTML = `
+        <button data-t="calendar">${t("runs_sub_calendar")}</button>
+        <button data-t="heatmap">${t("runs_sub_heatmap")}</button>
         <button data-t="schedule">${t("runs_sub_sched")}</button>
         <button data-t="cadence">${t("runs_sub_cadence")}</button>
         <button data-t="all">${t("runs_sub_all")}</button>
@@ -2589,13 +3060,461 @@
         renderInsp();
       };
 
-      if (runTab === "schedule") {
+      if (runTab === "calendar") {
+        renderRunCalendar();
+      } else if (runTab === "heatmap") {
+        renderRunHeatmap();
+      } else if (runTab === "schedule") {
         renderRunSchedule();
       } else if (runTab === "cadence") {
         renderRunCadence();
       } else {
         renderRunAll();
       }
+    }
+
+    function renderRunCalendar() {
+      const allItems = getUnifiedCalendarItems();
+      const todayStr = getTodayStr();
+
+      let filteredItems = allItems;
+      if (calPlatFilter) {
+        filteredItems = filteredItems.filter(it => it.platform === calPlatFilter);
+      }
+
+      const currentMonthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+      const monthItems = filteredItems.filter(it => (it.date || "").startsWith(currentMonthPrefix));
+      let pubCount = 0;
+      let schedCount = 0;
+      let revCount = 0;
+      let overdueCount = 0;
+
+      filteredItems.forEach(it => {
+        const st = getPostStatusInfo(it, todayStr);
+        if (st.code === "overdue") overdueCount++;
+      });
+
+      monthItems.forEach(it => {
+        const st = getPostStatusInfo(it, todayStr);
+        if (st.code === "published") pubCount++;
+        else if (st.code === "reviewed") revCount++;
+        else if (st.code === "scheduled") schedCount++;
+      });
+
+      const calBox = document.createElement("div");
+      calBox.className = "cal-container";
+
+      const monthNamesZh = ["1 月", "2 月", "3 月", "4 月", "5 月", "6 月", "7 月", "8 月", "9 月", "10 月", "11 月", "12 月"];
+      const monthNamesEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const monthTitleStr = lang === "zh" ? `${calYear} 年 ${monthNamesZh[calMonth]}` : `${monthNamesEn[calMonth]} ${calYear}`;
+
+      calBox.innerHTML = `
+        <div class="cal-header">
+          <div class="cal-nav">
+            <button type="button" class="cal-btn-arrow" id="calPrevBtn" title="${esc(t("cal_prev_month"))}">‹</button>
+            <div class="cal-title">${esc(monthTitleStr)}</div>
+            <button type="button" class="cal-btn-arrow" id="calNextBtn" title="${esc(t("cal_next_month"))}">›</button>
+            <button type="button" class="cal-btn-today" id="calTodayBtn">${esc(t("cal_today"))}</button>
+          </div>
+          <div class="cal-kpis">
+            <span class="cal-kpi-pill kpi-pub">🟢 ${esc(t("status_published"))} <b>${pubCount}</b></span>
+            <span class="cal-kpi-pill kpi-sched">🟠 ${esc(t("status_scheduled"))} <b>${schedCount}</b></span>
+            <span class="cal-kpi-pill kpi-rev">🔵 ${esc(t("status_reviewed"))} <b>${revCount}</b></span>
+            ${overdueCount > 0 ? `<span class="cal-kpi-pill kpi-overdue">🔴 ${esc(t("status_overdue"))} <b>${overdueCount}</b></span>` : ""}
+          </div>
+        </div>
+
+        <div class="cal-toolbar">
+          <div class="cal-filter-plats" id="calPlatBar">
+            <button type="button" class="cal-plat-btn ${!calPlatFilter ? "on" : ""}" data-plat="">${esc(t("cal_all_plats"))}</button>
+            ${["x", "xiaohongshu", "linkedin", "instagram", "threads", "tiktok"].map(p => `
+              <button type="button" class="cal-plat-btn ${calPlatFilter === p ? "on" : ""}" data-plat="${p}">
+                ${platMarkHtml({platform: p})} ${p.toUpperCase()}
+              </button>
+            `).join("")}
+          </div>
+          <div class="cal-legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#20572b;"></span> ${esc(t("status_published"))}</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#164673;"></span> ${esc(t("status_reviewed"))}</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#8a4f00;"></span> ${esc(t("status_scheduled"))}</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#9e2319;"></span> ${esc(t("status_overdue"))}</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#7a7263;"></span> ${esc(t("status_draft"))}</span>
+          </div>
+        </div>
+
+        <div class="cal-grid" id="calGrid"></div>
+      `;
+
+      $list.appendChild(calBox);
+
+      calBox.querySelector("#calPrevBtn").onclick = () => {
+        calMonth -= 1;
+        if (calMonth < 0) {
+          calMonth = 11;
+          calYear -= 1;
+        }
+        renderRuns();
+      };
+      calBox.querySelector("#calNextBtn").onclick = () => {
+        calMonth += 1;
+        if (calMonth > 11) {
+          calMonth = 0;
+          calYear += 1;
+        }
+        renderRuns();
+      };
+      calBox.querySelector("#calTodayBtn").onclick = () => {
+        const now = new Date();
+        calYear = now.getFullYear();
+        calMonth = now.getMonth();
+        renderRuns();
+      };
+      calBox.querySelector("#calPlatBar").onclick = (e) => {
+        const btn = e.target.closest("button[data-plat]");
+        if (!btn) return;
+        calPlatFilter = btn.dataset.plat;
+        renderRuns();
+      };
+
+      const $grid = calBox.querySelector("#calGrid");
+      const weekDayHeadersZh = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+      const weekDayHeadersEn = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const weekDays = lang === "zh" ? weekDayHeadersZh : weekDayHeadersEn;
+
+      weekDays.forEach(wd => {
+        const el = document.createElement("div");
+        el.className = "cal-day-name";
+        el.textContent = wd;
+        $grid.appendChild(el);
+      });
+
+      const itemsByDate = new Map();
+      filteredItems.forEach(it => {
+        if (!it.date) return;
+        if (!itemsByDate.has(it.date)) itemsByDate.set(it.date, []);
+        itemsByDate.get(it.date).push(it);
+      });
+
+      const firstDayOfMonth = new Date(calYear, calMonth, 1);
+      const startDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+      const totalCells = (startDayOfWeek + daysInMonth > 35) ? 42 : 35;
+
+      for (let i = 0; i < totalCells; i++) {
+        let cellYear = calYear;
+        let cellMonth = calMonth;
+        let cellDay = 1;
+        let isOtherMonth = false;
+
+        if (i < startDayOfWeek) {
+          isOtherMonth = true;
+          cellMonth = calMonth - 1;
+          if (cellMonth < 0) {
+            cellMonth = 11;
+            cellYear -= 1;
+          }
+          cellDay = daysInPrevMonth - (startDayOfWeek - 1 - i);
+        } else if (i >= startDayOfWeek + daysInMonth) {
+          isOtherMonth = true;
+          cellMonth = calMonth + 1;
+          if (cellMonth > 11) {
+            cellMonth = 0;
+            cellYear += 1;
+          }
+          cellDay = i - (startDayOfWeek + daysInMonth) + 1;
+        } else {
+          cellDay = i - startDayOfWeek + 1;
+        }
+
+        const dateStr = `${cellYear}-${String(cellMonth + 1).padStart(2, '0')}-${String(cellDay).padStart(2, '0')}`;
+        const isToday = (dateStr === todayStr);
+        const dayItems = itemsByDate.get(dateStr) || [];
+
+        const cell = document.createElement("div");
+        cell.className = "cal-cell" + (isOtherMonth ? " other-month" : "") + (isToday ? " is-today" : "");
+        cell.onclick = () => {
+          if (dayItems.length > 0) {
+            select(dayItems[0].run_id || dayItems[0].id);
+          }
+        };
+
+        const head = document.createElement("div");
+        head.className = "cal-cell-head";
+        head.innerHTML = `
+          <span class="cal-cell-daynum">${cellDay}</span>
+          ${isToday ? `<span class="cal-cell-badge">${esc(t("cal_today"))}</span>` : ""}
+          ${dayItems.length > 0 ? `<span class="cal-cell-cnt">${dayItems.length}</span>` : ""}
+        `;
+        cell.appendChild(head);
+
+        dayItems.forEach(item => {
+          const st = getPostStatusInfo(item, todayStr);
+          const pill = document.createElement("div");
+          pill.className = `cal-post-pill status-${st.code}`;
+          pill.title = `[${st.label}] ${item.platform.toUpperCase()} · ${item.label}${item.notes ? `\n备注: ${item.notes}` : ""}`;
+          pill.onclick = (e) => {
+            e.stopPropagation();
+            select(item.run_id || item.id);
+          };
+          pill.innerHTML = `
+            <span class="cal-post-dot" style="background:${st.color};"></span>
+            <span class="cal-post-plat">${platMarkHtml({ platform: item.platform })}</span>
+            <span class="cal-post-title">${esc(item.label)}</span>
+            ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noreferrer" class="cal-ext-link" onclick="event.stopPropagation();" title="直达原帖">↗</a>` : ""}
+          `;
+          cell.appendChild(pill);
+        });
+
+        $grid.appendChild(cell);
+      }
+
+      const banner = document.createElement("div");
+      banner.className = "sched-banner";
+      banner.style.marginTop = "16px";
+      banner.innerHTML = `
+        <div>💡 ${t("sched_banner_hint")}</div>
+        <button type="button" class="ghost-link" data-md="runs/_index.md" data-md-title="runs/_index.md">打开 runs/_index.md</button>
+      `;
+      $list.appendChild(banner);
+    }
+
+    function renderRunHeatmap() {
+      const allItems = getUnifiedCalendarItems();
+      const todayStr = getTodayStr();
+
+      const shippedDates = new Set();
+      const itemsByDate = new Map();
+      const platCounts = {};
+
+      allItems.forEach(it => {
+        if (!it.date) return;
+        if (!itemsByDate.has(it.date)) itemsByDate.set(it.date, []);
+        itemsByDate.get(it.date).push(it);
+
+        if (it.is_published || it.status === "published") {
+          shippedDates.add(it.date);
+          const p = (it.platform || "x").toLowerCase();
+          platCounts[p] = (platCounts[p] || 0) + 1;
+        }
+      });
+
+      const streakInfo = calculatePublishingStreaks(shippedDates, todayStr);
+      const totalShipped = Array.from(allItems).filter(it => it.is_published || it.status === "published").length;
+
+      let topPlat = "—";
+      let topPlatCnt = 0;
+      Object.entries(platCounts).forEach(([p, cnt]) => {
+        if (cnt > topPlatCnt) {
+          topPlatCnt = cnt;
+          topPlat = p;
+        }
+      });
+      const topPlatStr = topPlatCnt > 0 ? `${topPlat.toUpperCase()} (${Math.round(topPlatCnt / (totalShipped || 1) * 100)}%)` : "—";
+
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const daysToSunday = (7 - dayOfWeek) % 7;
+      const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToSunday);
+
+      const startDate = new Date(endDate);
+      startDate.setDate(endDate.getDate() - (52 * 7) + 1);
+
+      const ghCard = document.createElement("div");
+      ghCard.className = "gh-card";
+
+      ghCard.innerHTML = `
+        <div class="gh-header">
+          <div class="gh-title">🟩 ${esc(t("gh_annual_title"))}</div>
+          <button type="button" class="ghost-link" data-md="published/_index.md" data-md-title="published/_index.md">打开 published/_index.md</button>
+        </div>
+
+        <div class="gh-stats-strip">
+          <div class="gh-stat-box">
+            <div class="gh-stat-val">${totalShipped}</div>
+            <div class="gh-stat-lab">${esc(t("gh_stat_shipped"))}</div>
+          </div>
+          <div class="gh-stat-box">
+            <div class="gh-stat-val">${streakInfo.currentStreak} <span style="font-size:12px; font-weight:normal;">天</span></div>
+            <div class="gh-stat-lab">${esc(t("gh_stat_streak_cur"))}</div>
+          </div>
+          <div class="gh-stat-box">
+            <div class="gh-stat-val">${streakInfo.maxStreak} <span style="font-size:12px; font-weight:normal;">天</span></div>
+            <div class="gh-stat-lab">${esc(t("gh_stat_streak_max"))}</div>
+          </div>
+          <div class="gh-stat-box">
+            <div class="gh-stat-val">${streakInfo.totalActiveDays} <span style="font-size:12px; font-weight:normal;">天</span></div>
+            <div class="gh-stat-lab">${esc(t("gh_stat_active_days"))}</div>
+          </div>
+          <div class="gh-stat-box">
+            <div class="gh-stat-val" style="font-size:14px; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${topPlatStr}</div>
+            <div class="gh-stat-lab">${esc(t("gh_stat_top_plat"))}</div>
+          </div>
+        </div>
+
+        <div class="gh-scroll-container">
+          <div class="gh-matrix-wrap">
+            <div class="gh-months-row" id="ghMonthsRow"></div>
+            <div class="gh-body">
+              <div class="gh-days-col">
+                <div class="gh-day-label">${lang === "zh" ? "周一" : "Mon"}</div>
+                <div class="gh-day-label"></div>
+                <div class="gh-day-label">${lang === "zh" ? "周三" : "Wed"}</div>
+                <div class="gh-day-label"></div>
+                <div class="gh-day-label">${lang === "zh" ? "周五" : "Fri"}</div>
+                <div class="gh-day-label"></div>
+                <div class="gh-day-label">${lang === "zh" ? "周日" : "Sun"}</div>
+              </div>
+              <div class="gh-weeks-grid" id="ghWeeksGrid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gh-footer">
+          <div class="note">${heatmapSelectedDate ? `当前已锁定日期：<b>${heatmapSelectedDate}</b> · 点击格子可取消锁定` : "点击任意小方格，查看该日发布与排期详情"}</div>
+          <div class="gh-legend">
+            <span>少</span>
+            <span class="gh-legend-cell lvl-0" style="background:#ebdcc4;"></span>
+            <span class="gh-legend-cell lvl-1" style="background:#9ecaa7;"></span>
+            <span class="gh-legend-cell lvl-2" style="background:#5ea46e;"></span>
+            <span class="gh-legend-cell lvl-3" style="background:#276735;"></span>
+            <span>多</span>
+          </div>
+        </div>
+      `;
+
+      $list.appendChild(ghCard);
+
+      const $monthsRow = ghCard.querySelector("#ghMonthsRow");
+      const $weeksGrid = ghCard.querySelector("#ghWeeksGrid");
+      const monthNamesZh = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+      const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const mLabels = lang === "zh" ? monthNamesZh : monthNamesEn;
+
+      let prevMonth = -1;
+
+      for (let w = 0; w < 52; w++) {
+        const weekMon = new Date(startDate);
+        weekMon.setDate(startDate.getDate() + (w * 7));
+        const curM = weekMon.getMonth();
+
+        if (curM !== prevMonth) {
+          const mSpan = document.createElement("span");
+          mSpan.className = "gh-month-label";
+          mSpan.style.left = `${w * 15}px`;
+          mSpan.textContent = mLabels[curM];
+          $monthsRow.appendChild(mSpan);
+          prevMonth = curM;
+        }
+
+        const weekCol = document.createElement("div");
+        weekCol.className = "gh-week-col";
+
+        for (let d = 0; d < 7; d++) {
+          const cellDate = new Date(startDate);
+          cellDate.setDate(startDate.getDate() + (w * 7 + d));
+          const dateStr = `${cellDate.getFullYear()}-${String(cellDate.getMonth() + 1).padStart(2, '0')}-${String(cellDate.getDate()).padStart(2, '0')}`;
+          const isSelected = (heatmapSelectedDate === dateStr);
+
+          const dayItems = itemsByDate.get(dateStr) || [];
+          const shipped = dayItems.filter(it => it.is_published || it.status === "published");
+          const overdue = dayItems.filter(it => !it.is_published && it.scheduled_date && it.scheduled_date < todayStr);
+          const sched = dayItems.filter(it => !it.is_published && it.scheduled_date && it.scheduled_date >= todayStr);
+
+          let lvlClass = "lvl-0";
+          if (shipped.length >= 3) lvlClass = "lvl-3";
+          else if (shipped.length === 2) lvlClass = "lvl-2";
+          else if (shipped.length === 1) lvlClass = "lvl-1";
+          else if (overdue.length > 0) lvlClass = "has-overdue";
+          else if (sched.length > 0) lvlClass = "has-sched";
+
+          const cell = document.createElement("div");
+          cell.className = `gh-cell ${lvlClass}` + (isSelected ? " selected" : "");
+
+          let tip = `${formatFriendlyDate(dateStr, lang)}: ${shipped.length} 篇已发布`;
+          if (sched.length) tip += ` · ${sched.length} 篇待发布`;
+          if (overdue.length) tip += ` · ${overdue.length} 篇超期待发`;
+          if (dayItems.length > 0) {
+            tip += `\n` + dayItems.map(x => `${x.platform.toUpperCase()}: ${x.label}`).join("\n");
+          }
+          cell.title = tip;
+
+          cell.onclick = () => {
+            heatmapSelectedDate = (heatmapSelectedDate === dateStr ? "" : dateStr);
+            renderRuns();
+          };
+
+          weekCol.appendChild(cell);
+        }
+
+        $weeksGrid.appendChild(weekCol);
+      }
+
+      const feedSec = document.createElement("div");
+      feedSec.className = "gh-feed-sec";
+
+      let displayItems = [];
+      let feedTitle = "";
+
+      if (heatmapSelectedDate) {
+        feedTitle = t("gh_feed_day", { date: formatFriendlyDate(heatmapSelectedDate, lang) });
+        displayItems = itemsByDate.get(heatmapSelectedDate) || [];
+      } else {
+        feedTitle = t("gh_feed_recent");
+        displayItems = [...allItems].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 15);
+      }
+
+      feedSec.innerHTML = `
+        <div class="gh-feed-header">
+          <div class="gh-feed-title">
+            <span>${esc(feedTitle)}</span>
+            <span class="pill">${displayItems.length} 篇</span>
+          </div>
+          ${heatmapSelectedDate ? `<button type="button" class="ghost-link" style="font-size:11px;" onclick="heatmapSelectedDate=''; renderRuns();">${esc(t("gh_feed_clear"))}</button>` : ""}
+        </div>
+      `;
+
+      if (!displayItems.length) {
+        feedSec.innerHTML += `<p class="vacant" style="padding:14px 4px;">${esc(t("gh_feed_empty"))}</p>`;
+      } else {
+        displayItems.forEach(item => {
+          const st = getPostStatusInfo(item, todayStr);
+          const row = document.createElement("div");
+          row.className = "sched-card" + (selected === (item.run_id || item.id) ? " sel" : "");
+          row.onclick = () => select(item.run_id || item.id);
+
+          const p = parseDateParts(item.date);
+          const monthDay = p ? `${p.m}/${p.d}` : "--";
+          const wDays = lang === "zh" ? ["周日", "周一", "周二", "周三", "周四", "周五", "周六"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const weekday = p ? wDays[new Date(p.y, p.m - 1, p.d).getDay()] : "";
+
+          row.innerHTML = `
+            <div class="sched-date-badge">
+              <div class="month-day">${esc(monthDay)}</div>
+              <div class="weekday">${esc(weekday)}</div>
+            </div>
+            <div style="min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+                ${platMarkHtml({platform: item.platform})}
+                <span style="font-weight:600; font-size:13px; color:var(--sumi);">${esc(item.platform.toUpperCase())}</span>
+                <span class="sched-status-tag ${st.badgeClass}">${esc(st.label)}</span>
+                ${item.topic_id ? `<span class="pill" style="font-size:10px;">${esc(item.topic_id)}</span>` : ""}
+                ${item.pillar ? `<span class="pill" style="font-size:10px;">${esc(formatPillar(item.pillar))}</span>` : ""}
+                ${item.result && item.result !== "unknown" ? `<span class="pill" style="font-size:10px; font-weight:600;">复盘: ${esc(item.result)}</span>` : ""}
+              </div>
+              <div style="font-size:13px; color:var(--text); line-height:1.4; overflow:hidden; text-overflow:ellipsis;">${esc(item.label)}</div>
+              ${item.notes ? `<div class="note" style="margin-top:4px;">${esc(item.notes.slice(0, 80))}</div>` : ""}
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+              ${item.run_id ? `<button type="button" class="ghost-link" data-run-open="${esc(item.run_id)}" style="font-size:11px;">查看内容</button>` : ""}
+              ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noreferrer" class="ghost-link" style="font-size:11px;" onclick="event.stopPropagation();">查看原帖 ↗</a>` : ""}
+            </div>
+          `;
+          feedSec.appendChild(row);
+        });
+      }
+
+      $list.appendChild(feedSec);
     }
 
     function renderRunSchedule() {
@@ -2717,10 +3636,12 @@
 
     function createScheduleCard(r, opts = {}) {
       const card = document.createElement("div");
+      const st = getPostStatusInfo(r, getTodayStr());
       let cardClass = "sched-card";
       if (opts.isToday) cardClass += " today";
-      else if (opts.isShipped) cardClass += " shipped";
-      else cardClass += " scheduled";
+      else if (st.code === "overdue" || opts.isOverdue) cardClass += " overdue";
+      else if (st.code === "published" || st.code === "reviewed" || opts.isShipped) cardClass += " shipped";
+      else if (st.code === "scheduled") cardClass += " scheduled";
       if (selected === r.id) cardClass += " sel";
       card.className = cardClass;
       card.onclick = () => select(r.id);
@@ -2731,17 +3652,11 @@
       const wDays = lang === "zh" ? ["周日", "周一", "周二", "周三", "周四", "周五", "周六"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const weekday = p ? wDays[new Date(p.y, p.m - 1, p.d).getDay()] : "";
 
-      let tagClass = "tag-sched";
-      let tagText = t("status_scheduled");
-      if (opts.isShipped) {
-        tagClass = "tag-shipped";
-        tagText = t("status_published");
-      } else if (opts.isReady) {
+      let tagClass = st.badgeClass;
+      let tagText = st.label;
+      if (opts.isReady) {
         tagClass = "tag-ready";
         tagText = t("status_ready");
-      } else if (opts.isOverdue) {
-        tagClass = "tag-sched";
-        tagText = "⚠️ 待发布";
       }
 
       card.innerHTML = `
@@ -2756,6 +3671,7 @@
             <span class="sched-status-tag ${tagClass}">${esc(tagText)}</span>
             ${r.topic_id ? `<span class="pill" style="font-size:10px;">${esc(r.topic_id)}</span>` : ""}
             ${r.pillar ? `<span class="pill" style="font-size:10px;">${esc(formatPillar(r.pillar))}</span>` : ""}
+            ${r.published_result && r.published_result !== "unknown" ? `<span class="pill" style="font-size:10px; font-weight:600;">复盘: ${esc(r.published_result)}</span>` : ""}
           </div>
           <div style="font-size:13px; color:var(--text); line-height:1.4; overflow:hidden; text-overflow:ellipsis;">${esc(r.label)}</div>
           ${r.notes ? `<div class="note" style="margin-top:4px;">${esc(r.notes.slice(0, 70))}</div>` : ""}
