@@ -22,7 +22,11 @@ Then tell your Agent (Codex / Claude Code / …):
 
 > Follow `CLAUDE.md` in this folder. Start with interview / profile, then capture audience quotes into `needs/`.
 
-Optional skill (also vendored under `skills/easysociable-content/`): install into your Agent skills path, or point the Agent at that folder.
+Agent skill (interview / needs / topics): install via EasySociable CLI — not part of this repo:
+
+```bash
+easysociable install --skills content,template,slideshow --yes
+```
 
 ## Requirements
 
