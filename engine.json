@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "content-engine.v1",
+  "locale": "en",
+  "root": "Content Engine",
+  "vault_root": ".",
+  "paths": {
+    "runs": "runs",
+    "exports": "exports",
+    "topics": "topics",
+    "needs": "needs",
+    "hits": "hits",
+    "products": "products",
+    "recommendations": "recommendations",
+    "swipe": "swipe",
+    "profiles": "profiles",
+    "inbox": "inbox",
+    "accounts": "accounts",
+    "raw": "raw",
+    "published": "published",
+    "wiki": "wiki",
+    "platforms": "platforms",
+    "workbench": "workbench"
+  }
+}

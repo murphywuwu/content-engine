@@ -1,0 +1,3408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Content Engine · 观察台</title>
+  <style>
+    :root {
+      --ink: #2c2822;
+      --bg: #f4ecdc;
+      --bg-2: #efe6d2;
+      --bg-3: #e5d9c0;
+      --paper: #faf6ec;
+      --text: #2c2822;
+      --muted: #6e675c;
+      --faint: #8a8276;
+      --line: #d4c6a8;
+      --accent: #9c3d32;
+      --accent-dim: #7a3028;
+      --gap: #a14a38;
+      --ok: #4a6750;
+      --chip: #e8dcc4;
+      --shadow: 0 12px 28px rgba(70, 50, 24, .08);
+      --glow: #ead9b8;
+      --gap-bg: #f6e6d6;
+      --sumi: #2c2822;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; height: 100%;
+      background:
+        radial-gradient(900px 420px at 12% -8%, var(--glow) 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font: 14px/1.5 "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      opacity: .14; mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    }
+    body::after {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      opacity: .045;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0 5px,
+        rgba(80, 60, 30, .35) 5px 6px
+      );
+    }
+    button { font: inherit; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .tools { display: flex; align-items: center; gap: 8px; }
+    .tools button, .tools select {
+      background: var(--bg-3); border: 1px solid var(--line); color: var(--text);
+      border-radius: 999px; padding: 6px 10px; cursor: pointer; font: inherit;
+    }
+    #profileSel { max-width: 220px; }
+    header.app {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 20px;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--paper) 82%, transparent);
+      backdrop-filter: blur(16px);
+      position: sticky; top: 0; z-index: 5;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 168px; }
+    .mark {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(145deg, #3a342c, #1e1b17);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+      position: relative;
+    }
+    .mark::after {
+      content: ""; position: absolute; inset: 8px 7px 8px 13px;
+      border-right: 1.5px solid var(--paper); border-bottom: 1.5px solid var(--paper);
+      opacity: .55;
+    }
+    header.app h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: .04em; }
+    header.app h1 small { display: block; color: var(--faint); font-weight: 400; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; margin-top: 2px; }
+    nav.tabs { display: flex; gap: 2px; flex-wrap: wrap; }
+    nav.tabs button, .subtabs button {
+      background: transparent; border: 0; color: var(--muted);
+      padding: 8px 12px; border-radius: 999px; cursor: pointer;
+    }
+    nav.tabs button.on, .subtabs button.on {
+      background: var(--sumi); color: var(--paper); font-weight: 600;
+    }
+    nav.tabs button:not(.on):hover { color: var(--text); background: var(--bg-3); }
+    .search {
+      position: relative;
+    }
+    .search::before {
+      content: ""; position: absolute; left: 12px; top: 11px; width: 12px; height: 12px;
+      border: 1.5px solid var(--faint); border-radius: 50%;
+    }
+    .search::after {
+      content: ""; position: absolute; left: 22px; top: 21px; width: 6px; height: 1.5px;
+      background: var(--faint); transform: rotate(45deg);
+    }
+    #q {
+      width: 260px; background: var(--paper); border: 1px solid var(--line); color: var(--text);
+      padding: 8px 12px 8px 32px; border-radius: 999px; outline: none;
+    }
+    #q:focus { border-color: var(--accent-dim); }
+    .stamp { color: var(--faint); font-size: 11px; letter-spacing: .04em; }
+    .shell { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr); height: calc(100% - 61px); }
+    .list { overflow: auto; padding: 28px 32px 56px; }
+    .insp {
+      overflow: auto; padding: 28px 26px 56px;
+      background:
+        linear-gradient(180deg, rgba(255,250,240,.5), transparent 140px),
+        var(--bg-2);
+      border-left: 1px solid var(--line);
+    }
+    .lead {
+      font-family: "Iowan Old Style", "Palatino Linotype", "Songti SC", Georgia, serif;
+      font-size: 28px; line-height: 1.25; font-weight: 500; margin: 0 0 8px; max-width: 18em;
+    }
+    .lede { color: var(--muted); margin: 0 0 22px; max-width: 42em; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filters select {
+      background: var(--paper); border: 1.5px solid var(--line); color: var(--text);
+      padding: 7px 28px 7px 12px; border-radius: 8px; min-width: 140px;
+    }
+    .filt {
+      display: flex; flex-direction: column; gap: 14px;
+      margin: 0 0 16px; padding: 14px 16px;
+      background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    }
+    .filt-row {
+      display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+    }
+    .filt-lab { font-size: 11px; color: var(--faint); letter-spacing: .08em; }
+    .filt .subtabs {
+      display: flex; flex-wrap: wrap; margin: 0; width: 100%;
+      border-radius: 12px; gap: 2px;
+    }
+    .filt .subtabs button { white-space: nowrap; }
+    .ghost-link {
+      background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer;
+      font: inherit; text-decoration: underline; text-underline-offset: 3px;
+    }
+    .cards { display: grid; gap: 10px; }
+    .row {
+      display: grid; grid-template-columns: 8px 1fr auto; gap: 14px;
+      padding: 14px 16px 14px 0; background: var(--paper);
+      border: 1px solid var(--line); border-radius: 14px;
+      cursor: pointer; text-align: left; box-shadow: 0 1px 0 rgba(255,255,255,.55) inset;
+    }
+    .row:hover { border-color: #b8a888; transform: translateY(-1px); }
+    .row.sel { border-color: var(--accent); box-shadow: var(--shadow); }
+    .stripe { border-radius: 14px 0 0 14px; background: var(--accent-dim); }
+    .row[data-kind="capture"] .stripe { background: #7d9aa8; }
+    .row[data-kind="need"] .stripe { background: #5a9e8f; }
+    .row[data-kind="raw"] .stripe { background: #6e7f6a; }
+    .row[data-kind="topic"] .stripe { background: var(--accent); }
+    .row[data-kind="swipe"] .stripe { background: #c4a06a; }
+    .row[data-kind="atom"] .stripe { background: #a78bb0; }
+    .row[data-kind="claim"] .stripe { background: #d08a78; }
+    .row[data-kind="hit"] .stripe { background: #6b8f9e; }
+    .row[data-kind="run"] .stripe { background: #8aa87a; }
+    .row[data-kind="profile"] .stripe { background: #8b6b4a; }
+    .row[data-kind="account"] .stripe { background: #5c6b7a; }
+    .heat {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 10px; align-items: center;
+    }
+    .heat-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-variant-numeric: tabular-nums;
+      padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .heat-chip .sym { font-size: 10px; line-height: 1; opacity: .9; }
+    .heat-chip .val { font-weight: 600; letter-spacing: .01em; }
+    .heat-chip.likes { color: #a14a38; background: #f3ddd4; }
+    .heat-chip.replies { color: #3d4a57; background: #dce3ea; }
+    .heat-chip.bookmarks {
+      color: #8a6a3a; background: #ead9b8;
+      border-color: rgba(138, 106, 58, .28);
+    }
+    .heat-chip.views { color: #8a8276; background: #ebe4d6; }
+    .heat-chip.empty { opacity: .55; font-weight: 400; }
+    .heat-note { font-size: 11px; color: var(--faint); margin: 6px 0 0; }
+    .insp .heat { margin: 0 0 14px; }
+    .kw-filter { margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+    .kw-filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .kw-search {
+      position: relative;
+      flex: 1 1 180px;
+      min-width: 160px;
+      max-width: 320px;
+    }
+    .kw-search::before {
+      content: ""; position: absolute; left: 12px; top: 50%; width: 12px; height: 12px;
+      margin-top: -7px; border: 1.5px solid var(--faint); border-radius: 50%;
+      pointer-events: none;
+    }
+    .kw-search::after {
+      content: ""; position: absolute; left: 22px; top: 50%; width: 6px; height: 1.5px;
+      margin-top: 3px; background: var(--faint); transform: rotate(45deg);
+      pointer-events: none;
+    }
+    .kw-search input[type="search"] {
+      width: 100%;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px 8px 32px;
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255, 250, 240, .55);
+      transition: border-color .15s ease, box-shadow .15s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .kw-search input[type="search"]::placeholder { color: var(--faint); }
+    .kw-search input[type="search"]::-webkit-search-decoration,
+    .kw-search input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+    .kw-search input[type="search"]:hover { border-color: color-mix(in srgb, var(--line) 40%, var(--accent-dim)); }
+    .kw-search input[type="search"]:focus {
+      border-color: var(--accent-dim);
+      box-shadow: inset 0 1px 0 rgba(255, 250, 240, .55), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+    }
+    .kw-quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+    .kw-quick .kw-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .kw-active {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline;
+      border: 1px solid var(--line); background: var(--bg-2);
+      border-radius: 10px; padding: 8px 10px; font-size: 12px;
+    }
+    .kw-active .kid {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      color: var(--accent); font-weight: 600;
+    }
+    .kw-active .why { color: var(--text); flex: 1 1 180px; }
+    .kw-active .meta { color: var(--muted); }
+    .kw-active .clear {
+      border: 0; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 12px;
+    }
+    .kw-active .clear:hover { color: var(--text); }
+    .kw-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 11px; padding: 3px 8px; border-radius: 999px;
+      border: 1px solid var(--line); background: var(--bg-3); color: var(--accent);
+      cursor: pointer;
+    }
+    .kw-chip .n { font-family: inherit; color: var(--muted); font-weight: 600; }
+    .kw-chip.on .n { color: rgba(255,255,255,.85); }
+    .kw-chip:hover { border-color: var(--accent); }
+    .kw-catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .kw-catalog-card {
+      border: 1px solid var(--line); background: var(--bg-2);
+      border-radius: 12px; padding: 12px; text-align: left; color: inherit;
+      cursor: pointer; display: flex; flex-direction: column; gap: 6px;
+    }
+    .kw-catalog-card:hover { border-color: var(--accent); }
+    .kw-catalog-card .kid {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 12px; color: var(--accent); font-weight: 600;
+    }
+    .kw-catalog-card .meta { font-size: 11px; color: var(--muted); }
+    .kw-catalog-card .query {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 12px; color: var(--text); line-height: 1.4;
+      word-break: break-word;
+    }
+    .kw-catalog-card .why { font-size: 12px; color: var(--muted); line-height: 1.35; }
+    .kw-catalog-card .count { font-size: 11px; color: var(--faint); margin-top: auto; }
+    .kw-active .query {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 12px; color: var(--text); flex: 1 1 220px; word-break: break-word;
+    }
+    .kw-catalog-card .count b { color: var(--text); }
+    .kw-catalog-card .go {
+      font-size: 11px; color: var(--accent); border: 0; background: transparent;
+      padding: 0; cursor: pointer; text-align: left; font: inherit;
+    }
+    .row .id {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 11px; color: var(--accent); letter-spacing: .02em;
+    }
+    .row .label { font-size: 15px; margin-top: 4px; }
+    .row .meta { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .row .side {
+      display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between;
+      gap: 10px; min-height: 52px;
+    }
+    .plat-mark {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; letter-spacing: -.02em; line-height: 1;
+      flex-shrink: 0;
+    }
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; align-items: flex-start; max-width: 280px; }
+    .pill-stack { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+    .pill-row { display: inline-flex; flex-wrap: nowrap; gap: 6px; align-items: center; }
+    .score {
+      font-family: "Iowan Old Style", Georgia, serif;
+      font-size: 22px; color: var(--sumi); line-height: 1;
+    }
+    .pill {
+      display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 999px;
+      background: var(--chip); color: var(--muted); white-space: nowrap;
+    }
+    .pill.gap { color: var(--gap); background: #f3ddd4; }
+    .pill.ok { color: var(--ok); background: #dce6d8; }
+    .pill.hit-n { color: #3d4a57; background: #dce3ea; }
+    .pill.hit-win { color: var(--ok); background: #dce6d8; }
+    .pill.hit-loss { color: var(--gap); background: #f3ddd4; }
+    .ipgrid { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 0; max-width: 42em; }
+    .ipcard {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
+      padding: 16px 18px; cursor: pointer; text-align: left;
+    }
+    .ipcard:hover, .ipcard.on { border-color: var(--accent); box-shadow: var(--shadow); }
+    .ipcard .hid { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--accent); }
+    .ipcard .ttl {
+      font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
+      font-size: 17px; line-height: 1.35; margin: 6px 0 0;
+    }
+    .prof-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 18px;
+    }
+    .prof-stats > div {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .prof-stats b {
+      display: block; font-family: "Iowan Old Style", Georgia, serif;
+      font-size: 22px; font-weight: 500; line-height: 1.1; margin-bottom: 4px;
+    }
+    .prof-stats span { font-size: 11px; color: var(--faint); }
+    .prof-pillars { display: grid; gap: 8px; margin: 0 0 18px; }
+    .prof-pill {
+      display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: baseline;
+      padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+      font-size: 13px;
+    }
+    .prof-pill .hid { color: var(--accent); font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+    .prof-accts button { margin-top: 0; margin-bottom: 8px; }
+    .prof-docs { display: flex; flex-direction: column; gap: 6px; margin: 0 0 12px; }
+    .gap-list { display: grid; gap: 8px; margin: 0 0 4px; }
+    .gap-list p {
+      margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 13px;
+      background: #f3ddd4; color: var(--gap); border: 1px solid rgba(161, 74, 56, .18);
+    }
+    .stage-file-lite {
+      display: grid; grid-template-columns: 76px 1fr auto; gap: 10px; align-items: center;
+      width: 100%; text-align: left; cursor: pointer;
+      font-family: inherit; font-size: 13px; color: var(--text);
+      background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .stage-file-lite:hover { border-color: var(--accent-dim); background: var(--bg-3); }
+    .stage-file-lite .sk { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--ok); }
+    .stage-file-lite .sp {
+      font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--faint);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .stage-file-lite .sa { font-size: 12px; color: var(--accent); }
+    .empty {
+      color: var(--faint); padding: 48px 8px;
+      text-align: center;
+    }
+    .empty strong { display: block; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+    .insp h2 {
+      font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--faint); font-weight: 600; margin: 22px 0 10px;
+    }
+    .insp h2:first-child { margin-top: 0; }
+    .insp .kicker { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--accent); margin: 0 0 6px; }
+    .insp .title {
+      font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
+      font-size: 22px; line-height: 1.3; margin: 0 0 16px;
+    }
+    .insp .title-btn {
+      font: inherit; color: inherit; text-align: left; text-decoration: none;
+      border-bottom: 1px solid var(--accent-dim);
+    }
+    .insp .title-btn:hover { color: var(--accent); }
+    .kv { display: grid; grid-template-columns: 76px 1fr; gap: 8px 12px; font-size: 13px; margin: 0 0 16px; }
+    .kv dt { color: var(--faint); }
+    .kv dd { margin: 0; }
+    .trace { margin: 4px 0 20px; }
+    .tstep {
+      display: grid; grid-template-columns: 18px 1fr; gap: 10px;
+      position: relative; align-items: stretch;
+    }
+    .tspine {
+      position: relative;
+      width: 18px;
+      justify-self: stretch;
+    }
+    .tstep .dot {
+      position: relative; z-index: 1;
+      display: block; box-sizing: border-box;
+      width: 10px; height: 10px; margin: 5px auto 0;
+      border-radius: 50%; background: var(--line);
+    }
+    .tstep .dot.on { background: var(--accent); }
+    .tstep .dot.here { background: var(--ok); box-shadow: 0 0 0 4px rgba(156,186,134,.18); }
+    .tstep .rail {
+      position: absolute;
+      left: 50%;
+      top: 15px;
+      bottom: -5px;
+      width: 2px;
+      margin-left: -1px;
+      background: var(--line);
+      border-radius: 1px;
+      pointer-events: none;
+    }
+    .tstep:last-child .rail { display: none; }
+    .tcard { padding: 0 0 16px; min-height: 28px; }
+    .tcard .note { margin-bottom: 6px; letter-spacing: .12em; text-transform: uppercase; font-size: 10px; }
+    .tcard button {
+      background: var(--bg-3); border: 1px solid var(--line); color: var(--text);
+      border-radius: 10px; padding: 8px 10px; cursor: pointer; text-align: left; width: 100%; margin-top: 6px;
+    }
+    .tcard button:hover { border-color: var(--accent-dim); }
+    .vacant { color: var(--faint); font-size: 12px; font-style: italic; padding: 2px 0 4px; }
+    .note { font-size: 12px; color: var(--muted); }
+    .warn {
+      color: var(--gap); font-size: 12px; background: #f3ddd4; border-radius: 10px; padding: 10px 12px;
+    }
+    .subtabs { display: inline-flex; background: var(--bg-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; margin-bottom: 16px; }
+    .subtabs button { border-radius: 999px; padding: 6px 14px; }
+
+    /* Schedule & Cadence styles */
+    .kpi-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;
+      margin-bottom: 18px;
+    }
+    .kpi-card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px 14px; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
+    }
+    .kpi-card .kpi-num {
+      font-size: 22px; font-weight: 700; color: var(--sumi); font-variant-numeric: tabular-nums;
+      font-family: "Iowan Old Style", "Songti SC", Georgia, serif; line-height: 1.1; margin-bottom: 4px;
+    }
+    .kpi-card .kpi-lab {
+      font-size: 11px; color: var(--muted); letter-spacing: .04em;
+    }
+    .sched-banner {
+      background: var(--paper); border: 1px dashed var(--line); border-radius: 12px;
+      padding: 10px 14px; font-size: 12px; color: var(--muted); margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .sched-bucket {
+      margin-bottom: 22px;
+    }
+    .sched-bucket-title {
+      font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .08em;
+      text-transform: uppercase; margin: 0 0 10px 4px; display: flex; align-items: center; gap: 8px;
+    }
+    .sched-bucket-title .badge {
+      font-size: 10px; padding: 1px 7px; border-radius: 999px; background: var(--bg-3);
+      color: var(--faint); font-weight: 500;
+    }
+    .sched-card {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 14px;
+      padding: 12px 16px; background: var(--paper); border: 1px solid var(--line);
+      border-radius: 12px; margin-bottom: 8px; cursor: pointer; align-items: center;
+      box-shadow: 0 1px 0 rgba(255,255,255,.5) inset; transition: all .15s ease;
+    }
+    .sched-card:hover {
+      border-color: #b8a888; transform: translateY(-1px);
+    }
+    .sched-card.today {
+      border-left: 4px solid var(--accent);
+      background: linear-gradient(90deg, #fffcf6, var(--paper));
+    }
+    .sched-card.scheduled {
+      border-left: 4px solid #d48817;
+    }
+    .sched-card.shipped {
+      border-left: 4px solid var(--ok); opacity: .88;
+    }
+    .sched-date-badge {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-width: 58px; padding: 6px 8px; border-radius: 8px; background: var(--bg-2);
+      border: 1px solid var(--line); text-align: center;
+    }
+    .sched-date-badge .month-day {
+      font-size: 13px; font-weight: 700; color: var(--sumi); font-variant-numeric: tabular-nums;
+    }
+    .sched-date-badge .weekday {
+      font-size: 10px; color: var(--faint); letter-spacing: .05em;
+    }
+    .sched-status-tag {
+      font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; white-space: nowrap;
+    }
+    .sched-status-tag.tag-sched {
+      background: #fbf0dc; color: #9c6008; border: 1px solid #ebd5b0;
+    }
+    .sched-status-tag.tag-ready {
+      background: #e9f0f8; color: #23527c; border: 1px solid #c7dcee;
+    }
+    .sched-status-tag.tag-shipped {
+      background: #eaf3ec; color: #2e6939; border: 1px solid #c9e2cf;
+    }
+    .sched-status-tag.tag-draft {
+      background: var(--bg-3); color: var(--muted); border: 1px solid var(--line);
+    }
+
+    /* Cadence Matrix Styles */
+    .cadence-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;
+      margin-bottom: 20px;
+    }
+    .cadence-plat-card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+      padding: 16px; display: flex; flex-direction: column; gap: 10px; cursor: pointer;
+      box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
+    }
+    .cadence-plat-card:hover {
+      border-color: #b8a888; transform: translateY(-1px);
+    }
+    .cadence-plat-card.active-filter {
+      border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
+    }
+    .cadence-plat-head {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cadence-plat-name {
+      font-size: 14px; font-weight: 600; color: var(--sumi); display: flex; align-items: center; gap: 8px;
+    }
+    .cadence-stat-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; color: var(--muted);
+      background: var(--bg-2); padding: 8px 10px; border-radius: 8px;
+    }
+    .cadence-stat-val {
+      font-weight: 700; color: var(--sumi); font-size: 13px; font-variant-numeric: tabular-nums;
+    }
+    .cadence-group {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+      padding: 16px; margin-bottom: 14px;
+    }
+    .cadence-group-head {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+      padding-bottom: 8px; border-bottom: 1px solid var(--bg-3);
+    }
+    .cadence-group-title {
+      font-size: 14px; font-weight: 600; color: var(--sumi); display: flex; align-items: center; gap: 8px;
+    }
+    .cadence-ratio-bar {
+      display: flex; height: 6px; border-radius: 999px; overflow: hidden; background: var(--bg-3); margin-bottom: 12px;
+    }
+    .cadence-ratio-seg {
+      height: 100%; transition: width .3s ease;
+    }
+    .cadence-item-row {
+      display: grid; grid-template-columns: 90px auto 1fr auto; gap: 10px; align-items: center;
+      padding: 7px 8px; border-radius: 8px; font-size: 12px; color: var(--text);
+    }
+    .cadence-item-row:hover {
+      background: var(--bg-2);
+    }
+    .cadence-item-row .c-date {
+      font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums;
+    }
+    .cadence-item-row .c-link {
+      font-size: 11px; color: var(--accent); white-space: nowrap;
+    }
+    footer.hint { margin-top: 28px; color: var(--faint); font-size: 12px; }
+    .stages { margin: 8px 0 14px; }
+    .stages .stage-lab {
+      font-size: 11px; color: var(--faint); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .md-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+    .md-actions button {
+      font-size: 12px; padding: 8px 12px; border-radius: 999px;
+      border: 1px solid var(--accent-dim); background: var(--bg-2); color: var(--sumi); cursor: pointer;
+    }
+    .md-actions button:hover { background: var(--chip); }
+    .serve-banner {
+      display: none; position: sticky; top: 0; z-index: 40;
+      background: #f3ddd4; color: var(--gap); font-size: 13px;
+      padding: 10px 18px; border-bottom: 1px solid var(--line);
+    }
+    .serve-banner.on { display: block; }
+    .serve-banner code {
+      font-size: 12px; background: rgba(0,0,0,.06); padding: 2px 6px; border-radius: 4px;
+    }
+    .md-modal {
+      display: none; position: fixed; inset: 0; z-index: 50;
+      background: rgba(36, 30, 22, .52);
+      backdrop-filter: blur(6px);
+      padding: 4vh 3vw;
+      align-items: center; justify-content: center;
+    }
+    .md-modal.on { display: flex; }
+    .md-sheet {
+      width: min(960px, 100%);
+      height: min(820px, 88vh);
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255,252,245,.55), transparent 48px),
+        var(--paper);
+      border: 1px solid #cbb896;
+      border-radius: 18px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.55) inset,
+        0 28px 80px rgba(42, 32, 18, .28),
+        0 2px 0 rgba(90, 60, 20, .06);
+      display: flex; flex-direction: column; overflow: hidden;
+      position: relative;
+    }
+    .md-sheet::before {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      opacity: .08; mix-blend-mode: multiply; border-radius: inherit;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    }
+    .md-sheet > * { position: relative; z-index: 1; }
+    .md-sheet.run-mode { width: min(1120px, 100%); }
+    .md-head {
+      display: flex; align-items: center; gap: 14px; padding: 16px 20px 14px;
+      border-bottom: 1px solid rgba(180, 150, 100, .35);
+      background: linear-gradient(180deg, #f3ead6, #ebe1cb);
+      flex-shrink: 0;
+    }
+    .md-head .md-title {
+      flex: 1; min-width: 0; font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
+      font-size: 19px; margin: 0; letter-spacing: .01em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .md-head .md-sub {
+      font-size: 12px; color: var(--muted);
+      max-width: 42%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .md-head button {
+      border: 1px solid var(--line); background: var(--paper); border-radius: 999px;
+      padding: 7px 13px; cursor: pointer; font-size: 12px; color: var(--text);
+      box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
+    }
+    .md-head button:hover { border-color: var(--accent-dim); }
+    .md-layout {
+      display: grid; grid-template-columns: 1fr; flex: 1; min-height: 0;
+    }
+    .md-sheet.run-mode .md-layout {
+      grid-template-columns: 228px 1fr;
+    }
+    .md-rail {
+      display: none; overflow: auto; padding: 18px 14px 24px;
+      border-right: 1px solid rgba(180, 150, 100, .35);
+      background:
+        linear-gradient(90deg, #e8dcc3 0%, #efe4cf 72%, #f3ead8 100%);
+    }
+    .md-sheet.run-mode .md-rail { display: block; }
+    .md-rail .rail-lab {
+      font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--faint); padding: 0 6px 14px;
+    }
+    .md-rail .rail-flow {
+      list-style: none; margin: 0; padding: 0;
+    }
+    .md-rail .rail-flow > li { position: relative; }
+    .md-rail button.rail-step {
+      display: grid; grid-template-columns: 28px 1fr; gap: 4px 10px;
+      width: 100%; text-align: left; cursor: pointer;
+      border: 0; background: transparent; font: inherit; color: var(--muted);
+      padding: 0 6px 0 2px; border-radius: 12px; min-height: 52px;
+    }
+    .md-rail button.rail-step:hover .rail-card {
+      background: rgba(250, 246, 236, .72);
+      border-color: rgba(180, 150, 100, .45);
+    }
+    .md-rail button.rail-step.on .rail-card {
+      background: var(--paper);
+      border-color: rgba(156, 61, 50, .35);
+      box-shadow: 0 6px 16px rgba(70, 45, 20, .08);
+      color: var(--sumi);
+    }
+    .md-rail button.rail-step.miss { opacity: .42; cursor: default; }
+    .md-rail button.rail-step.miss:hover .rail-card { background: transparent; border-color: transparent; }
+    .md-rail .rail-spine {
+      display: flex; flex-direction: column; align-items: center;
+      padding-top: 14px;
+    }
+    .md-rail .rail-spine .dot {
+      width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+      background: #cfc0a2;
+      border: 2px solid #efe4cf;
+      box-shadow: 0 0 0 1px rgba(120, 95, 55, .25);
+      z-index: 1;
+    }
+    .md-rail button.rail-step.has .dot {
+      background: var(--ok);
+      box-shadow: 0 0 0 1px rgba(74, 103, 80, .35);
+    }
+    .md-rail button.rail-step.on .dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(156, 61, 50, .16);
+    }
+    .md-rail .rail-spine .wire {
+      width: 2px; flex: 1; min-height: 28px; margin-top: 4px;
+      background: linear-gradient(180deg, #c8b68f, #d9c9a8);
+      border-radius: 2px;
+    }
+    .md-rail .rail-flow > li:last-child .wire { display: none; }
+    .md-rail .rail-card {
+      margin: 4px 0 8px; padding: 10px 11px 9px;
+      border-radius: 11px; border: 1px solid transparent;
+      transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .md-rail .rail-card .idx {
+      display: inline-block; min-width: 1.6em;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 10px; color: var(--faint); letter-spacing: .04em;
+      margin-right: 6px;
+    }
+    .md-rail button.rail-step.on .idx { color: var(--accent); }
+    .md-rail .rail-card .sn {
+      font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
+      font-size: 14px; line-height: 1.25; color: inherit;
+    }
+    .md-rail .rail-card .sf {
+      display: block; margin-top: 3px;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 10px; color: var(--faint);
+    }
+    .md-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--paper); }
+    .md-toolbar {
+      display: flex; align-items: center; gap: 10px; padding: 11px 22px;
+      border-bottom: 1px solid rgba(180, 150, 100, .28); flex-shrink: 0;
+      background: rgba(244, 236, 220, .55);
+    }
+    .md-toolbar .md-path {
+      flex: 1; min-width: 0;
+      font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--faint);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .md-body {
+      overflow: auto; padding: 26px 30px 40px; flex: 1;
+      font-size: 15px; line-height: 1.7; color: var(--text);
+    }
+    .md-body .acct-kv {
+      display: grid; grid-template-columns: 110px 1fr; gap: 10px 14px;
+      margin: 0 0 18px; font-size: 14px;
+    }
+    .md-body .acct-kv dt { color: var(--faint); }
+    .md-body .acct-kv dd { margin: 0; }
+    .md-body .acct-note {
+      margin: 0 0 16px; padding: 12px 14px; border-radius: 12px;
+      background: var(--bg-2); border: 1px solid var(--line); color: var(--muted); font-size: 13px;
+    }
+    .md-body .acct-voice {
+      border: 1px solid var(--line); border-radius: 12px; background: var(--bg-2);
+    }
+    .md-body .acct-voice > summary {
+      cursor: pointer; list-style: none; padding: 12px 14px;
+      font-size: 13px; color: var(--sumi); display: flex; align-items: center; gap: 8px;
+    }
+    .md-body .acct-voice > summary::-webkit-details-marker { display: none; }
+    .md-body .acct-voice > summary::before {
+      content: "▸"; color: var(--accent); font-size: 12px;
+    }
+    .md-body .acct-voice[open] > summary::before { content: "▾"; }
+    .md-body .acct-voice > summary .sp {
+      margin-left: auto; font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px; color: var(--faint);
+    }
+    .md-body .acct-voice-body {
+      padding: 4px 18px 18px; border-top: 1px solid var(--line);
+      background: var(--paper); border-radius: 0 0 12px 12px;
+    }
+    .md-body h1, .md-body h2, .md-body h3 {
+      font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
+      line-height: 1.3; margin: 1.2em 0 .5em;
+    }
+    .md-body h1 { font-size: 1.55em; } .md-body h2 { font-size: 1.28em; } .md-body h3 { font-size: 1.1em; }
+    .md-body p, .md-body ul, .md-body ol { margin: 0 0 .85em; }
+    .md-body ul, .md-body ol { padding-left: 1.4em; }
+    .md-body code {
+      font-family: ui-monospace, Menlo, monospace; font-size: .88em;
+      background: var(--chip); padding: .1em .35em; border-radius: 4px;
+    }
+    .md-body pre {
+      background: var(--bg-3); border: 1px solid var(--line); border-radius: 10px;
+      padding: 12px 14px; overflow: auto; font-size: 13px; line-height: 1.45;
+    }
+    .md-body pre code { background: none; padding: 0; }
+    .md-body blockquote {
+      margin: 0 0 .85em; padding: 0 0 0 14px; border-left: 3px solid var(--accent-dim); color: var(--muted);
+    }
+    .md-body a { color: var(--accent); }
+    .md-body table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 0 0 1em; }
+    .md-body th, .md-body td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }
+    .md-body th { background: var(--bg-2); }
+    @media (max-width: 980px) {
+      header.app { grid-template-columns: 1fr 1fr; }
+      nav.tabs { grid-column: 1 / -1; }
+      .shell { grid-template-columns: 1fr; height: auto; }
+      .insp { border-left: 0; border-top: 1px solid var(--line); min-height: 40vh; }
+      #q { width: 100%; }
+      .md-sheet, .md-sheet.run-mode {
+        width: 100%;
+        height: min(860px, 92vh);
+      }
+      .md-sheet.run-mode .md-layout { grid-template-columns: 1fr; }
+      .md-sheet.run-mode .md-rail {
+        display: block; border-right: 0; border-bottom: 1px solid rgba(180, 150, 100, .35);
+        max-height: 34%; overflow: auto;
+      }
+      .md-rail .rail-spine .wire { min-height: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="serve-banner" id="serveBanner"></div>
+  <header class="app">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <h1>观察台<small>Content Engine</small></h1>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="search"><input id="q" type="search" placeholder="" /></div>
+    <div class="tools">
+      <select id="profileSel" aria-label="profile"></select>
+      <button type="button" id="langBtn">EN</button>
+      <span class="stamp" id="stamp"></span>
+    </div>
+  </header>
+  <div class="shell">
+    <section class="list" id="list"></section>
+    <aside class="insp" id="insp"><div class="empty"><strong>从左边拾起一件东西</strong>它从哪来、有没有被写过、发过没有、值不值得再拿出来——会在这里连成一条。</div></aside>
+  </div>
+  <div class="md-modal" id="mdModal" role="dialog" aria-modal="true" aria-labelledby="mdTitle">
+    <div class="md-sheet" id="mdSheet">
+      <div class="md-head">
+        <h2 class="md-title" id="mdTitle"></h2>
+        <span class="md-sub" id="mdSub"></span>
+        <button type="button" id="mdClose">✕</button>
+      </div>
+      <div class="md-layout">
+        <nav class="md-rail" id="mdRail" aria-label="stages"></nav>
+        <div class="md-main">
+          <div class="md-toolbar">
+            <span class="md-path" id="mdPath"></span>
+          </div>
+          <div class="md-body" id="mdBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const GRAPH = /*__GRAPH__*/null;
+    const TRACE_ORDER = ["raw", "capture", "hit", "need", "product", "recommendation", "topic", "swipe", "atom", "claim", "run", "published"];
+    const STR = {
+      zh: {
+        title: "Content Engine · 观察台",
+        brand: "观察台",
+        search: "搜索 ID、一句话、来源…",
+        overview: "总览", needs: "需求库", hits: "Hits", products: "产品库", recommendations: "推荐库", topics: "选题库", notes: "记录与知识", runs: "Run 档案", pub: "发布与复盘",
+        runs_sub_sched: "📅 发布排期",
+        runs_sub_cadence: "📊 平台发布频率",
+        runs_sub_all: "📋 全部 Run",
+        sched_kpi_sched: "已排期待发",
+        sched_kpi_ready: "待排期就绪池",
+        sched_kpi_next: "下一单发布",
+        sched_kpi_shipped: "累计已发布",
+        sched_banner_hint: "发布安排由你手动去各平台执行。发布后在对应 Run 标记 published 并填入链接。",
+        sched_b_today: "今天待发",
+        sched_b_tomorrow: "明天待发",
+        sched_b_this_week: "未来 7 天",
+        sched_b_later: "更晚排期",
+        sched_b_overdue: "超期待发布",
+        sched_b_ready_pool: "待排期选题池",
+        sched_b_recent_pub: "最近已发",
+        sched_empty: "暂无排期安排。可将 ready 状态的选题指定发布时间。",
+        cadence_m_plat: "各平台总览",
+        cadence_m_day: "按日记录",
+        cadence_m_week: "按周复盘",
+        cadence_m_month: "按月统计",
+        cadence_plat_total: "累计发布",
+        cadence_plat_month: "本月",
+        cadence_plat_week: "本周",
+        cadence_plat_sched: "已排期",
+        cadence_plat_last: "最近发布",
+        cadence_empty: "暂无发布记录",
+        status_scheduled: "已排期",
+        status_ready: "待排期",
+        status_published: "已发布",
+        notes_in: "记下的", notes_lib: "进库的",
+        lead: "先认 IP，再看库存。",
+        kpi_cap: "记下的", kpi_needs: "需求", kpi_hits: "Hits", kpi_lib: "进库的", kpi_topics: "选题", kpi_out: "下场",
+        kpi_cap_sub: "Capture", kpi_needs_sub: "Needs 原话", kpi_lib_sub: "Swipe / Atom / Claim",
+        kpi_topics_sub: "{n} 条 ready 未开单", kpi_out_sub: "Run / 已发帖",
+        kpi_hits_sub: "待分流 triage",
+        no_hit: "尚无 Hits",
+        no_keyword: "尚无 active 关键词",
+        hit_empty_hint: "对 Agent 说「扫关键词」写入 triage。路由后才会进 Needs 或 Library。",
+        gap_hits_n: "Hits 待分流 {n}",
+        f_signal: "信号",
+        f_hit_kind: "类型",
+        f_keyword: "关键词",
+        kw_search: "搜 K- / why…",
+        kw_triage: "待分流",
+        kw_hits: "命中",
+        kw_clear: "清除",
+        hits_sub_list: "命中",
+        hits_sub_catalog: "关键词",
+        kw_catalog_search: "搜全部关键词…",
+        kw_catalog_empty: "无匹配关键词",
+        kw_open_hits: "查看命中",
+        kw_track_all: "全部轨",
+        kw_track_listen: "listen 社交",
+        kw_track_search: "search SEO",
+        kw_track_ask: "ask GEO",
+        kw_vol: "量",
+
+        kw_catalog_count: "共 {n} 条",
+        doc_keywords: "Keywords",
+        doc_handles: "Handles",
+        ip_section: "IP · Profiles",
+        ip_all: "全部 Profile",
+        ip_accounts: "账号 {n}",
+        vault_title: "整库",
+        vault_kicker: "未选 Profile",
+        vault_lede: "点左边一张卡片，看该 IP 的支柱、账号与档案。数字只出现在这一侧。",
+        gap_section: "断链",
+        gap_none: "没有明显断链。",
+        gap_ready_n: "ready 选题未开单 {n}",
+        gap_needs_thin_n: "需求原话不足 3 条（出图硬门闩）· 现有 {n}",
+        gap_needs_n: "需求原话未选题 {n}",
+        gap_lib_n: "Capture 未入库 {n}",
+        gap_review_n: "已发但无法复盘 {n}",
+        kv_lane: "Lane",
+        kv_mode: "生成路径",
+        kv_needs: "需求",
+        kv_recs: "推荐对象",
+        kv_signal: "信号",
+        kv_hit_kind: "命中类型",
+        kv_hit_source: "来源配方",
+        kv_profile: "Profile",
+        kind_profile: "Profile", kind_account: "账号",
+        profile_pillars: "支柱",
+        profile_accounts: "账号",
+        profile_docs: "档案文件",
+        profile_stats: "资产概览",
+        profile_voice_path: "Voice 路径",
+        doc_readme: "README",
+        doc_voice: "Voice",
+        doc_audience: "Audience",
+        doc_pillars: "Pillars",
+        doc_lanes: "Lanes",
+        empty_profile_t: "点选一个 Profile",
+        empty_profile_b: "右侧会显示该 IP 的支柱、账号、档案与断链。",
+        acct_handle: "Handle",
+        acct_voice: "Voice",
+        acct_platforms: "平台",
+        acct_default_plat: "默认平台",
+        acct_overrides: "Overrides",
+        acct_status: "状态",
+        acct_note: "Account 是挂在 Profile 上的发布身份；支柱 / audience / voice 在 Profile 档案里。",
+        acct_voice_md: "Voice Markdown",
+        gap_ready: "缺口：ready 选题未开单",
+        gap_lib: "缺口：Capture 未入库",
+        gap_review: "缺口：已发但无法复盘（result ≠ win/flat/loss）",
+        gap_unshipped: "无发布行",
+        gap_unshipped_box: "有 Run、没有发布行",
+        gap_superseded: "未发过 · 已取代",
+        gap_killed: "未发过 · 已放弃",
+        hint: "外链 src_likes 等是来源帖热度，不计入你的成绩。无趋势图：指标样本不够。",
+        none: "无", unused: "未开单", no_lib: "未入库", thin: "数据不足", no_ev: "无本库证据",
+        lib_use_hist: "使用史在 published/_index（swipe / atoms 列）。零件文件不建 Evidence 表。",
+        lib_claim_ev: "命题证据在本 claim 的 Evidence 表；命中率看 n/win/loss。",
+        f_status: "状态（登记）", f_pillar: "Pillar", f_src: "来源", f_use: "使用", f_unused: "未开单", f_promoted: "已开单",
+        f_sort: "排序",
+        f_sort_recommend: "报题优先",
+        f_sort_bookmarks: "Bookmarks ↓",
+        f_sort_replies: "Replies ↓",
+        f_sort_likes: "Likes ↓",
+        f_sort_views: "Views ↓",
+        f_sort_date: "日期 ↓",
+        f_sort_relevance: "Relevance ↓",
+        f_lib_kind: "种类", f_lib_subtype: "子类", f_lib_status: "状态",
+        kv_hits: "命中",
+        kv_refs: "开单引用",
+        kv_heat_at: "热度快照",
+        lib_refs: "{n} 次引用",
+        lib_n: "n {v}",
+        lib_win: "win {v}",
+        lib_loss: "loss {v}",
+        f_all: "全部",
+        f_run_ship: "发布", f_run_shipped: "已发布", f_run_unshipped: "未发布", f_run_plat: "平台",
+        f_run_topic: "选题", f_run_no_topic: "未绑选题",
+        f_run_topic_n: "{id} · {n}",
+        no_run: "无匹配 Run",
+        f_cap_ingest: "入库",
+        f_cap_ingested: "已入库",
+        f_cap_not_ingested: "未入库",
+        no_topic: "无匹配选题", no_note: "无匹配记录", no_need: "尚无需求原话", no_pub: "尚无已发帖",
+        need_empty_hint: "对 Agent 说「记需求：……」写入第一条读者原话。不要编造。",
+        no_stage: "无阶段文件",
+        empty_t: "从左边拾起一件东西",
+        empty_b: "它从哪来、有没有被写过、发过没有、值不值得再拿出来——会在这里连成一条。",
+        obj: "对象", trace: "追溯", vacant: "未绑定",
+        read_md: "阅读 Markdown",
+        open_run: "打开阶段阅读",
+        open_stage: "打开",
+        stages_h: "阶段流程",
+        stages_hint: "点标题或下方按钮，打开阶段阅读。",
+        md_loading: "加载中…",
+        md_missing: "文件不存在或无法读取。",
+        md_need_serve: "需要本地 HTTP。在 Content Engine 根目录运行：",
+        serve_cmd: "python3 workbench/serve.py",
+        serve_banner: "请用本地服务打开观察台（file:// 无法读取 Markdown）。运行：",
+        readonly: "只读 · 由 indexes 生成 · 正文经 HTTP 即时读取，不改写库",
+        no_stage: "无文件",
+        src_url: "来源 URL：", src_heat: "来源帖热度，不是你的帖",
+        heat_hint: "来源帖热度 · 非我方成绩",
+        raw_section: "关联 Raw",
+        raw_link: "原始帖子",
+        raw_file: "Raw 文件",
+        raw_none: "未绑定 Raw / 无原始链接",
+        thin_warn: "数据不足：result 不是 win / flat / loss，不画趋势。",
+        topic_bind: "选题绑定：{t} · swipe {s} · claim {c}",
+        supersedes: "取代 {id}", superseded_by: "被取代 {id}",
+        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "需求", kind_product: "产品", kind_recommendation: "推荐对象", kind_topic: "选题", kind_swipe: "Swipe",
+        kind_atom: "Atom", kind_claim: "Claim", kind_run: "Run", kind_published: "发布",
+        kv_kind: "类型", kv_date: "日期", kv_status: "状态", kv_plat: "平台", kv_score: "分数", kv_relevance: "关联度", kv_ownership: "归属度", kv_product_relevance: "产品关联",
+        kv_use: "使用", kv_src: "来源", kv_result: "结果", kv_pillar: "支柱",
+        pub_lead: "这一页只列已经写进 published/_index 的 URL。Run 状态 ≠ 已发帖。",
+        pub_lede: "按 Profile 作用域过滤；没有 URL 的 Run 不会出现在这里。",
+        raw_yes: "有", raw_no: "无",
+      },
+      en: {
+        title: "Content Engine · Observatory",
+        brand: "Observatory",
+        search: "Search ID, one-liner, source…",
+        overview: "Overview", needs: "Needs", hits: "Hits", products: "Products", recommendations: "Recommendations", topics: "Topics", notes: "Notes & library", runs: "Run files", pub: "Shipped & review",
+        runs_sub_sched: "📅 Schedule",
+        runs_sub_cadence: "📊 Platform Cadence",
+        runs_sub_all: "📋 All Runs",
+        sched_kpi_sched: "Scheduled",
+        sched_kpi_ready: "Ready Queue",
+        sched_kpi_next: "Next Upcoming",
+        sched_kpi_shipped: "Total Shipped",
+        sched_banner_hint: "You publish manually to each platform. After posting, mark as published and add URL.",
+        sched_b_today: "Today",
+        sched_b_tomorrow: "Tomorrow",
+        sched_b_this_week: "Next 7 Days",
+        sched_b_later: "Later",
+        sched_b_overdue: "Overdue",
+        sched_b_ready_pool: "Ready to Schedule",
+        sched_b_recent_pub: "Recently Shipped",
+        sched_empty: "No scheduled runs. You can assign a date to any ready run.",
+        cadence_m_plat: "Platforms",
+        cadence_m_day: "Daily",
+        cadence_m_week: "Weekly",
+        cadence_m_month: "Monthly",
+        cadence_plat_total: "Total Shipped",
+        cadence_plat_month: "This Month",
+        cadence_plat_week: "This Week",
+        cadence_plat_sched: "Scheduled",
+        cadence_plat_last: "Last Shipped",
+        cadence_empty: "No published records yet",
+        status_scheduled: "Scheduled",
+        status_ready: "Ready",
+        status_published: "Published",
+        notes_in: "Captured", notes_lib: "Catalog",
+        lead: "Pick an IP, then inspect the stock.",
+        kpi_cap: "Captured", kpi_needs: "Needs", kpi_hits: "Hits", kpi_lib: "Catalog", kpi_topics: "Topics", kpi_out: "Outcomes",
+        kpi_cap_sub: "Capture", kpi_needs_sub: "Audience quotes", kpi_lib_sub: "Swipe / Atom / Claim",
+        kpi_topics_sub: "{n} ready, never opened as a run", kpi_out_sub: "Runs / shipped URLs",
+        kpi_hits_sub: "awaiting triage",
+        no_hit: "No hits yet",
+        no_keyword: "No active keywords",
+        hit_empty_hint: "Ask the Agent to scan keywords. Hits stay in triage until you route them.",
+        gap_hits_n: "{n} hits awaiting triage",
+        f_signal: "Signal",
+        f_hit_kind: "Kind",
+        f_keyword: "Keyword",
+        kw_search: "Search K- / why…",
+        kw_triage: "triage",
+        kw_hits: "hits",
+        kw_clear: "Clear",
+        hits_sub_list: "Hits",
+        hits_sub_catalog: "Keywords",
+        kw_catalog_search: "Search all keywords…",
+        kw_catalog_empty: "No matching keywords",
+        kw_open_hits: "View hits",
+        kw_track_all: "All tracks",
+        kw_track_listen: "listen",
+        kw_track_search: "search SEO",
+        kw_track_ask: "ask GEO",
+        kw_vol: "vol",
+
+        kw_catalog_count: "{n} total",
+        doc_keywords: "Keywords",
+        doc_handles: "Handles",
+        ip_section: "IP · Profiles",
+        ip_all: "All profiles",
+        ip_accounts: "{n} account(s)",
+        vault_title: "Whole vault",
+        vault_kicker: "No Profile selected",
+        vault_lede: "Click a card on the left for that IP’s pillars, accounts, and files. Numbers live only on this side.",
+        gap_section: "Breaks",
+        gap_none: "No obvious breaks.",
+        gap_ready_n: "{n} ready topics with no run",
+        gap_needs_thin_n: "Needs under 3 quotes (graphics hard gate) · have {n}",
+        gap_needs_n: "{n} needs not yet in a topic",
+        gap_lib_n: "{n} captures not ingested",
+        gap_review_n: "{n} shipped posts not reviewable",
+        kv_lane: "Lane",
+        kv_mode: "Generation mode",
+        kv_needs: "Needs",
+        kv_recs: "Recommendations",
+        kv_signal: "Signal",
+        kv_hit_kind: "Hit kind",
+        kv_hit_source: "Source recipe",
+        kv_profile: "Profile",
+        kind_profile: "Profile", kind_account: "Account",
+        profile_pillars: "Pillars",
+        profile_accounts: "Accounts",
+        profile_docs: "Profile files",
+        profile_stats: "Asset snapshot",
+        profile_voice_path: "Voice path",
+        doc_readme: "README",
+        doc_voice: "Voice",
+        doc_audience: "Audience",
+        doc_pillars: "Pillars",
+        doc_lanes: "Lanes",
+        empty_profile_t: "Pick a Profile",
+        empty_profile_b: "The inspector shows that IP’s pillars, accounts, files, and breaks.",
+        acct_handle: "Handle",
+        acct_voice: "Voice",
+        acct_platforms: "Platforms",
+        acct_default_plat: "Default platform",
+        acct_overrides: "Overrides",
+        acct_status: "Status",
+        acct_note: "An Account is a publish identity on a Profile; pillars / audience / voice live in the Profile files.",
+        acct_voice_md: "Voice Markdown",
+        gap_ready: "Gap: ready topics with no run",
+        gap_lib: "Gap: Capture not ingested",
+        gap_review: "Gap: shipped but not reviewable (result ≠ win/flat/loss)",
+        gap_unshipped: "no ship row",
+        gap_unshipped_box: "Runs with no published row",
+        gap_superseded: "never shipped · superseded",
+        gap_killed: "never shipped · killed",
+        hint: "src_likes etc. are source-post heat, not your results. No trend charts: the sample is too thin.",
+        none: "None", unused: "unused", no_lib: "not ingested", thin: "too thin", no_ev: "no in-vault evidence",
+        lib_use_hist: "Use history is published/_index (swipe / atoms columns). No Evidence table in part files.",
+        lib_claim_ev: "Proposition evidence is this claim’s Evidence table; hit rate is n/win/loss.",
+        f_status: "Registry status", f_pillar: "Pillar", f_src: "Source", f_use: "Use", f_unused: "unused", f_promoted: "promoted",
+        f_sort: "Sort",
+        f_sort_recommend: "Report first",
+        f_sort_bookmarks: "Bookmarks ↓",
+        f_sort_replies: "Replies ↓",
+        f_sort_likes: "Likes ↓",
+        f_sort_views: "Views ↓",
+        f_sort_date: "Date ↓",
+        f_sort_relevance: "Relevance ↓",
+        f_lib_kind: "Kind", f_lib_subtype: "Subtype", f_lib_status: "Status",
+        kv_hits: "Hits",
+        kv_refs: "Run uses",
+        kv_heat_at: "Heat snapshot",
+        lib_refs: "{n} cited",
+        lib_n: "n {v}",
+        lib_win: "win {v}",
+        lib_loss: "loss {v}",
+        f_all: "All",
+        f_run_ship: "Shipped", f_run_shipped: "Shipped", f_run_unshipped: "Unshipped", f_run_plat: "Platform",
+        f_run_topic: "Topic", f_run_no_topic: "No topic",
+        f_run_topic_n: "{id} · {n}",
+        no_run: "No matching runs",
+        f_cap_ingest: "Ingest",
+        f_cap_ingested: "Ingested",
+        f_cap_not_ingested: "Not ingested",
+        no_topic: "No matching topics", no_note: "No matching notes", no_need: "No audience quotes yet", no_pub: "No shipped posts",
+        need_empty_hint: "Ask the Agent: “capture audience quotes: …” with a verbatim quote. Do not invent quotes.",
+        no_stage: "no stage files",
+        empty_t: "Pick something on the left",
+        empty_b: "Where it came from, whether it was written, whether it shipped, whether it is worth reusing — that chain shows up here.",
+        obj: "Object", trace: "Trace", vacant: "unbound",
+        read_md: "Read Markdown",
+        open_run: "Open stages",
+        open_stage: "Open",
+        stages_h: "Stages",
+        stages_hint: "Click the title or the button below to open the stage reader.",
+        md_loading: "Loading…",
+        md_missing: "File missing or unreadable.",
+        md_need_serve: "Needs local HTTP. From the Content Engine root run:",
+        serve_cmd: "python3 workbench/serve.py",
+        serve_banner: "Open the observatory via local serve (file:// cannot fetch Markdown). Run:",
+        readonly: "Read-only · indexes for structure · live Markdown over HTTP",
+        no_stage: "missing",
+        src_url: "Source URL: ", src_heat: "Source-post heat, not your post",
+        heat_hint: "Source-post heat · not our score",
+        raw_section: "Linked Raw",
+        raw_link: "Original post",
+        raw_file: "Raw file",
+        raw_none: "No Raw / no source URL",
+        thin_warn: "Too thin to review: result is not win / flat / loss. No chart.",
+        topic_bind: "Topic: {t} · swipe {s} · claim {c}",
+        supersedes: "supersedes {id}", superseded_by: "superseded by {id}",
+        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "Need", kind_product: "Product", kind_recommendation: "Recommendation", kind_topic: "Topic", kind_swipe: "Swipe",
+        kind_atom: "Atom", kind_claim: "Claim", kind_run: "Run", kind_published: "Shipped",
+        kv_kind: "Kind", kv_date: "Date", kv_status: "Status", kv_plat: "Platform", kv_score: "Score", kv_relevance: "Relevance", kv_ownership: "Ownership", kv_product_relevance: "Product relevance",
+        kv_use: "Use", kv_src: "Source", kv_result: "Result", kv_pillar: "Pillar",
+        pub_lead: "This view lists URLs written in published/_index. Run status is not the same as shipped.",
+        pub_lede: "Filtered by Profile scope; runs without a URL do not appear here.",
+        raw_yes: "yes", raw_no: "no",
+      },
+    };
+
+    let lang = localStorage.getItem("wb-lang") || "zh";
+    let profileScope = localStorage.getItem("wb-profile") || "";
+    function t(k, vars) {
+      let s = (STR[lang] && STR[lang][k]) || STR.zh[k] || k;
+      if (vars) Object.entries(vars).forEach(([a, b]) => { s = s.replaceAll("{" + a + "}", b); });
+      return s;
+    }
+    function kindName(k) { return t("kind_" + k); }
+    function profileList() { return GRAPH.profiles || []; }
+    function activePillars() {
+      const by = GRAPH.pillars_by_profile || {};
+      if (profileScope && by[profileScope]) return by[profileScope];
+      const merged = {};
+      Object.values(by).forEach(p => Object.assign(merged, p));
+      return Object.keys(merged).length ? merged : (GRAPH.pillars || {});
+    }
+    function pillarName(id) {
+      const p = activePillars()[id] || (GRAPH.pillars || {})[id];
+      if (!p) return id;
+      return lang === "zh" ? p.zh : p.en;
+    }
+    function formatPillar(cell) {
+      if (!cell) return "";
+      const ids = [...new Set(String(cell).match(/P\d+/g) || [])];
+      if (!ids.length) return cell;
+      const sep = lang === "zh" ? "：" : ": ";
+      return ids.map(id => `${id}${sep}${pillarName(id)}`).join(" · ");
+    }
+    function pillarIds() {
+      return Object.keys(activePillars());
+    }
+    function nodeProfiles(n) {
+      if (!n) return [];
+      if (n.kind === "profile") return [n.ident];
+      if (n.kind === "account") return n.profile_id ? [n.profile_id] : [];
+      if (n.profile) return [n.profile];
+      if (n.profiles) {
+        return String(n.profiles).split(",").map(s => s.trim()).filter(s => s && s !== "*");
+      }
+      if (n.kind === "published" && n.run_id) {
+        const run = GRAPH.nodes.find(x => x.kind === "run" && x.ident === n.run_id);
+        return run && run.profile ? [run.profile] : [];
+      }
+      if (n.kind === "raw" && n.capture_id) {
+        const c = GRAPH.nodes.find(x => x.kind === "capture" && x.ident === n.capture_id);
+        return c && c.profile ? [c.profile] : [];
+      }
+      return [];
+    }
+    function inScope(n) {
+      if (!profileScope) return true;
+      if (n.kind === "profile") return n.ident === profileScope;
+      if (n.kind === "account") return n.profile_id === profileScope;
+      if (n.lib && n.profiles) {
+        const parts = String(n.profiles).split(",").map(s => s.trim());
+        if (parts.includes("*") || parts.includes(profileScope)) return true;
+        return false;
+      }
+      const ps = nodeProfiles(n);
+      if (!ps.length) return true;
+      return ps.includes(profileScope);
+    }
+    function scoped(kind) { return GRAPH.nodes.filter(n => n.kind === kind && inScope(n)); }
+
+    const byId = Object.fromEntries(GRAPH.nodes.map(n => [n.id, n]));
+    const adj = new Map();
+    for (const e of GRAPH.edges) {
+      if (!adj.has(e.from)) adj.set(e.from, []);
+      if (!adj.has(e.to)) adj.set(e.to, []);
+      adj.get(e.from).push(e.to);
+      adj.get(e.to).push(e.from);
+    }
+
+    let view = "overview";
+    let notesTab = "notes";
+    let libKind = "";
+    let libSubtype = "";
+    let libStatus = "";
+    let runShip = "";
+    let runPlat = "";
+    let runTopic = "";
+    let runTab = "schedule";
+    let cadenceMode = "platforms";
+    let cadencePlatFilter = "";
+    let pubTopic = "";
+    let pubPlat = "";
+    let topicStatus = "";
+    let topicPillar = "";
+    let topicSrc = "";
+    let topicUsage = "";
+    let capIngest = "";
+    let hitKw = "";
+    let hitKwQ = "";
+    let hitSt = "";
+    let hitSig = "";
+    let hitsSub = "list"; // list = 命中 · catalog = 关键词
+    let kwCatalogQ = "";
+    let kwCatalogTrack = ""; // "" | listen | search | ask
+
+    const KW_TRACKS = ["listen", "search", "ask"];
+    const TOPIC_SOURCES = ["need", "inbox", "user", "product", "recommendation"];
+    let selected = null;
+    const $list = document.getElementById("list");
+    const $insp = document.getElementById("insp");
+    const $q = document.getElementById("q");
+    const tabs = document.getElementById("tabs");
+    const $modal = document.getElementById("mdModal");
+    const $sheet = document.getElementById("mdSheet");
+    const $mdTitle = document.getElementById("mdTitle");
+    const $mdSub = document.getElementById("mdSub");
+    const $mdPath = document.getElementById("mdPath");
+    const $mdBody = document.getElementById("mdBody");
+    const $mdRail = document.getElementById("mdRail");
+    const STAGE_ORDER = ["idea", "brief", "packet", "draft", "editor", "rubric", "pack", "feedback"];
+    let runModal = null; // { id, stage }
+    let mdFetchToken = 0;
+    document.getElementById("stamp").textContent = GRAPH.generated_at;
+
+    function vaultFetchUrl(rel) {
+      return "../" + String(rel || "").replace(/^\/+/, "");
+    }
+
+    function isHttpServe() {
+      return location.protocol === "http:" || location.protocol === "https:";
+    }
+
+    function refreshServeBanner() {
+      const el = document.getElementById("serveBanner");
+      if (!isHttpServe()) {
+        el.classList.add("on");
+        el.innerHTML = `${t("serve_banner")} <code>${esc(t("serve_cmd"))}</code>`;
+      } else {
+        el.classList.remove("on");
+        el.textContent = "";
+      }
+    }
+
+    function closeMd() {
+      $modal.classList.remove("on");
+      $sheet.classList.remove("run-mode");
+      $mdBody.innerHTML = "";
+      $mdRail.innerHTML = "";
+      $mdPath.textContent = "";
+      $mdSub.textContent = "";
+      runModal = null;
+      mdFetchToken += 1;
+    }
+
+    async function loadMdIntoBody(rel) {
+      const token = ++mdFetchToken;
+      $mdPath.textContent = rel || "";
+      $mdBody.innerHTML = `<p class="note">${esc(t("md_loading"))}</p>`;
+      if (!rel) {
+        $mdBody.innerHTML = `<p class="md-err">${esc(t("md_missing"))}</p>`;
+        return;
+      }
+      if (!isHttpServe()) {
+        $mdBody.innerHTML = `<p class="md-err">${esc(t("md_need_serve"))}</p><p><code>${esc(t("serve_cmd"))}</code></p>`;
+        return;
+      }
+      try {
+        const res = await fetch(vaultFetchUrl(rel));
+        if (!res.ok) throw new Error(String(res.status));
+        const text = await res.text();
+        if (token !== mdFetchToken) return;
+        $mdBody.innerHTML = renderMarkdown(text);
+      } catch {
+        if (token !== mdFetchToken) return;
+        $mdBody.innerHTML = `<p class="md-err">${esc(t("md_missing"))}</p><p class="note">${esc(rel)}</p>`;
+      }
+    }
+
+    function paintRunRail(n, active) {
+      const files = n.stage_files || {};
+      const steps = STAGE_ORDER.map((k, i) => {
+        const p = files[k];
+        const cls = ["rail-step", p ? "has" : "miss", k === active ? "on" : ""].filter(Boolean).join(" ");
+        const idx = String(i + 1).padStart(2, "0");
+        const fileHint = p ? p.split("/").pop() : t("no_stage");
+        return `<li><button type="button" class="${cls}" data-stage="${esc(k)}" ${p ? "" : "disabled"}>
+          <span class="rail-spine" aria-hidden="true"><span class="dot"></span><span class="wire"></span></span>
+          <span class="rail-card">
+            <span class="sn"><span class="idx">${idx}</span>${esc(k)}</span>
+            <span class="sf">${esc(fileHint)}</span>
+          </span>
+        </button></li>`;
+      }).join("");
+      $mdRail.innerHTML = `<div class="rail-lab">${t("stages_h")}</div><ol class="rail-flow">${steps}</ol>`;
+      $mdRail.querySelectorAll("button[data-stage]:not([disabled])").forEach(btn => {
+        btn.onclick = () => openRun(n, btn.getAttribute("data-stage"));
+      });
+    }
+
+    function defaultStage(n) {
+      const files = n.stage_files || {};
+      return STAGE_ORDER.find(k => files[k]) || STAGE_ORDER[0];
+    }
+
+    function openRun(n, stage) {
+      if (!n || n.kind !== "run") return;
+      const files = n.stage_files || {};
+      const st = stage && files[stage] ? stage : defaultStage(n);
+      runModal = { id: n.id, stage: st };
+      $sheet.classList.add("run-mode");
+      $mdTitle.textContent = n.ident;
+      $mdSub.textContent = n.label || "";
+      paintRunRail(n, st);
+      $modal.classList.add("on");
+      loadMdIntoBody(files[st] || "");
+    }
+
+    async function openMd(rel, title) {
+      if (!rel) return;
+      runModal = null;
+      $sheet.classList.remove("run-mode");
+      $mdRail.innerHTML = "";
+      $mdTitle.textContent = title || rel.split("/").pop();
+      $mdSub.textContent = "";
+      $modal.classList.add("on");
+      await loadMdIntoBody(rel);
+    }
+
+    function accountVoicePath(n) {
+      const v = String(n.voice || "").trim();
+      if (!v || v === "profile") {
+        return n.profile_id ? `profiles/${n.profile_id}/voice.md` : "";
+      }
+      return v;
+    }
+
+    function openAccount(n) {
+      if (!n || n.kind !== "account") return;
+      runModal = null;
+      $sheet.classList.remove("run-mode");
+      $mdRail.innerHTML = "";
+      $mdTitle.textContent = n.ident;
+      $mdSub.textContent = t("kind_account");
+      $mdPath.textContent = "";
+      const voicePath = accountVoicePath(n);
+      const rows = [
+        [t("acct_handle"), n.ident],
+        [t("kv_profile"), n.profile_id],
+        [t("acct_status"), n.status],
+        [t("acct_platforms"), n.platforms],
+        [t("acct_default_plat"), n.default_platform],
+        [t("acct_voice"), voicePath || n.voice || t("none")],
+        [t("acct_overrides"), n.overrides || t("none")],
+      ].filter(([, v]) => v);
+      const voiceFold = voicePath
+        ? `<details class="acct-voice" id="acctVoice">
+            <summary>${esc(t("acct_voice_md"))}<span class="sp">${esc(voicePath.split("/").pop())}</span></summary>
+            <div class="acct-voice-body" id="acctVoiceBody"><p class="note">${esc(t("md_loading"))}</p></div>
+          </details>`
+        : "";
+      $mdBody.innerHTML = `<dl class="acct-kv">${rows.map(([k, v]) =>
+        `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`
+      ).join("")}</dl>
+        <p class="acct-note">${esc(t("acct_note"))}</p>
+        ${voiceFold}`;
+      $modal.classList.add("on");
+      const fold = $mdBody.querySelector("#acctVoice");
+      const body = $mdBody.querySelector("#acctVoiceBody");
+      if (fold && body) {
+        fold.addEventListener("toggle", async () => {
+          if (!fold.open || body.dataset.loaded === "1") return;
+          if (!isHttpServe()) {
+            body.innerHTML = `<p class="md-err">${esc(t("md_need_serve"))}</p>`;
+            return;
+          }
+          try {
+            const res = await fetch(vaultFetchUrl(voicePath));
+            if (!res.ok) throw new Error(String(res.status));
+            body.innerHTML = renderMarkdown(await res.text());
+            body.dataset.loaded = "1";
+          } catch {
+            body.innerHTML = `<p class="md-err">${esc(t("md_missing"))}</p><p class="note">${esc(voicePath)}</p>`;
+          }
+        });
+      }
+    }
+
+    function inlineMd(text) {
+      return esc(text)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+    }
+
+    function renderMarkdown(src) {
+      const lines = String(src || "").replace(/\r\n/g, "\n").split("\n");
+      const out = [];
+      let i = 0;
+      let para = [];
+      let listType = null;
+      const flushPara = () => {
+        if (!para.length) return;
+        out.push("<p>" + inlineMd(para.join(" ")) + "</p>");
+        para = [];
+      };
+      const flushList = () => {
+        if (!listType) return;
+        out.push(listType === "ul" ? "</ul>" : "</ol>");
+        listType = null;
+      };
+      while (i < lines.length) {
+        const line = lines[i];
+        if (line.startsWith("```")) {
+          flushPara(); flushList();
+          const buf = [];
+          i += 1;
+          while (i < lines.length && !lines[i].startsWith("```")) {
+            buf.push(lines[i]);
+            i += 1;
+          }
+          out.push("<pre><code>" + esc(buf.join("\n")) + "</code></pre>");
+          i += 1;
+          continue;
+        }
+        if (/^\|.+\|$/.test(line) && i + 1 < lines.length && /^\|[\s:\-|]+\|$/.test(lines[i + 1])) {
+          flushPara(); flushList();
+          const rows = [];
+          while (i < lines.length && /^\|.+\|$/.test(lines[i])) {
+            if (!/^\|[\s:\-|]+\|$/.test(lines[i])) rows.push(lines[i]);
+            i += 1;
+          }
+          const cells = (row) => row.replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+          const head = cells(rows[0] || "");
+          const body = rows.slice(1);
+          out.push("<table><thead><tr>" + head.map(c => "<th>" + inlineMd(c) + "</th>").join("") + "</tr></thead>");
+          out.push("<tbody>" + body.map(r => "<tr>" + cells(r).map(c => "<td>" + inlineMd(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table>");
+          continue;
+        }
+        if (!line.trim()) {
+          flushPara(); flushList();
+          i += 1;
+          continue;
+        }
+        const hm = /^(#{1,3})\s+(.+)$/.exec(line);
+        if (hm) {
+          flushPara(); flushList();
+          const lvl = hm[1].length;
+          out.push(`<h${lvl}>` + inlineMd(hm[2]) + `</h${lvl}>`);
+          i += 1;
+          continue;
+        }
+        if (/^>\s?/.test(line)) {
+          flushPara(); flushList();
+          out.push("<blockquote><p>" + inlineMd(line.replace(/^>\s?/, "")) + "</p></blockquote>");
+          i += 1;
+          continue;
+        }
+        const ul = /^[-*]\s+(.+)$/.exec(line);
+        const ol = /^\d+\.\s+(.+)$/.exec(line);
+        if (ul || ol) {
+          flushPara();
+          const kind = ul ? "ul" : "ol";
+          if (listType !== kind) {
+            flushList();
+            listType = kind;
+            out.push(kind === "ul" ? "<ul>" : "<ol>");
+          }
+          out.push("<li>" + inlineMd((ul || ol)[1]) + "</li>");
+          i += 1;
+          continue;
+        }
+        flushList();
+        para.push(line);
+        i += 1;
+      }
+      flushPara();
+      flushList();
+      return out.join("\n") || "<p></p>";
+    }
+
+    function mdFileForNode(n) {
+      if (!n) return "";
+      if (n.kind === "run") return "";
+      if (n.open_file) return n.open_file;
+      if (n.path && String(n.path).endsWith(".md")) return n.path;
+      return "";
+    }
+
+    function runMetaHtml(n) {
+      const files = n.stage_files || {};
+      const have = STAGE_ORDER.filter(k => files[k]).join(" · ") || t("no_stage");
+      const sel = n.selection || {};
+      let schedHtml = "";
+      if (n.is_published) {
+        schedHtml = `<p class="note" style="color:#2e6939; font-weight:600;">✅ 已发布于：${esc(n.published_date || n.date)} ${n.published_url ? `· <a href="${esc(n.published_url)}" target="_blank" rel="noreferrer">查看帖子 ↗</a>` : ""}</p>`;
+      } else if (n.is_scheduled) {
+        schedHtml = `<p class="note" style="color:#9c6008; font-weight:600;">🕒 计划发布时间：${esc(n.scheduled_date || n.date)}（待手动发布）</p>`;
+      } else {
+        schedHtml = `<p class="note">⚪ 当前状态：${esc(n.status)}（尚未设定具体排期）</p>`;
+      }
+      return `${schedHtml}
+        <p class="note">${t("stages_h")}：${esc(have)}</p>
+        <p class="note">${t("topic_bind", { t: n.topic_id || t("none"), s: sel.swipe, c: sel.claim })}</p>
+        ${n.supersedes ? `<p class="note">${t("supersedes", { id: n.supersedes })}</p>` : ""}
+        ${n.superseded_by ? `<p class="note">${t("superseded_by", { id: n.superseded_by })}</p>` : ""}`;
+    }
+
+    function mdActionsHtml(n) {
+      if (n.kind === "run") {
+        return `<div class="md-actions"><button type="button" data-run-open="${esc(n.id)}">${t("open_run")}</button></div>
+          <p class="note">${t("stages_hint")}</p>`;
+      }
+      const path = mdFileForNode(n);
+      if (!path) return "";
+      return `<div class="md-actions"><button type="button" data-md="${esc(path)}" data-md-title="${esc(n.ident)}">${t("read_md")}</button></div>`;
+    }
+
+    document.addEventListener("click", (e) => {
+      const runBtn = e.target.closest("[data-run-open]");
+      if (runBtn && !runBtn.closest("#mdModal")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const node = byId[runBtn.getAttribute("data-run-open")];
+        if (node) openRun(node);
+        return;
+      }
+      const acctBtn = e.target.closest("[data-account-open]");
+      if (acctBtn && !acctBtn.closest("#mdModal")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const node = byId[acctBtn.getAttribute("data-account-open")];
+        if (node) openAccount(node);
+        return;
+      }
+      const el = e.target.closest("[data-md]");
+      if (!el || el.closest("#mdModal")) return;
+      const rel = el.getAttribute("data-md");
+      if (!rel) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openMd(rel, el.getAttribute("data-md-title") || "");
+    });
+
+    document.getElementById("mdClose").onclick = closeMd;
+    $modal.addEventListener("click", (e) => { if (e.target === $modal) closeMd(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMd(); });
+
+    function applyChrome() {
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      document.title = t("title");
+      document.querySelector("header h1").innerHTML = `${t("brand")}<small>Content Engine</small>`;
+      $q.placeholder = t("search");
+      document.getElementById("langBtn").textContent = lang === "zh" ? "EN" : "中文";
+      refreshServeBanner();
+      const sel = document.getElementById("profileSel");
+      const ids = profileList().map(p => p.id);
+      if (profileScope && !ids.includes(profileScope)) profileScope = "";
+      sel.innerHTML = `<option value="">${t("ip_all")}</option>` +
+        ids.map(id => `<option value="${id}" ${id === profileScope ? "selected" : ""}>${id}</option>`).join("");
+      tabs.innerHTML = "";
+      for (const id of ["overview", "hits", "needs", "products", "recommendations", "topics", "notes", "runs", "pub"]) {
+        const b = document.createElement("button");
+        b.textContent = t(id);
+        b.dataset.view = id;
+        b.onclick = () => { view = id; render(); };
+        tabs.appendChild(b);
+      }
+    }
+    document.getElementById("langBtn").onclick = () => {
+      lang = lang === "zh" ? "en" : "zh";
+      localStorage.setItem("wb-lang", lang);
+      applyChrome();
+      render();
+    };
+    document.getElementById("profileSel").onchange = (e) => {
+      profileScope = e.target.value;
+      localStorage.setItem("wb-profile", profileScope);
+      if (profileScope) selected = `profile:${profileScope}`;
+      else if (selected && byId[selected]?.kind === "profile") selected = null;
+      applyChrome();
+      render();
+    };
+
+    $q.addEventListener("input", () => render());
+
+    function nodesOf(kind) { return GRAPH.nodes.filter(n => n.kind === kind && inScope(n)); }
+    function nodesOfAll(kind) { return GRAPH.nodes.filter(n => n.kind === kind); }
+    function runIsShipped(r) {
+      if ((r.ship_urls || []).length) return true;
+      return nodesOf("published").some(p =>
+        (p.run_id && p.run_id === r.ident) ||
+        (r.folder && p.run_folder && p.run_folder === r.folder)
+      );
+    }
+    function runClosedWithoutShip(r) {
+      return r.status === "superseded" || r.status === "killed";
+    }
+    function unshippedRuns() {
+      return nodesOf("run").filter(r => !runIsShipped(r) && !runClosedWithoutShip(r));
+    }
+    function citesPart(p, n) {
+      const id = n.ident;
+      const cell = n.kind === "swipe" ? p.swipe : n.kind === "atom" ? p.atoms : n.kind === "claim" ? p.claim : "";
+      const v = String(cell || "").trim();
+      if (!v || v.toLowerCase() === "none") return false;
+      return v.split(/[,;]/).some(tok => (tok.split(":").pop() || "").trim() === id);
+    }
+    function publishedFor(n, ctx) {
+      if (n.kind === "published") return [n];
+      if (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") {
+        return nodesOf("published").filter(p => citesPart(p, n));
+      }
+      const runs = n.kind === "run" ? [n] : ctx.filter(x => x.kind === "run");
+      return nodesOf("published").filter(p => runs.some(r =>
+        (p.run_id && p.run_id === r.ident) || (r.folder && p.run_folder === r.folder)
+      ));
+    }
+    function qmatch(n) {
+      const q = $q.value.trim().toLowerCase();
+      if (!q) return true;
+      const blob = [n.ident, n.label, n.kind, n.status, n.pillar, n.lane, n.generation_mode, n.profile, n.profiles, n.src_handle, n.url, n.notes, n.type, n.atom_type, n.topic_id, n.audience, n.need_ids, n.product_ids, n.product_fit, n.recommendation_ids, n.source_type, n.capture_id, n.source, n.keyword_id, n.hit_kind, n.signal, n.excerpt].filter(Boolean).join(" ").toLowerCase();
+      return blob.includes(q);
+    }
+    function connected(id) {
+      const seen = new Set([id]);
+      const q = [id];
+      while (q.length) {
+        const cur = q.shift();
+        for (const n of adj.get(cur) || []) {
+          if (!seen.has(n)) { seen.add(n); q.push(n); }
+        }
+      }
+      return [...seen].map(i => byId[i]).filter(Boolean);
+    }
+
+    function select(id) {
+      const n = byId[id];
+      if (view === "overview" && n && n.kind === "account") {
+        openAccount(n);
+        return;
+      }
+      selected = id;
+      render();
+    }
+
+    function rowEl(n, extra) {
+      const d = document.createElement("div");
+      d.className = "row" + (selected === n.id ? " sel" : "");
+      d.dataset.kind = n.kind;
+      d.onclick = () => select(n.id);
+      const score = n.kind === "topic" && (n.craft || n.total)
+        ? `<div class="score">${esc(n.fit ? `${n.craft}/${n.fit}` : n.total)}</div>`
+        : "";
+      const clean = n.kind === "run" || n.kind === "published";
+      const meta = clean ? "" : (extra || metaLine(n));
+      d.innerHTML = `<div class="stripe"></div>
+        <div>
+          <div class="id">${esc(n.ident)}</div>
+          <div class="label">${esc(n.label)}</div>
+          ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
+        </div>
+        <div class="side">
+          <div class="pills">${score}${pills(n)}</div>
+          ${clean ? platMarkHtml(n) : ""}
+        </div>`;
+      return d;
+    }
+
+    function runPlatform(n) {
+      return String(n.primary_platform || n.platform || n.platforms || "").split(",")[0].trim().toLowerCase();
+    }
+
+    function platMarkHtml(n) {
+      const id = runPlatform(n);
+      const marks = {
+        x: { t: "𝕏", bg: "#171411", fg: "#f4ecdc" },
+        twitter: { t: "𝕏", bg: "#171411", fg: "#f4ecdc" },
+        tiktok: { t: "Tk", bg: "#111111", fg: "#69c9d0" },
+        instagram: { t: "Ig", bg: "#c13584", fg: "#fff" },
+        linkedin: { t: "in", bg: "#0a66c2", fg: "#fff" },
+        threads: { t: "Th", bg: "#1c1915", fg: "#f4ecdc" },
+        xiaohongshu: { t: "红", bg: "#ff2442", fg: "#fff" },
+      };
+      const m = marks[id] || { t: (id || "?").slice(0, 2), bg: "#6e675c", fg: "#faf6ec" };
+      return `<span class="plat-mark" title="${esc(id || "")}" style="background:${m.bg};color:${m.fg}">${m.t}</span>`;
+    }
+    function metaLine(n) {
+      return [n.date, n.profile, n.status, formatPillar(n.pillar), n.platform || n.platforms, n.type || n.atom_type || n.form].filter(Boolean).join(" · ");
+    }
+    function numCompact(v) {
+      if (v === null || v === undefined || v === "") return null;
+      const n = Number(String(v).replace(/,/g, ""));
+      if (!Number.isFinite(n)) return null;
+      if (n >= 10000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
+      if (n >= 1000) return `${(n / 1000).toFixed(1)}k`.replace(/\.0k$/, "k");
+      return String(Math.round(n));
+    }
+    function heatMetric(n, key) {
+      return numCompact(n[`src_${key}`]);
+    }
+    function hasHeat(n) {
+      return ["likes", "replies", "bookmarks", "views"].some(k => heatMetric(n, k) !== null);
+    }
+    function heatStripHtml(n, opts = {}) {
+      // No strip when every metric is missing — empty "—" chips inflate row height.
+      if (!hasHeat(n)) return "";
+      const hint = opts.hint ? `<span class="heat-note">${esc(t("heat_hint"))}</span>` : "";
+      const items = [
+        { key: "likes", sym: "♥", title: "likes" },
+        { key: "replies", sym: "💬", title: "replies" },
+        { key: "bookmarks", sym: "🔖", title: "bookmarks" },
+        { key: "views", sym: "👁", title: "views" },
+      ];
+      const chips = items.map(({ key, sym, title }) => {
+        const val = heatMetric(n, key);
+        const shown = val === null ? "—" : val;
+        const empty = val === null ? " empty" : "";
+        return `<span class="heat-chip ${key}${empty}" title="${esc(title)}"><span class="sym">${sym}</span><span class="val">${esc(shown)}</span></span>`;
+      }).join("");
+      return `<div class="heat" title="${esc(t("heat_hint"))}">${chips}</div>${hint}`;
+    }
+    function listRowEl(n, extra) {
+      const d = document.createElement("div");
+      d.className = "row" + (selected === n.id ? " sel" : "");
+      d.dataset.kind = n.kind;
+      d.onclick = () => select(n.id);
+      const meta = extra || metaLine(n);
+      d.innerHTML = `<div class="stripe"></div>
+        <div>
+          <div class="id">${esc(n.ident)}</div>
+          <div class="label">${esc(n.label)}</div>
+          ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
+          ${heatStripHtml(n)}
+        </div>
+        <div class="side">
+          <div class="pills">${pills(n)}</div>
+          ${platMarkHtml(n)}
+        </div>`;
+      return d;
+    }
+    function pills(n) {
+      const bits = [];
+      if (n.kind === "need") {
+        const st = n.status || "";
+        const cls = st === "promoted" ? "ok" : (st === "captured" ? "gap" : "");
+        if (st) bits.push(`<span class="pill ${cls}">${esc(st)}</span>`);
+        if (n.source_type) bits.push(`<span class="pill">${esc(n.source_type)}</span>`);
+        if (n.frequency) bits.push(`<span class="pill">×${esc(n.frequency)}</span>`);
+      }
+      if (n.kind === "hit") {
+        const st = n.status || "";
+        const cls = st === "triage" ? "gap" : (st === "discarded" ? "" : "ok");
+        if (st) bits.push(`<span class="pill ${cls}">${esc(st)}</span>`);
+        if (n.keyword_id) bits.push(`<button type="button" class="kw-chip" data-kw-filter="${esc(n.keyword_id)}">${esc(n.keyword_id)}</button>`);
+        if (n.signal) bits.push(`<span class="pill">${esc(n.signal)}</span>`);
+        if (n.hit_kind) bits.push(`<span class="pill">${esc(n.hit_kind)}</span>`);
+      }
+      if (n.kind === "topic") {
+        bits.push(`<span class="pill">${esc(n.status)}</span>`);
+        if (n.source_type) bits.push(`<span class="pill">${esc(n.source_type)}</span>`);
+        if (n.generation_mode) bits.push(`<span class="pill">${esc(n.generation_mode)}</span>`);
+        bits.push(n.usage === "unused" ? `<span class="pill gap">${t("unused")}</span>` : `<span class="pill ok">${esc(n.usage)}</span>`);
+      }
+      if (n.kind === "run") {
+        const cls = n.status === "published" ? "ok" : n.status === "superseded" || n.status === "killed" ? "gap" : "";
+        bits.push(`<span class="pill ${cls}">${esc(n.status)}</span>`);
+        if (!runIsShipped(n)) {
+          if (n.status === "superseded") bits.push(`<span class="pill">${t("gap_superseded")}</span>`);
+          else if (n.status === "killed") bits.push(`<span class="pill">${t("gap_killed")}</span>`);
+          else bits.push(`<span class="pill gap">${t("gap_unshipped")}</span>`);
+        }
+      }
+      if (n.kind === "capture" && n.library_cell === "none") bits.push(`<span class="pill gap">${t("no_lib")}</span>`);
+      if (n.kind === "published") {
+        if (n.result) bits.push(`<span class="pill">${esc(n.result)}</span>`);
+        if (!n.reviewable) bits.push(`<span class="pill gap">${t("thin")}</span>`);
+      }
+      if (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") {
+        const st = n.status || "";
+        const cls = n.kind === "claim"
+          ? (st === "supported" ? "ok" : (st === "weakened" || st === "retired" ? "gap" : ""))
+          : (st === "working" ? "ok" : (st === "dead" ? "gap" : ""));
+        const row1 = [];
+        if (st) row1.push(`<span class="pill ${cls}">${esc(st)}</span>`);
+        row1.push(`<span class="pill hit-win">${esc(t("lib_win", { v: n.win ?? 0 }))}</span>`);
+        row1.push(`<span class="pill hit-loss">${esc(t("lib_loss", { v: n.loss ?? 0 }))}</span>`);
+        row1.push(`<span class="pill hit-n">${esc(t("lib_n", { v: n.n ?? 0 }))}</span>`);
+        const row2 = [`<span class="pill">${esc(t("lib_refs", { n: n.refs ?? 0 }))}</span>`];
+        if (n.kind === "claim" && !n.has_evidence) row2.push(`<span class="pill gap">${t("no_ev")}</span>`);
+        bits.push(`<span class="pill-stack"><span class="pill-row">${row1.join("")}</span><span class="pill-row">${row2.join("")}</span></span>`);
+      }
+      return bits.join("");
+    }
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    }
+
+    function render() {
+      for (const b of tabs.querySelectorAll("button")) b.classList.toggle("on", b.dataset.view === view);
+      if (view === "overview") renderOverview();
+      if (view === "needs") renderNeeds();
+      if (view === "hits") renderHits();
+      if (view === "products") renderProducts();
+      if (view === "recommendations") renderRecommendations();
+      if (view === "topics") renderTopics();
+      if (view === "notes") renderNotes();
+      if (view === "runs") renderRuns();
+      if (view === "pub") renderPub();
+      renderInsp();
+    }
+
+    function renderNeedsList(into) {
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      const needs = nodesOf("need").filter(qmatch).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      needs.forEach(n => {
+        const meta = [
+          n.source_type || "",
+          n.status || "",
+          n.frequency ? `×${n.frequency}` : "",
+          n.topic_ids && n.topic_ids !== "none" ? n.topic_ids : "",
+        ].filter(Boolean).join(" · ");
+        cards.appendChild(listRowEl(n, meta));
+      });
+      if (!needs.length) {
+        cards.innerHTML = `<p class='empty'>${t("no_need")}</p><p class="note">${esc(t("need_empty_hint"))}</p>`;
+      }
+      into.appendChild(cards);
+    }
+
+    function renderNeeds() {
+      $list.innerHTML = "";
+      $list.insertAdjacentHTML("beforeend", `<p class="lead">${esc(t("need_empty_hint"))}</p>`);
+      renderNeedsList($list);
+    }
+
+    function keywordsInScope(opts = {}) {
+      const all = GRAPH.keywords || [];
+      let rows = profileScope
+        ? all.filter(k => k.profile === profileScope)
+        : all.slice();
+      if (opts.activeOnly !== false) rows = rows.filter(k => k.status === "active" || !k.status);
+      if (opts.track) rows = rows.filter(k => (k.track || "listen") === opts.track);
+      return rows;
+    }
+    function listenKeywordsInScope() {
+      return keywordsInScope({ track: "listen" });
+    }
+    function hitCountForKeyword(kid) {
+      return nodesOf("hit").filter(h => h.keyword_id === kid).length;
+    }
+    function triageCountForKeyword(kid) {
+      return nodesOf("hit").filter(h => h.keyword_id === kid && h.status === "triage").length;
+    }
+    function keywordMatchesQuery(k, q) {
+      if (!q) return true;
+      const blob = [k.id, k.why, k.query, k.intent, k.layer, k.pillar].filter(Boolean).join(" ").toLowerCase();
+      return blob.includes(q);
+    }
+    function rankedKeywords(opts = {}) {
+      const base = opts.forHits ? listenKeywordsInScope() : keywordsInScope({ activeOnly: false, track: opts.track || "" });
+      return base
+        .map(k => ({
+          ...k,
+          track: k.track || "listen",
+          triage: triageCountForKeyword(k.id),
+          total: hitCountForKeyword(k.id),
+        }))
+        .sort((a, b) => (b.triage - a.triage) || (b.total - a.total) || (Number(b.weight || 0) - Number(a.weight || 0)));
+    }
+    function keywordById(kid) {
+      return (GRAPH.keywords || []).find(k => k.id === kid && (!profileScope || k.profile === profileScope))
+        || (GRAPH.keywords || []).find(k => k.id === kid)
+        || null;
+    }
+    function keywordIdNum(id) {
+      const m = String(id || "").match(/K-(\d+)/i);
+      return m ? Number(m[1]) : 0;
+    }
+    function keywordOptionLabel(k) {
+      const triage = typeof k.triage === "number" ? k.triage : triageCountForKeyword(k.id);
+      const total = typeof k.total === "number" ? k.total : hitCountForKeyword(k.id);
+      const bits = [k.id];
+      if (k.track && k.track !== "listen") bits.push(k.track);
+      if (k.layer) bits.push(k.layer);
+      bits.push(`${triage}/${total}`);
+      return bits.join(" · ");
+    }
+    function bindKwFilters(root) {
+      root.querySelectorAll("[data-kw-filter]").forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const kid = btn.getAttribute("data-kw-filter") || "";
+          hitKw = hitKw === kid ? "" : kid;
+          hitsSub = "list";
+          renderHits();
+        };
+      });
+    }
+    function renderKeywordFilter(into) {
+      const wrap = document.createElement("div");
+      wrap.className = "kw-filter";
+      const ranked = rankedKeywords({ forHits: true });
+      const q = hitKwQ.trim().toLowerCase();
+      const filtered = ranked.filter(k => keywordMatchesQuery(k, q));
+      const withHits = filtered.filter(k => k.total > 0);
+      const listenN = listenKeywordsInScope().length;
+
+      const row = document.createElement("div");
+      row.className = "kw-filter-row";
+      const searchWrap = document.createElement("div");
+      searchWrap.className = "kw-search";
+      const search = document.createElement("input");
+      search.type = "search";
+      search.placeholder = t("kw_search");
+      search.setAttribute("aria-label", t("kw_search"));
+      search.value = hitKwQ;
+      search.oninput = () => {
+        const pos = search.selectionStart;
+        hitKwQ = search.value;
+        renderHits();
+        const s2 = $list.querySelector(".kw-search input[type='search']");
+        if (s2) {
+          s2.focus();
+          try { s2.setSelectionRange(pos, pos); } catch (_) {}
+        }
+      };
+      searchWrap.appendChild(search);
+      row.appendChild(searchWrap);
+      wrap.appendChild(row);
+
+      const quickWrap = document.createElement("div");
+      quickWrap.className = "kw-quick";
+      if (!listenN) {
+        quickWrap.innerHTML = `<span class="vacant">${esc(t("no_keyword"))}</span>`;
+      } else if (!withHits.length) {
+        quickWrap.innerHTML = `<span class="vacant">${esc(t("no_hit"))}</span>`;
+      } else {
+        withHits.forEach(k => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "kw-chip" + (hitKw === k.id ? " on" : "");
+          b.innerHTML = `${esc(k.id)}<span class="n">${k.triage}</span>`;
+          b.title = [k.query, k.why, `${k.triage} ${t("kw_triage")} · ${k.total} ${t("kw_hits")}`].filter(Boolean).join("\n");
+          b.onclick = () => {
+            hitKw = hitKw === k.id ? "" : k.id;
+            renderHits();
+          };
+          quickWrap.appendChild(b);
+        });
+      }
+      wrap.appendChild(quickWrap);
+
+      if (hitKw) {
+        const k = keywordById(hitKw);
+        const active = document.createElement("div");
+        active.className = "kw-active";
+        const triage = triageCountForKeyword(hitKw);
+        const total = hitCountForKeyword(hitKw);
+        active.innerHTML = `<span class="kid">${esc(hitKw)}</span>
+          <span class="meta">${esc([(k && k.layer) || "", (k && k.intent) || "", (k && k.pillar) || ""].filter(Boolean).join(" · "))}</span>
+          <span class="query" title="${esc((k && k.why) || "")}">${esc((k && k.query) || "")}</span>
+          <span class="meta"><b>${triage}</b> ${esc(t("kw_triage"))} · ${total} ${esc(t("kw_hits"))}</span>
+          <button type="button" class="clear">${esc(t("kw_clear"))}</button>`;
+        active.querySelector(".clear").onclick = () => { hitKw = ""; renderHits(); };
+        wrap.appendChild(active);
+      }
+
+      into.appendChild(wrap);
+      return { filtered };
+    }
+    function renderHitsSubtabs() {
+      const sub = document.createElement("div");
+      sub.className = "subtabs";
+      sub.innerHTML = `<button type="button" data-hits-sub="list">${t("hits_sub_list")}</button><button type="button" data-hits-sub="catalog">${t("hits_sub_catalog")}</button>`;
+      sub.querySelectorAll("button").forEach(b => {
+        b.classList.toggle("on", b.dataset.hitsSub === hitsSub);
+        b.onclick = () => {
+          hitsSub = b.dataset.hitsSub;
+          renderHits();
+        };
+      });
+      $list.appendChild(sub);
+    }
+    function openKeywordInHits(kid) {
+      hitKw = kid || "";
+      hitsSub = "list";
+      renderHits();
+    }
+    function renderKeywordCatalog() {
+      const row = document.createElement("div");
+      row.className = "kw-filter-row";
+      const searchWrap = document.createElement("div");
+      searchWrap.className = "kw-search";
+      const search = document.createElement("input");
+      search.type = "search";
+      search.placeholder = t("kw_catalog_search");
+      search.setAttribute("aria-label", t("kw_catalog_search"));
+      search.value = kwCatalogQ;
+      search.oninput = () => {
+        const pos = search.selectionStart;
+        kwCatalogQ = search.value;
+        renderHits();
+        const s2 = $list.querySelector(".kw-search input[type='search']");
+        if (s2) {
+          s2.focus();
+          try { s2.setSelectionRange(pos, pos); } catch (_) {}
+        }
+      };
+      searchWrap.appendChild(search);
+      row.appendChild(searchWrap);
+
+      const tracks = document.createElement("div");
+      tracks.className = "kw-quick";
+      [
+        ["", "kw_track_all"],
+        ["listen", "kw_track_listen"],
+        ["search", "kw_track_search"],
+        ["ask", "kw_track_ask"],
+      ].forEach(([id, labelKey]) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "kw-chip" + (kwCatalogTrack === id ? " on" : "");
+        b.textContent = t(labelKey);
+        b.onclick = () => { kwCatalogTrack = id; renderHits(); };
+        tracks.appendChild(b);
+      });
+      row.appendChild(tracks);
+      $list.appendChild(row);
+
+      const q = kwCatalogQ.trim().toLowerCase();
+      const keys = rankedKeywords({ track: kwCatalogTrack || "" })
+        .filter(k => keywordMatchesQuery(k, q))
+        .sort((a, b) => keywordIdNum(a.id) - keywordIdNum(b.id));
+      const count = document.createElement("p");
+      count.className = "note";
+      count.style.margin = "8px 0 0";
+      count.textContent = t("kw_catalog_count", { n: keys.length });
+      $list.appendChild(count);
+      const grid = document.createElement("div");
+      grid.className = "kw-catalog-grid";
+      if (!keys.length) {
+        grid.innerHTML = `<p class='empty'>${esc(t("kw_catalog_empty"))}</p>`;
+      } else {
+        keys.forEach(k => {
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "kw-catalog-card";
+          const vol = k.track === "search" && k.volume
+            ? ` · ${t("kw_vol")} ${esc(k.volume)}`
+            : "";
+          const go = k.track === "listen"
+            ? `<span class="go">${esc(t("kw_open_hits"))} →</span>`
+            : `<span class="meta">${esc(k.track)}</span>`;
+          card.innerHTML = `<div class="kid">${esc(k.id)} <span class="pill">${esc(k.track || "listen")}</span></div>
+            <div class="meta">${esc([k.layer, k.intent, k.pillar, k.status].filter(Boolean).join(" · "))}${vol}</div>
+            <div class="query">${esc(k.query || "")}</div>
+            ${k.why ? `<div class="why">${esc(k.why)}</div>` : ""}
+            <div class="count"><b>${k.triage}</b> ${esc(t("kw_triage"))} · ${k.total} ${esc(t("kw_hits"))}${k.last_scanned ? ` · ${esc(k.last_scanned)}` : ""}</div>
+            ${go}`;
+          card.onclick = () => {
+            if ((k.track || "listen") === "listen") openKeywordInHits(k.id);
+          };
+          grid.appendChild(card);
+        });
+      }
+      $list.appendChild(grid);
+    }
+    function renderHitsList() {
+      const statuses = [...new Set(nodesOf("hit").map(x => x.status).filter(Boolean))];
+      const signals = [...new Set(nodesOf("hit").map(x => x.signal).filter(Boolean))];
+      const { filtered } = renderKeywordFilter($list);
+      const kwOptions = filtered.length ? filtered : rankedKeywords({ forHits: true });
+      filterBar(
+        `<select id="h-st"><option value="">${t("f_status")}</option>${statuses.map(s => `<option value="${s}" ${s === hitSt ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>
+         <select id="h-sig"><option value="">${t("f_signal")}</option>${signals.map(s => `<option value="${s}" ${s === hitSig ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>
+         <select id="h-kw"><option value="">${t("f_keyword")} (${listenKeywordsInScope().length})</option>${kwOptions.map(k => `<option value="${esc(k.id)}" ${k.id === hitKw ? "selected" : ""}>${esc(keywordOptionLabel(k))}</option>`).join("")}</select>`,
+        (w) => {
+          const st = w.querySelector("#h-st");
+          const sig = w.querySelector("#h-sig");
+          const kw = w.querySelector("#h-kw");
+          if (hitKw && ![...kw.options].some(o => o.value === hitKw)) {
+            const opt = document.createElement("option");
+            opt.value = hitKw;
+            opt.textContent = keywordOptionLabel(keywordById(hitKw) || { id: hitKw });
+            opt.selected = true;
+            kw.appendChild(opt);
+          }
+          const paintCards = () => {
+            [...$list.querySelectorAll(".cards")].forEach(n => n.remove());
+            const cards = document.createElement("div");
+            cards.className = "cards";
+            let rows = nodesOf("hit").filter(qmatch).sort((a, b) => {
+              const ta = a.status === "triage" ? 0 : 1;
+              const tb = b.status === "triage" ? 0 : 1;
+              if (ta !== tb) return ta - tb;
+              const ha = Number(String(a.src_likes || "0").replace(/,/g, "")) || 0;
+              const hb = Number(String(b.src_likes || "0").replace(/,/g, "")) || 0;
+              if (hb !== ha) return hb - ha;
+              return String(b.date || "").localeCompare(String(a.date || ""));
+            });
+            if (hitSt) rows = rows.filter(x => x.status === hitSt);
+            if (hitSig) rows = rows.filter(x => x.signal === hitSig);
+            if (hitKw) rows = rows.filter(x => x.keyword_id === hitKw);
+            rows.forEach(x => {
+              const meta = [x.platform, x.hit_kind, x.signal].filter(Boolean).join(" · ");
+              cards.appendChild(listRowEl(x, meta));
+            });
+            if (!rows.length) {
+              cards.innerHTML = `<p class='empty'>${t("no_hit")}</p><p class="note">${esc(t("hit_empty_hint"))}</p>`;
+            }
+            $list.appendChild(cards);
+            bindKwFilters(cards);
+          };
+          st.onchange = () => { hitSt = st.value || ""; paintCards(); };
+          sig.onchange = () => { hitSig = sig.value || ""; paintCards(); };
+          kw.onchange = () => { hitKw = kw.value || ""; renderHits(); };
+          paintCards();
+        }
+      );
+    }
+    function renderHits() {
+      $list.innerHTML = "";
+      renderHitsSubtabs();
+      if (hitsSub === "catalog") renderKeywordCatalog();
+      else renderHitsList();
+    }
+
+    function renderProducts() {
+      $list.innerHTML = "";
+      const products = nodesOf("product").filter(qmatch).sort((a, b) => String(a.label).localeCompare(String(b.label)));
+      $list.insertAdjacentHTML("beforeend", `<p class="lead">Needs describe demand. Products describe the offer. Topics connect them only when the fit is honest.</p>`);
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      products.forEach(product => {
+        const meta = [
+          product.status,
+          product.audience,
+          product.price,
+          product.effective_from,
+        ].filter(Boolean).join(" · ");
+        cards.appendChild(rowEl(product, meta));
+      });
+      if (!products.length) cards.innerHTML = `<p class='empty'>No products in products/_index.md</p>`;
+      $list.appendChild(cards);
+    }
+
+    function renderRecommendations() {
+      $list.innerHTML = "";
+      const recommendations = nodesOf("recommendation").filter(qmatch).sort((a, b) => String(a.label).localeCompare(String(b.label)));
+      $list.insertAdjacentHTML("beforeend", `<p class="lead">Recommendations are third-party review subjects, not owned Products.</p>`);
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      recommendations.forEach(item => {
+        const meta = [
+          item.status,
+          item.category,
+          item.relationship,
+          item.last_researched,
+        ].filter(Boolean).join(" · ");
+        cards.appendChild(rowEl(item, meta));
+      });
+      if (!recommendations.length) cards.innerHTML = `<p class='empty'>No recommendations in recommendations/_index.md</p>`;
+      $list.appendChild(cards);
+    }
+
+    function renderOverview() {
+      $list.innerHTML = "";
+      $list.insertAdjacentHTML("beforeend", `<p class="lead">${t("lead")}</p>`);
+      const ipSec = document.createElement("h2");
+      ipSec.className = "note";
+      ipSec.style.cssText = "letter-spacing:.12em;text-transform:uppercase;margin:8px 0 10px;font-size:11px;";
+      ipSec.textContent = `${t("ip_section")} · ${profileList().length}`;
+      $list.appendChild(ipSec);
+      const ipgrid = document.createElement("div");
+      ipgrid.className = "ipgrid";
+      profileList().forEach(p => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "ipcard" + (profileScope === p.id ? " on" : "");
+        card.innerHTML = `<div class="hid">${esc(p.id)}</div>
+          <div class="ttl">${esc(p.one_liner || p.id)}</div>`;
+        card.onclick = () => {
+          const pid = `profile:${p.id}`;
+          if (profileScope === p.id) {
+            profileScope = "";
+            if (selected === pid) selected = null;
+          } else {
+            profileScope = p.id;
+            selected = pid;
+          }
+          localStorage.setItem("wb-profile", profileScope);
+          applyChrome();
+          render();
+        };
+        ipgrid.appendChild(card);
+      });
+      $list.appendChild(ipgrid);
+    }
+
+    function chipRow(label, opts, current, onPick) {
+      const row = document.createElement("div");
+      row.className = "filt-row";
+      const lab = document.createElement("span");
+      lab.className = "filt-lab";
+      lab.textContent = label;
+      row.appendChild(lab);
+      const tabs = document.createElement("div");
+      tabs.className = "subtabs";
+      [{ id: "", label: t("f_all") }, ...opts].forEach(o => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = o.label;
+        if ((o.id || "") === (current || "")) b.classList.add("on");
+        b.onclick = () => onPick(o.id);
+        tabs.appendChild(b);
+      });
+      row.appendChild(tabs);
+      return row;
+    }
+
+    function filterBar(html, onReady) {
+      const wrap = document.createElement("div");
+      wrap.innerHTML = html;
+      wrap.className = "filters";
+      $list.appendChild(wrap);
+      onReady(wrap);
+    }
+
+    function topicMeta(x) {
+      const score = x.fit ? `${x.craft}/${x.fit}` : (x.craft || x.total || "—");
+      const bits = [
+        score,
+        formatPillar(x.pillar),
+        x.lane,
+        x.generation_mode,
+        x.source_type,
+        x.need_ids && x.need_ids !== "none" ? x.need_ids : "",
+        x.product_ids && x.product_ids !== "none" ? x.product_ids : "",
+        x.recommendation_ids && x.recommendation_ids !== "none" ? x.recommendation_ids : "",
+        x.capture_id || "",
+      ].filter(Boolean);
+      return bits.join(" · ");
+    }
+
+    function renderTopics() {
+      $list.innerHTML = "";
+      if (topicSrc && !TOPIC_SOURCES.includes(topicSrc)) topicSrc = "";
+      const statuses = [...new Set(nodesOf("topic").map(x => x.status).filter(Boolean))];
+      filterBar(
+        `<select id="f-st"><option value="">${t("f_status")}</option>${statuses.map(s => `<option value="${s}" ${s === topicStatus ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>
+         <select id="f-p"><option value="">${t("f_pillar")}</option>${pillarIds().map(id => `<option value="${id}" ${id === topicPillar ? "selected" : ""}>${esc(formatPillar(id))}</option>`).join("")}</select>
+         <select id="f-src"><option value="">${t("f_src")}</option>${TOPIC_SOURCES.map(s => `<option value="${s}" ${s === topicSrc ? "selected" : ""}>${s}</option>`).join("")}</select>
+         <select id="f-u"><option value="">${t("f_use")}</option>
+           <option value="unused" ${topicUsage === "unused" ? "selected" : ""}>${t("f_unused")}</option>
+           <option value="promoted" ${topicUsage === "promoted" ? "selected" : ""}>${t("f_promoted")}</option></select>`,
+        (w) => {
+          const st = w.querySelector("#f-st");
+          const pill = w.querySelector("#f-p");
+          const src = w.querySelector("#f-src");
+          const use = w.querySelector("#f-u");
+          const paint = () => {
+            topicStatus = st.value;
+            topicPillar = pill.value;
+            topicSrc = src.value;
+            topicUsage = use.value;
+            [...$list.querySelectorAll(".cards")].forEach(n => n.remove());
+            const cards = document.createElement("div");
+            cards.className = "cards";
+            let rows = nodesOf("topic").filter(qmatch).sort((a, b) => Number(b.craft || b.total) - Number(a.craft || a.total));
+            if (topicStatus) rows = rows.filter(x => x.status === topicStatus);
+            if (topicPillar) rows = rows.filter(x => (x.pillar || "").includes(topicPillar));
+            if (topicSrc) rows = rows.filter(x => x.source_type === topicSrc);
+            if (topicUsage) rows = rows.filter(x => x.usage === topicUsage);
+            rows.forEach(x => {
+              cards.appendChild(rowEl(x, topicMeta(x)));
+            });
+            if (!rows.length) cards.innerHTML = `<p class='empty'>${t("no_topic")}</p>`;
+            $list.appendChild(cards);
+          };
+          w.querySelectorAll("select").forEach(s => s.onchange = paint);
+          paint();
+        }
+      );
+    }
+
+    function renderNotes() {
+      $list.innerHTML = "";
+      if (notesTab === "needs") notesTab = "notes";
+      const sub = document.createElement("div");
+      sub.className = "subtabs";
+      sub.innerHTML = `<button data-t="notes">${t("notes_in")}</button><button data-t="lib">${t("notes_lib")}</button>`;
+      $list.appendChild(sub);
+      sub.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.t === notesTab));
+      sub.onclick = (e) => {
+        const tab = e.target.dataset.t;
+        if (!tab) return;
+        notesTab = tab;
+        renderNotes();
+        renderInsp();
+      };
+      if (notesTab === "notes") {
+        const box = document.createElement("div");
+        box.className = "filt";
+        box.appendChild(chipRow(t("f_cap_ingest"), [
+          { id: "ingested", label: t("f_cap_ingested") },
+          { id: "not_ingested", label: t("f_cap_not_ingested") },
+        ], capIngest, (id) => {
+          capIngest = id;
+          renderNotes();
+          renderInsp();
+        }));
+        $list.appendChild(box);
+        const cards = document.createElement("div");
+        cards.className = "cards";
+        let caps = nodesOf("capture").filter(qmatch).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+        if (capIngest === "ingested") caps = caps.filter(c => c.status === "ingested");
+        if (capIngest === "not_ingested") caps = caps.filter(c => c.status !== "ingested");
+        caps.forEach(c => cards.appendChild(listRowEl(c, `${c.type} · ${c.status} · raw ${c.has_raw ? t("raw_yes") : t("raw_no")}`)));
+        if (!caps.length) cards.innerHTML = `<p class='empty'>${t("no_note")}</p>`;
+        $list.appendChild(cards);
+        return;
+      }
+      const items = GRAPH.nodes.filter(n => n.lib && inScope(n));
+      const subtypeOf = (n) => n.atom_type || n.form || n.claim_type || "";
+      const kinds = [...new Set(items.map(n => n.kind))];
+      const pool = items.filter(n => !libKind || n.kind === libKind);
+      const subs = [...new Set(pool.map(subtypeOf).filter(Boolean))].sort();
+      const statusVocab = {
+        swipe: ["trial", "working", "dead"],
+        atom: ["trial", "working", "dead"],
+        claim: ["hypothesis", "supported", "weakened", "retired"],
+      };
+      const statuses = statusVocab[libKind] || [];
+      const box = document.createElement("div");
+      box.className = "filt";
+      box.appendChild(chipRow(t("f_lib_kind"), kinds.map(k => ({ id: k, label: kindName(k) })), libKind, (id) => {
+        libKind = id;
+        libSubtype = "";
+        libStatus = "";
+        renderNotes();
+        renderInsp();
+      }));
+      box.appendChild(chipRow(t("f_lib_subtype"), subs.map(s => ({ id: s, label: s })), libSubtype, (id) => {
+        libSubtype = id;
+        renderNotes();
+        renderInsp();
+      }));
+      if (libKind) {
+        box.appendChild(chipRow(t("f_lib_status"), statuses.map(s => ({ id: s, label: s })), libStatus, (id) => {
+          libStatus = id;
+          renderNotes();
+          renderInsp();
+        }));
+      }
+      $list.appendChild(box);
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      let rows = items.filter(qmatch);
+      if (libKind) rows = rows.filter(n => n.kind === libKind);
+      if (libSubtype) rows = rows.filter(n => subtypeOf(n) === libSubtype);
+      if (libStatus) rows = rows.filter(n => n.status === libStatus);
+      rows.forEach(n => cards.appendChild(rowEl(n, `${kindName(n.kind)}${subtypeOf(n) ? " · " + subtypeOf(n) : ""}`)));
+      if (!rows.length) cards.innerHTML = `<p class='empty'>${t("no_note")}</p>`;
+      $list.appendChild(cards);
+    }
+
+    function topicIdOf(n) {
+      if (n.topic_id) return n.topic_id;
+      if (n.kind === "published" && n.run_id) {
+        return byId[`run:${n.run_id}`]?.topic_id || "";
+      }
+      return "";
+    }
+
+    function topicSelectHtml(nodes, current) {
+      const ids = [...new Set(nodes.map(topicIdOf).filter(Boolean))].sort();
+      const hasNone = nodes.some(n => !topicIdOf(n));
+      const opts = [
+        `<option value="">${t("f_run_topic")} · ${t("f_all")}</option>`,
+        ...ids.map(id => {
+          const n = nodes.filter(x => topicIdOf(x) === id).length;
+          return `<option value="${esc(id)}" ${id === current ? "selected" : ""}>${esc(t("f_run_topic_n", { id, n }))}</option>`;
+        }),
+      ];
+      if (hasNone) {
+        opts.push(`<option value="__none__" ${current === "__none__" ? "selected" : ""}>${esc(t("f_run_no_topic"))}</option>`);
+      }
+      return `<select id="f-topic" aria-label="${esc(t("f_run_topic"))}">${opts.join("")}</select>`;
+    }
+
+    function parseDateParts(s) {
+      if (!s || typeof s !== "string") return null;
+      const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!m) return null;
+      return { y: parseInt(m[1], 10), m: parseInt(m[2], 10), d: parseInt(m[3], 10) };
+    }
+
+    function getWeekKey(s) {
+      const p = parseDateParts(s);
+      if (!p) return { key: "unknown", label: "未知周", year: 0, weekNo: 0 };
+      const date = new Date(Date.UTC(p.y, p.m - 1, p.d));
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+
+      const target = new Date(Date.UTC(p.y, p.m - 1, p.d));
+      const day = target.getUTCDay() || 7;
+      const mon = new Date(target);
+      mon.setUTCDate(target.getUTCDate() - day + 1);
+      const sun = new Date(target);
+      sun.setUTCDate(target.getUTCDate() - day + 7);
+      const monStr = `${String(mon.getUTCMonth() + 1).padStart(2, '0')}-${String(mon.getUTCDate()).padStart(2, '0')}`;
+      const sunStr = `${String(sun.getUTCMonth() + 1).padStart(2, '0')}-${String(sun.getUTCDate()).padStart(2, '0')}`;
+
+      const yr = date.getUTCFullYear();
+      return {
+        key: `${yr}-W${String(weekNo).padStart(2, '0')}`,
+        label: `${yr}年 第${weekNo}周 (${monStr} ~ ${sunStr})`,
+        year: yr,
+        weekNo: weekNo
+      };
+    }
+
+    function getMonthKey(s) {
+      const p = parseDateParts(s);
+      if (!p) return "未知月";
+      return `${p.y}-${String(p.m).padStart(2, '0')}`;
+    }
+
+    function formatFriendlyDate(s, currentLang) {
+      const p = parseDateParts(s);
+      if (!p) return s || "";
+      const d = new Date(p.y, p.m - 1, p.d);
+      const wDays = currentLang === "zh" ? ["周日", "周一", "周二", "周三", "周四", "周五", "周六"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const wDay = wDays[d.getDay()];
+      if (currentLang === "zh") {
+        return `${p.m}月${p.d}日 ${wDay}`;
+      }
+      return `${p.m}/${p.d} ${wDay}`;
+    }
+
+    function getDiffDaysFromToday(s) {
+      const p = parseDateParts(s);
+      if (!p) return null;
+      const now = new Date();
+      const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+      const targetUtc = Date.UTC(p.y, p.m - 1, p.d);
+      return Math.round((targetUtc - todayUtc) / (24 * 3600 * 1000));
+    }
+
+    function renderRuns() {
+      $list.innerHTML = "";
+      const sub = document.createElement("div");
+      sub.className = "subtabs";
+      sub.innerHTML = `
+        <button data-t="schedule">${t("runs_sub_sched")}</button>
+        <button data-t="cadence">${t("runs_sub_cadence")}</button>
+        <button data-t="all">${t("runs_sub_all")}</button>
+      `;
+      $list.appendChild(sub);
+      sub.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.t === runTab));
+      sub.onclick = (e) => {
+        const tname = e.target.dataset.t;
+        if (!tname) return;
+        runTab = tname;
+        renderRuns();
+        renderInsp();
+      };
+
+      if (runTab === "schedule") {
+        renderRunSchedule();
+      } else if (runTab === "cadence") {
+        renderRunCadence();
+      } else {
+        renderRunAll();
+      }
+    }
+
+    function renderRunSchedule() {
+      const runs = nodesOf("run").filter(qmatch);
+      const scheduledRuns = runs.filter(r => r.is_scheduled && !r.is_published && r.status !== "published");
+      const readyRuns = runs.filter(r => (r.status === "ready" || r.status === "scored" || r.status === "open" || r.status === "draft") && !r.is_scheduled && !r.is_published && r.status !== "published");
+      const shippedRuns = runs.filter(r => r.is_published || r.status === "published");
+
+      scheduledRuns.sort((a, b) => (a.scheduled_date || a.date || "").localeCompare(b.scheduled_date || b.date || ""));
+
+      const nextRun = scheduledRuns.find(r => {
+        const diff = getDiffDaysFromToday(r.scheduled_date || r.date);
+        return diff !== null && diff >= 0;
+      }) || scheduledRuns[0];
+
+      const kpis = document.createElement("div");
+      kpis.className = "kpi-strip";
+      kpis.innerHTML = `
+        <div class="kpi-card">
+          <div class="kpi-num">${scheduledRuns.length}</div>
+          <div class="kpi-lab">${t("sched_kpi_sched")}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">${readyRuns.length}</div>
+          <div class="kpi-lab">${t("sched_kpi_ready")}</div>
+        </div>
+        <div class="kpi-card" style="grid-column: span 2;">
+          <div class="kpi-num" style="font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${nextRun ? `${formatFriendlyDate(nextRun.scheduled_date || nextRun.date, lang)} @ ${platMarkHtml(nextRun)} ${esc(nextRun.label)}` : "暂无已定档任务"}
+          </div>
+          <div class="kpi-lab">${t("sched_kpi_next")}</div>
+        </div>
+      `;
+      $list.appendChild(kpis);
+
+      const banner = document.createElement("div");
+      banner.className = "sched-banner";
+      banner.innerHTML = `
+        <div>💡 ${t("sched_banner_hint")}</div>
+        <button type="button" class="ghost-link" data-md="runs/_index.md" data-md-title="runs/_index.md">打开 runs/_index.md</button>
+      `;
+      $list.appendChild(banner);
+
+      const buckets = {
+        overdue: [],
+        today: [],
+        tomorrow: [],
+        this_week: [],
+        later: []
+      };
+
+      scheduledRuns.forEach(r => {
+        const dt = r.scheduled_date || r.date;
+        const diff = getDiffDaysFromToday(dt);
+        if (diff === null) {
+          buckets.later.push(r);
+        } else if (diff < 0) {
+          buckets.overdue.push(r);
+        } else if (diff === 0) {
+          buckets.today.push(r);
+        } else if (diff === 1) {
+          buckets.tomorrow.push(r);
+        } else if (diff <= 7) {
+          buckets.this_week.push(r);
+        } else {
+          buckets.later.push(r);
+        }
+      });
+
+      const bucketDefs = [
+        { id: "today", title: t("sched_b_today"), items: buckets.today, badge: "Today", isToday: true },
+        { id: "tomorrow", title: t("sched_b_tomorrow"), items: buckets.tomorrow, badge: "Tomorrow" },
+        { id: "overdue", title: t("sched_b_overdue"), items: buckets.overdue, badge: "Overdue" },
+        { id: "this_week", title: t("sched_b_this_week"), items: buckets.this_week, badge: "Next 7 Days" },
+        { id: "later", title: t("sched_b_later"), items: buckets.later, badge: "Upcoming" }
+      ];
+
+      let renderedAny = false;
+      bucketDefs.forEach(b => {
+        if (!b.items.length) return;
+        renderedAny = true;
+        const sec = document.createElement("div");
+        sec.className = "sched-bucket";
+        sec.innerHTML = `<div class="sched-bucket-title">${esc(b.title)} <span class="badge">${b.items.length}</span></div>`;
+        b.items.forEach(r => {
+          sec.appendChild(createScheduleCard(r, { isToday: b.isToday, isOverdue: b.id === "overdue" }));
+        });
+        $list.appendChild(sec);
+      });
+
+      if (!renderedAny) {
+        const emptyP = document.createElement("p");
+        emptyP.className = "empty";
+        emptyP.style.margin = "20px 0";
+        emptyP.textContent = t("sched_empty");
+        $list.appendChild(emptyP);
+      }
+
+      if (readyRuns.length > 0) {
+        const readySec = document.createElement("div");
+        readySec.className = "sched-bucket";
+        readySec.innerHTML = `<div class="sched-bucket-title">⚡ ${t("sched_b_ready_pool")} <span class="badge">${readyRuns.length}</span></div>`;
+        readyRuns.slice(0, 10).forEach(r => {
+          readySec.appendChild(createScheduleCard(r, { isReady: true }));
+        });
+        $list.appendChild(readySec);
+      }
+
+      if (shippedRuns.length > 0) {
+        const shipSec = document.createElement("div");
+        shipSec.className = "sched-bucket";
+        shipSec.innerHTML = `<div class="sched-bucket-title">✅ ${t("sched_b_recent_pub")} <span class="badge">${shippedRuns.length}</span></div>`;
+        shippedRuns.slice(0, 5).forEach(r => {
+          shipSec.appendChild(createScheduleCard(r, { isShipped: true }));
+        });
+        $list.appendChild(shipSec);
+      }
+    }
+
+    function createScheduleCard(r, opts = {}) {
+      const card = document.createElement("div");
+      let cardClass = "sched-card";
+      if (opts.isToday) cardClass += " today";
+      else if (opts.isShipped) cardClass += " shipped";
+      else cardClass += " scheduled";
+      if (selected === r.id) cardClass += " sel";
+      card.className = cardClass;
+      card.onclick = () => select(r.id);
+
+      const dt = r.scheduled_date || r.published_date || r.date || "";
+      const p = parseDateParts(dt);
+      const monthDay = p ? `${p.m}/${p.d}` : "--";
+      const wDays = lang === "zh" ? ["周日", "周一", "周二", "周三", "周四", "周五", "周六"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const weekday = p ? wDays[new Date(p.y, p.m - 1, p.d).getDay()] : "";
+
+      let tagClass = "tag-sched";
+      let tagText = t("status_scheduled");
+      if (opts.isShipped) {
+        tagClass = "tag-shipped";
+        tagText = t("status_published");
+      } else if (opts.isReady) {
+        tagClass = "tag-ready";
+        tagText = t("status_ready");
+      } else if (opts.isOverdue) {
+        tagClass = "tag-sched";
+        tagText = "⚠️ 待发布";
+      }
+
+      card.innerHTML = `
+        <div class="sched-date-badge">
+          <div class="month-day">${esc(monthDay)}</div>
+          <div class="weekday">${esc(weekday)}</div>
+        </div>
+        <div style="min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+            ${platMarkHtml(r)}
+            <span style="font-weight:600; font-size:13px; color:var(--sumi);">${esc(runPlatform(r).toUpperCase())}</span>
+            <span class="sched-status-tag ${tagClass}">${esc(tagText)}</span>
+            ${r.topic_id ? `<span class="pill" style="font-size:10px;">${esc(r.topic_id)}</span>` : ""}
+            ${r.pillar ? `<span class="pill" style="font-size:10px;">${esc(formatPillar(r.pillar))}</span>` : ""}
+          </div>
+          <div style="font-size:13px; color:var(--text); line-height:1.4; overflow:hidden; text-overflow:ellipsis;">${esc(r.label)}</div>
+          ${r.notes ? `<div class="note" style="margin-top:4px;">${esc(r.notes.slice(0, 70))}</div>` : ""}
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+          <button type="button" class="ghost-link" data-run-open="${esc(r.id)}" style="font-size:11px;">查看内容</button>
+          ${r.published_url ? `<a href="${esc(r.published_url)}" target="_blank" rel="noreferrer" class="ghost-link" style="font-size:11px;" onclick="event.stopPropagation();">查看原帖 ↗</a>` : ""}
+        </div>
+      `;
+      return card;
+    }
+
+    function renderRunCadence() {
+      const pubs = nodesOf("published").filter(qmatch);
+      const runs = nodesOf("run").filter(qmatch);
+      const plats = ["x", "linkedin", "xiaohongshu", "instagram", "threads", "tiktok"];
+
+      const modeBox = document.createElement("div");
+      modeBox.className = "filt";
+      modeBox.style.padding = "10px 14px";
+      modeBox.innerHTML = `
+        <div class="subtabs" style="margin:0;">
+          <button data-m="platforms">${t("cadence_m_plat")}</button>
+          <button data-m="daily">${t("cadence_m_day")}</button>
+          <button data-m="weekly">${t("cadence_m_week")}</button>
+          <button data-m="monthly">${t("cadence_m_month")}</button>
+        </div>
+      `;
+      modeBox.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.m === cadenceMode));
+      modeBox.onclick = (e) => {
+        const m = e.target.dataset.m;
+        if (!m) return;
+        cadenceMode = m;
+        renderRuns();
+        renderInsp();
+      };
+      $list.appendChild(modeBox);
+
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const currentWeek = getWeekKey(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`).key;
+
+      if (cadenceMode === "platforms") {
+        const grid = document.createElement("div");
+        grid.className = "cadence-grid";
+
+        plats.forEach(p => {
+          const platPubs = pubs.filter(x => (x.platform || "").toLowerCase() === p);
+          const platRuns = runs.filter(x => runPlatform(x) === p);
+          const monthCount = platPubs.filter(x => (x.date || "").startsWith(currentMonth)).length;
+          const weekCount = platPubs.filter(x => getWeekKey(x.date || "").key === currentWeek).length;
+          const schedCount = platRuns.filter(x => x.is_scheduled && !x.is_published).length;
+          const lastPub = platPubs.sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0];
+
+          const card = document.createElement("div");
+          card.className = "cadence-plat-card" + (cadencePlatFilter === p ? " active-filter" : "");
+          card.onclick = () => {
+            cadencePlatFilter = cadencePlatFilter === p ? "" : p;
+            renderRuns();
+            renderInsp();
+          };
+
+          const pNames = {
+            x: "𝕏 (Twitter)",
+            linkedin: "LinkedIn",
+            xiaohongshu: "小红书",
+            instagram: "Instagram",
+            threads: "Threads",
+            tiktok: "TikTok"
+          };
+
+          card.innerHTML = `
+            <div class="cadence-plat-head">
+              <div class="cadence-plat-name">${platMarkHtml({ platform: p })} ${pNames[p] || p}</div>
+              <span class="sched-status-tag tag-shipped">${platPubs.length} 篇</span>
+            </div>
+            <div class="cadence-stat-row">
+              <div>${t("cadence_plat_month")}: <span class="cadence-stat-val">${monthCount}</span></div>
+              <div>${t("cadence_plat_week")}: <span class="cadence-stat-val">${weekCount}</span></div>
+              <div>${t("cadence_plat_sched")}: <span class="cadence-stat-val" style="color:#b8741a;">${schedCount}</span></div>
+              <div>总已发: <span class="cadence-stat-val">${platPubs.length}</span></div>
+            </div>
+            ${lastPub ? `<div class="note" style="font-size:11px; margin-top:2px;">${t("cadence_plat_last")}: ${esc(lastPub.date)} <a href="${esc(lastPub.url)}" target="_blank" onclick="event.stopPropagation();" class="c-link">查看 ↗</a></div>` : `<div class="vacant" style="font-size:11px;">尚无发布记录</div>`}
+          `;
+          grid.appendChild(card);
+        });
+        $list.appendChild(grid);
+
+        let filteredPubs = pubs;
+        if (cadencePlatFilter) {
+          filteredPubs = pubs.filter(x => (x.platform || "").toLowerCase() === cadencePlatFilter);
+        }
+        const filteredGroup = document.createElement("div");
+        filteredGroup.className = "cadence-group";
+        filteredGroup.innerHTML = `
+          <div class="cadence-group-head">
+            <div class="cadence-group-title">
+              ${cadencePlatFilter ? `平台 ${cadencePlatFilter.toUpperCase()} 发布明细` : "近期全平台发布明细"}
+              <span class="pill">${filteredPubs.length} 篇</span>
+            </div>
+            ${cadencePlatFilter ? `<button type="button" class="ghost-link" style="font-size:11px;" onclick="cadencePlatFilter=''; renderRuns();">清除筛选</button>` : ""}
+          </div>
+        `;
+        filteredPubs.sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach(item => {
+          filteredGroup.appendChild(createCadenceItemRow(item));
+        });
+        if (!filteredPubs.length) {
+          filteredGroup.innerHTML += `<p class="vacant" style="padding:10px;">${t("cadence_empty")}</p>`;
+        }
+        $list.appendChild(filteredGroup);
+
+      } else if (cadenceMode === "weekly") {
+        const weeksMap = new Map();
+        pubs.forEach(p => {
+          const wInfo = getWeekKey(p.date || "");
+          if (!weeksMap.has(wInfo.key)) {
+            weeksMap.set(wInfo.key, { label: wInfo.label, items: [] });
+          }
+          weeksMap.get(wInfo.key).items.push(p);
+        });
+
+        const sortedKeys = Array.from(weeksMap.keys()).sort((a, b) => b.localeCompare(a));
+        sortedKeys.forEach(wk => {
+          const { label, items } = weeksMap.get(wk);
+          const grp = document.createElement("div");
+          grp.className = "cadence-group";
+
+          const pCounts = {};
+          items.forEach(it => {
+            const plat = (it.platform || "unknown").toLowerCase();
+            pCounts[plat] = (pCounts[plat] || 0) + 1;
+          });
+          const summaryStr = Object.entries(pCounts).map(([p, cnt]) => `${platMarkHtml({ platform: p })} ${cnt}`).join(" · ");
+
+          grp.innerHTML = `
+            <div class="cadence-group-head">
+              <div class="cadence-group-title">
+                <span>${esc(label)}</span>
+                <span class="pill">${items.length} 篇</span>
+              </div>
+              <div style="font-size:12px; display:flex; align-items:center; gap:6px;">${summaryStr}</div>
+            </div>
+          `;
+          items.sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach(it => {
+            grp.appendChild(createCadenceItemRow(it));
+          });
+          $list.appendChild(grp);
+        });
+        if (!sortedKeys.length) {
+          $list.innerHTML += `<p class="empty">${t("cadence_empty")}</p>`;
+        }
+
+      } else if (cadenceMode === "monthly") {
+        const monthsMap = new Map();
+        pubs.forEach(p => {
+          const mKey = getMonthKey(p.date || "");
+          if (!monthsMap.has(mKey)) {
+            monthsMap.set(mKey, []);
+          }
+          monthsMap.get(mKey).push(p);
+        });
+
+        const sortedMonths = Array.from(monthsMap.keys()).sort((a, b) => b.localeCompare(a));
+        sortedMonths.forEach(mKey => {
+          const items = monthsMap.get(mKey);
+          const grp = document.createElement("div");
+          grp.className = "cadence-group";
+
+          const pCounts = {};
+          items.forEach(it => {
+            const plat = (it.platform || "unknown").toLowerCase();
+            pCounts[plat] = (pCounts[plat] || 0) + 1;
+          });
+
+          const platColors = {
+            x: "#171411",
+            linkedin: "#0a66c2",
+            xiaohongshu: "#ff2442",
+            instagram: "#c13584",
+            threads: "#1c1915",
+            tiktok: "#111111"
+          };
+          let ratioBarHtml = '<div class="cadence-ratio-bar">';
+          Object.entries(pCounts).forEach(([p, cnt]) => {
+            const pct = (cnt / items.length * 100).toFixed(1);
+            ratioBarHtml += `<div class="cadence-ratio-seg" style="width:${pct}%; background:${platColors[p] || '#888'};" title="${p}: ${cnt}篇 (${pct}%)"></div>`;
+          });
+          ratioBarHtml += '</div>';
+
+          const summaryStr = Object.entries(pCounts).map(([p, cnt]) => `${platMarkHtml({ platform: p })} ${cnt}`).join(" · ");
+
+          grp.innerHTML = `
+            <div class="cadence-group-head">
+              <div class="cadence-group-title">
+                <span>${esc(mKey)}</span>
+                <span class="pill">${items.length} 篇</span>
+              </div>
+              <div style="font-size:12px; display:flex; align-items:center; gap:6px;">${summaryStr}</div>
+            </div>
+            ${ratioBarHtml}
+          `;
+          items.sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach(it => {
+            grp.appendChild(createCadenceItemRow(it));
+          });
+          $list.appendChild(grp);
+        });
+        if (!sortedMonths.length) {
+          $list.innerHTML += `<p class="empty">${t("cadence_empty")}</p>`;
+        }
+
+      } else {
+        const daysMap = new Map();
+        pubs.forEach(p => {
+          const dKey = p.date || "unknown";
+          if (!daysMap.has(dKey)) {
+            daysMap.set(dKey, []);
+          }
+          daysMap.get(dKey).push(p);
+        });
+
+        const sortedDays = Array.from(daysMap.keys()).sort((a, b) => b.localeCompare(a));
+        sortedDays.forEach(dKey => {
+          const items = daysMap.get(dKey);
+          const grp = document.createElement("div");
+          grp.className = "cadence-group";
+          grp.innerHTML = `
+            <div class="cadence-group-head">
+              <div class="cadence-group-title">
+                <span>📅 ${esc(formatFriendlyDate(dKey, lang))}</span>
+                <span class="pill">${items.length} 篇</span>
+              </div>
+            </div>
+          `;
+          items.forEach(it => {
+            grp.appendChild(createCadenceItemRow(it));
+          });
+          $list.appendChild(grp);
+        });
+        if (!sortedDays.length) {
+          $list.innerHTML += `<p class="empty">${t("cadence_empty")}</p>`;
+        }
+      }
+    }
+
+    function createCadenceItemRow(it) {
+      const d = document.createElement("div");
+      d.className = "cadence-item-row";
+      d.onclick = () => {
+        if (it.run_id && byId[it.run_id]) {
+          select(it.run_id);
+        } else {
+          select(it.id);
+        }
+      };
+
+      const resultPill = it.result && it.result !== "unknown" ? `<span class="pill" style="font-size:10px;">${esc(it.result)}</span>` : "";
+
+      d.innerHTML = `
+        <span class="c-date">${esc(it.date)}</span>
+        <span>${platMarkHtml(it)}</span>
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500;">
+          ${esc(it.notes || it.label || it.ident)}
+        </span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          ${resultPill}
+          ${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noreferrer" class="c-link" onclick="event.stopPropagation();">直达 ↗</a>` : ""}
+        </span>
+      `;
+      return d;
+    }
+
+    function renderRunAll() {
+      const runs = nodesOf("run");
+      const plats = ["x", "tiktok", "instagram", "linkedin", "threads", "xiaohongshu"];
+      const box = document.createElement("div");
+      box.className = "filt";
+      const top = document.createElement("div");
+      top.className = "filters";
+      top.style.marginBottom = "0";
+      top.innerHTML = topicSelectHtml(runs, runTopic);
+      box.appendChild(top);
+      box.appendChild(chipRow(t("f_run_ship"), [
+        { id: "shipped", label: t("f_run_shipped") },
+        { id: "unshipped", label: t("f_run_unshipped") },
+      ], runShip, (id) => { runShip = id; renderRuns(); renderInsp(); }));
+      box.appendChild(chipRow(t("f_run_plat"), plats.map(p => ({ id: p, label: p })), runPlat, (id) => {
+        runPlat = id; renderRuns(); renderInsp();
+      }));
+      $list.appendChild(box);
+      top.querySelector("#f-topic").onchange = (e) => {
+        runTopic = e.target.value;
+        renderRuns();
+        renderInsp();
+      };
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      let rows = runs.filter(qmatch).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      if (runTopic === "__none__") rows = rows.filter(r => !topicIdOf(r));
+      else if (runTopic) rows = rows.filter(r => topicIdOf(r) === runTopic);
+      if (runShip === "shipped") rows = rows.filter(runIsShipped);
+      if (runShip === "unshipped") rows = rows.filter(r => !runIsShipped(r));
+      if (runPlat) {
+        rows = rows.filter(r =>
+          String(r.platforms || r.primary_platform || "").split(",").map(s => s.trim().toLowerCase()).includes(runPlat)
+        );
+      }
+      rows.forEach(r => cards.appendChild(rowEl(r)));
+      if (!rows.length) cards.innerHTML = `<p class='empty'>${t("no_run")}</p>`;
+      $list.appendChild(cards);
+    }
+
+    function renderPub() {
+      $list.innerHTML = "";
+      $list.insertAdjacentHTML("beforeend", `<p class="lead">${t("pub_lead")}</p><p class="lede">${t("pub_lede")}</p>`);
+      const pubs = nodesOf("published");
+      const plats = ["x", "tiktok", "instagram", "linkedin", "threads", "xiaohongshu"];
+      const box = document.createElement("div");
+      box.className = "filt";
+      const top = document.createElement("div");
+      top.className = "filters";
+      top.style.marginBottom = "0";
+      top.innerHTML = topicSelectHtml(pubs, pubTopic);
+      box.appendChild(top);
+      box.appendChild(chipRow(t("f_run_plat"), plats.map(p => ({ id: p, label: p })), pubPlat, (id) => {
+        pubPlat = id; renderPub(); renderInsp();
+      }));
+      $list.appendChild(box);
+      top.querySelector("#f-topic").onchange = (e) => {
+        pubTopic = e.target.value;
+        renderPub();
+        renderInsp();
+      };
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      let rows = pubs.filter(qmatch).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      if (pubTopic === "__none__") rows = rows.filter(p => !topicIdOf(p));
+      else if (pubTopic) rows = rows.filter(p => topicIdOf(p) === pubTopic);
+      if (pubPlat) {
+        rows = rows.filter(p => String(p.platform || "").trim().toLowerCase() === pubPlat);
+      }
+      if (!rows.length) cards.innerHTML = `<p class='empty'>${t("no_pub")}</p>`;
+      rows.forEach(p => cards.appendChild(rowEl(p)));
+      $list.appendChild(cards);
+    }
+
+    function rawLinksFor(n, ctx) {
+      const out = [];
+      if (n.kind === "raw" && n.source_url) {
+        out.push({ id: n.id, ident: n.ident, label: n.label, url: n.source_url, path: n.path });
+        return out;
+      }
+      if (n.kind === "capture") {
+        ctx.filter(x => x.kind === "raw").forEach(r => {
+          out.push({ id: r.id, ident: r.ident, label: r.label, url: r.source_url || "", path: r.path });
+        });
+      }
+      return out;
+    }
+
+    function sourceBlockHtml(n, ctx) {
+      const topicUrl = n.src_url || "";
+      const ownUrl = n.source_url || "";
+      const raws = rawLinksFor(n, ctx);
+      let html = "";
+      if (topicUrl) {
+        html += `<p class="note">${t("src_url")}<a href="${esc(topicUrl)}" target="_blank" rel="noreferrer">${esc(topicUrl)}</a><br>${t("src_heat")}
+          ${n.src_likes ? ` likes ${esc(n.src_likes)} · replies ${esc(n.src_replies)} · bookmarks ${esc(n.src_bookmarks)}` : ""}</p>`;
+      }
+      if (n.kind === "capture" || n.kind === "raw") {
+        html += `<h2>${t("raw_section")}</h2>`;
+        if (!raws.length && !ownUrl) {
+          html += `<p class="vacant">${t("raw_none")}</p>`;
+        } else if (n.kind === "raw") {
+          if (ownUrl) html += `<p class="note">${t("raw_link")}：<a href="${esc(ownUrl)}" target="_blank" rel="noreferrer">${esc(ownUrl)}</a></p>`;
+        } else {
+          raws.forEach(r => {
+            html += `<div class="note" style="margin:0 0 10px">
+              <div><button type="button" class="ghost-link" data-goto="${esc(r.id)}">${esc(r.ident)}</button> · ${esc(r.label.slice(0, 80))}</div>
+              ${r.url ? `<div>${t("raw_link")}：<a href="${esc(r.url)}" target="_blank" rel="noreferrer">${esc(r.url)}</a></div>` : `<div class="vacant">${t("raw_none")}</div>`}
+              ${r.path ? `<div>${t("raw_file")}：<button type="button" class="ghost-link" data-md="${esc(r.path)}" data-md-title="${esc(r.ident)}">${esc(r.path)}</button></div>` : ""}
+            </div>`;
+          });
+        }
+      } else if (ownUrl && !topicUrl) {
+        html += `<p class="note">${t("src_url")}<a href="${esc(ownUrl)}" target="_blank" rel="noreferrer">${esc(ownUrl)}</a></p>`;
+      }
+      return html;
+    }
+
+    function profileCounts(profileId) {
+      return {
+        capture: nodesOfAll("capture").filter(n => n.profile === profileId).length,
+        need: nodesOfAll("need").filter(n => n.profile === profileId).length,
+        hit: nodesOfAll("hit").filter(n => n.profile === profileId).length,
+        topic: nodesOfAll("topic").filter(n => n.profile === profileId).length,
+        lib: GRAPH.nodes.filter(n => n.lib && (String(n.profiles || "").includes(profileId) || String(n.profiles || "").includes("*"))).length,
+        run: nodesOfAll("run").filter(n => n.profile === profileId).length,
+        published: nodesOfAll("published").filter(n => n.profile === profileId).length,
+      };
+    }
+
+    function countsFor(profileId) {
+      if (profileId) return profileCounts(profileId);
+      return {
+        capture: nodesOfAll("capture").length,
+        need: nodesOfAll("need").length,
+        hit: nodesOfAll("hit").length,
+        topic: nodesOfAll("topic").length,
+        lib: GRAPH.nodes.filter(n => n.lib).length,
+        run: nodesOfAll("run").length,
+        published: nodesOfAll("published").length,
+      };
+    }
+
+    function gapsFor(profileId) {
+      const topics = profileId ? nodesOfAll("topic").filter(n => n.profile === profileId) : nodesOfAll("topic");
+      const needs = profileId ? nodesOfAll("need").filter(n => n.profile === profileId) : nodesOfAll("need");
+      const hits = profileId ? nodesOfAll("hit").filter(n => n.profile === profileId) : nodesOfAll("hit");
+      const caps = profileId ? nodesOfAll("capture").filter(n => n.profile === profileId) : nodesOfAll("capture");
+      const pubs = profileId ? nodesOfAll("published").filter(n => n.profile === profileId) : nodesOfAll("published");
+      const needCount = needs.length;
+      const gaps = [
+        [hits.filter(h => h.status === "triage").length, "gap_hits_n"],
+        [topics.filter(x => x.status === "ready" && x.usage === "unused").length, "gap_ready_n"],
+        [needs.filter(n => n.status === "captured" && (!n.topic_ids || n.topic_ids === "none")).length, "gap_needs_n"],
+        [caps.filter(c => c.status !== "ingested").length, "gap_lib_n"],
+        [pubs.filter(p => !p.reviewable).length, "gap_review_n"],
+      ].filter(([n]) => n > 0);
+      if (GRAPH.needs_index_present && needCount < 3) {
+        const idx = gaps.findIndex(([, k]) => k === "gap_needs_n");
+        gaps.splice(idx < 0 ? gaps.length : idx, 0, [needCount, "gap_needs_thin_n"]);
+      }
+      return gaps;
+    }
+
+    function statsHtml(counts) {
+      return `<div class="prof-stats">
+        <div><b>${counts.capture}</b><span>${t("kpi_cap")}</span></div>
+        <div><b>${counts.need || 0}</b><span>${t("kpi_needs")}</span></div>
+        <div><b>${counts.hit || 0}</b><span>${t("kpi_hits")}</span></div>
+        <div><b>${counts.topic}</b><span>${t("kpi_topics")}</span></div>
+        <div><b>${counts.lib}</b><span>${t("kpi_lib")}</span></div>
+        <div><b>${counts.run}</b><span>Run</span></div>
+        <div><b>${counts.published}</b><span>${t("kind_published")}</span></div>
+      </div>`;
+    }
+
+    function gapsHtml(profileId) {
+      const gaps = gapsFor(profileId);
+      if (!gaps.length) return `<p class="vacant">${t("gap_none")}</p>`;
+      return `<div class="gap-list">${gaps.map(([n, k]) => `<p>${esc(t(k, { n }))}</p>`).join("")}</div>`;
+    }
+
+    function renderVaultInsp() {
+      $insp.innerHTML = `<h2>${t("vault_title")}</h2>
+        <p class="kicker">${t("vault_kicker")}</p>
+        <p class="note" style="margin:0 0 16px">${esc(t("vault_lede"))}</p>
+        <h2>${t("profile_stats")}</h2>
+        ${statsHtml(countsFor(""))}
+        <h2>${t("gap_section")}</h2>
+        ${gapsHtml("")}
+        <p class="note">${t("readonly")}</p>`;
+    }
+
+    function renderProfileInsp(n) {
+      const pillars = (GRAPH.pillars_by_profile || {})[n.ident] || {};
+      const accounts = nodesOfAll("account").filter(a => a.profile_id === n.ident);
+      const files = n.files || {};
+      const docOrder = [
+        ["readme", t("doc_readme")],
+        ["voice", t("doc_voice")],
+        ["audience", t("doc_audience")],
+        ["pillars", t("doc_pillars")],
+        ["lanes", t("doc_lanes")],
+        ["keywords", t("doc_keywords")],
+        ["handles", t("doc_handles")],
+      ];
+      const pillarRows = Object.entries(pillars).map(([id, p]) => {
+        const title = lang === "zh" ? p.zh : p.en;
+        return `<div class="prof-pill"><span class="hid">${esc(id)}</span><span>${esc(title)}</span></div>`;
+      }).join("") || `<p class="vacant">${t("vacant")}</p>`;
+      const acctRows = accounts.map(a =>
+        `<button type="button" data-account-open="${esc(a.id)}">${esc(a.ident)} · ${esc(a.platforms || a.default_platform || "")} · ${esc(a.status || "")}</button>`
+      ).join("") || `<p class="vacant">${t("vacant")}</p>`;
+      const docRows = docOrder.filter(([k]) => files[k]).map(([k, label]) =>
+        `<button type="button" class="stage-file-lite" data-md="${esc(files[k])}" data-md-title="${esc(label)}">
+          <span class="sk">${esc(label)}</span><span class="sp">${esc(files[k].split("/").pop())}</span><span class="sa">${t("read_md")}</span>
+        </button>`
+      ).join("") || `<p class="vacant">${t("vacant")}</p>`;
+      $insp.innerHTML = `<h2>${t("kind_profile")}</h2>
+        <p class="kicker">${esc(n.ident)}</p>
+        <p class="title">${esc(n.label)}</p>
+        <h2>${t("profile_stats")}</h2>
+        ${statsHtml(countsFor(n.ident))}
+        <h2>${t("gap_section")}</h2>
+        ${gapsHtml(n.ident)}
+        <h2>${t("profile_pillars")}</h2>
+        <div class="prof-pillars">${pillarRows}</div>
+        <h2>${t("profile_accounts")}</h2>
+        <div class="tcard prof-accts">${acctRows}</div>
+        <h2>${t("profile_docs")}</h2>
+        <div class="prof-docs">${docRows}</div>
+        <p class="note">${t("readonly")}</p>`;
+      $insp.querySelectorAll("[data-account-open]").forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const node = byId[btn.getAttribute("data-account-open")];
+          if (node) openAccount(node);
+        };
+      });
+    }
+
+    function renderInsp() {
+      if (!selected || !byId[selected]) {
+        if (view === "overview") {
+          renderVaultInsp();
+        } else {
+          $insp.innerHTML = `<div class='empty'><strong>${t("empty_t")}</strong>${t("empty_b")}</div>`;
+        }
+        return;
+      }
+      const n = byId[selected];
+      if (n.kind === "profile") {
+        renderProfileInsp(n);
+        return;
+      }
+      const ctx = connected(n.id);
+      const byKind = {};
+      for (const k of TRACE_ORDER) byKind[k] = ctx.filter(x => x.kind === k);
+      const kv = Object.entries({
+        [t("kv_kind")]: kindName(n.kind),
+        [t("kv_date")]: n.date,
+        [t("kv_status")]: n.status,
+        [t("kv_refs")]: (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") ? String(n.refs ?? 0) : "",
+        [t("kv_hits")]: (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") && n.n != null
+          ? `${n.win || 0}w / ${n.loss || 0}l / n=${n.n}`
+          : "",
+        [t("kv_pillar")]: formatPillar(n.pillar),
+        [t("kv_lane")]: n.kind === "topic" ? (n.lane || "") : "",
+        [t("kv_mode")]: n.kind === "topic" ? (n.generation_mode || "") : "",
+        [t("kv_plat")]: n.platform || n.platforms,
+        [t("kv_profile")]: n.profile || n.profile_id || (n.profiles || ""),
+        [t("kv_score")]: n.fit ? `${n.craft} opp / ${n.fit} aud` : n.total,
+        [t("kv_use")]: n.usage,
+        [t("kv_src")]: n.kind === "hit" ? (n.source || "") : n.source_type,
+        [t("kv_hit_kind")]: n.kind === "hit" ? (n.hit_kind || "") : "",
+        [t("kv_signal")]: n.kind === "hit" ? (n.signal || "") : "",
+        Keyword: n.kind === "hit" ? (n.keyword_id || "") : "",
+        [t("kv_hit_source")]: n.kind === "hit" ? (n.source || "") : "",
+        [t("kv_needs")]: n.kind === "topic" ? (n.need_ids || "") : "",
+        Quote: n.kind === "need" ? (n.quote || "") : "",
+        Excerpt: n.kind === "hit" ? (n.excerpt || "") : "",
+        Speaker: n.kind === "need" ? (n.speaker || "") : "",
+        Frequency: n.kind === "need" ? (n.frequency || "") : "",
+        Topics: n.kind === "need" ? (n.topic_ids || "") : "",
+        Products: n.kind === "topic" ? (n.product_ids || "") : "",
+        "Product fit": n.kind === "topic" ? (n.product_fit || "") : "",
+        [t("kv_recs")]: n.kind === "topic" ? (n.recommendation_ids || "") : "",
+        Audience: n.kind === "product" ? (n.audience || "") : "",
+        Price: n.kind === "product" ? (n.price || "") : "",
+        "Effective from": n.kind === "product" ? (n.effective_from || "") : "",
+        Category: n.kind === "recommendation" ? (n.category || "") : "",
+        Relationship: n.kind === "recommendation" ? (n.relationship || "") : "",
+        "Last researched": n.kind === "recommendation" ? (n.last_researched || "") : "",
+        Handle: n.source_handle || n.src_handle || "",
+        [t("kv_heat_at")]: (n.kind === "capture" || n.kind === "hit") ? (n.engagement_at || "") : "",
+        [t("kv_result")]: n.result,
+      }).filter(([, v]) => v);
+      const kwMeta = n.kind === "hit" && n.keyword_id
+        ? (GRAPH.keywords || []).find(k => k.id === n.keyword_id && (!n.profile || k.profile === n.profile))
+        : null;
+      const kwBlock = n.kind === "hit" && n.keyword_id
+        ? `<p class="note"><button type="button" class="kw-chip" data-kw-filter="${esc(n.keyword_id)}">${esc(n.keyword_id)}</button>${kwMeta ? ` · ${esc([kwMeta.layer, kwMeta.intent, kwMeta.why].filter(Boolean).join(" · "))}` : ""}</p>`
+        : "";
+      const heatBlock = (n.kind === "capture" || n.kind === "hit")
+        ? `${heatStripHtml(n, { hint: true })}${n.source_url ? `<p class="note">${t("src_url")}<a href="${esc(n.source_url)}" target="_blank" rel="noreferrer">${esc(n.source_url)}</a></p>` : ""}`
+        : "";
+      $insp.innerHTML = `<h2>${t("obj")}</h2>
+        <p class="kicker">${esc(kindName(n.kind))} · ${esc(n.ident)}</p>
+        <p class="title">${n.kind === "run" ? `<button type="button" class="ghost-link title-btn" data-run-open="${esc(n.id)}">${esc(n.label)}</button>` : esc(n.label)}</p>
+        <dl class="kv">${kv.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+        ${kwBlock}
+        ${heatBlock}
+        ${n.kind === "swipe" || n.kind === "atom" ? `<p class="note">${esc(t("lib_use_hist"))}</p>` : ""}
+        ${n.kind === "claim" ? `<p class="note">${esc(t("lib_claim_ev"))}</p>` : ""}
+        ${sourceBlockHtml(n, ctx)}
+        ${n.url && n.kind === "published" ? `<p><a href="${esc(n.url)}" target="_blank" rel="noreferrer">${esc(n.url)}</a></p>
+          ${n.reviewable ? "" : `<p class='warn'>${t("thin_warn")}</p>`}` : ""}
+        ${n.kind === "run" ? runMetaHtml(n) : ""}
+        ${mdActionsHtml(n)}
+        <h2>${t("trace")}</h2>
+        <div class="trace" id="trace"></div>
+        <p class="note">${t("readonly")}</p>`;
+      $insp.querySelectorAll("[data-goto]").forEach(btn => {
+        btn.onclick = () => select(btn.getAttribute("data-goto"));
+      });
+      bindKwFilters($insp);
+      const trace = $insp.querySelector("#trace");
+      for (const k of TRACE_ORDER) {
+        const items = k === "published" ? publishedFor(n, ctx) : (byKind[k] || []);
+        const step = document.createElement("div");
+        step.className = "tstep";
+        const here = items.some(x => x.id === n.id);
+        const on = items.length > 0;
+        step.innerHTML = `<div class="tspine"><div class="dot${on ? " on" : ""}${here ? " here" : ""}"></div><div class="rail"></div></div>`;
+        const body = document.createElement("div");
+        body.className = "tcard";
+        const lab = document.createElement("div");
+        lab.className = "note";
+        lab.textContent = kindName(k);
+        body.appendChild(lab);
+        if (!items.length) {
+          const v = document.createElement("div");
+          v.className = "vacant";
+          v.textContent = t("vacant");
+          body.appendChild(v);
+        } else {
+          items.forEach(item => {
+            const b = document.createElement("button");
+            if (item.source_url && item.kind === "raw") {
+              b.innerHTML = `${esc(item.ident)}  ${esc(item.label.slice(0, 48))}<br><span class="note">${esc(item.source_url)}</span>`;
+            } else {
+              b.textContent = `${item.ident}  ${item.label.slice(0, 72)}`;
+            }
+            b.onclick = () => {
+              if (item.kind === "run") {
+                selected = item.id;
+                render();
+                openRun(item);
+                return;
+              }
+              select(item.id);
+              const md = mdFileForNode(item);
+              if (md) openMd(md, item.ident);
+            };
+            body.appendChild(b);
+          });
+        }
+        step.appendChild(body);
+        trace.appendChild(step);
+      }
+    }
+
+    applyChrome();
+    render();
+
+  </script>
+</body>
+</html>

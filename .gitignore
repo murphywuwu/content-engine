@@ -1,0 +1,15 @@
+# Generated / local
+workbench/index.html
+workbench/__pycache__/
+**/__pycache__/
+*.pyc
+.DS_Store
+.exports-cache/
+exports/*/
+!exports/README.md
+runs/RUN-*/
+needs/entries/N-*.md
+hits/entries/H-*.md
+topics/items/T-*.md
+inbox/entries/C-*.md
+published/entries/
