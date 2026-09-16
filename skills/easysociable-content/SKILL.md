@@ -83,19 +83,19 @@ profile_thesis     = Profile + Pillar
 
 ## Create / serve / build
 
-**Primary (git / monorepo core — preferred):** copy or clone the Content Engine
-tree, then run workbench from that folder. See `LAYOUT.md` (core vs vault;
-optional `engine.json` `vault_root`).
+**Primary (public core — preferred):** clone the Content Engine repo, then run
+workbench from that folder. See `LAYOUT.md` (core vs vault; optional
+`engine.json` `vault_root`).
 
 ```bash
-# From this monorepo (until a standalone public repo exists):
-cp -R apps/cli/content-engine/starter "$HOME/Documents/Content Engine"
-cp apps/cli/content-engine/workbench/{build.py,serve.py,template.html,roots.py} \
-  "$HOME/Documents/Content Engine/workbench/"
-cd "$HOME/Documents/Content Engine"
+git clone https://github.com/murphywuwu/content-engine.git
+cd content-engine
 python3 workbench/build.py
 python3 workbench/serve.py --no-open
 ```
+
+Monorepo maintainers can still sync from `apps/cli/content-engine/` via
+`node apps/cli/content-engine/scripts/export-public-core.mjs`.
 
 **Optional offline scaffold** (still never overwrites existing files):
 

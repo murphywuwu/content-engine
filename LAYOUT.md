@@ -46,7 +46,18 @@ The Content Engine is two logical layers. They may live in **one folder** (defau
 
 ## How to get a core
 
-Prefer copying or cloning this tree (monorepo path today: `apps/cli/content-engine/starter` + sibling `workbench/`).
+**Public repo (preferred):**
+
+```bash
+git clone https://github.com/murphywuwu/content-engine.git
+```
+
+**Monorepo maintainers:** edit `apps/cli/content-engine/starter` + `workbench/`, then:
+
+```bash
+node apps/cli/content-engine/scripts/export-public-core.mjs /tmp/content-engine-public
+# review, commit, push that tree to murphywuwu/content-engine
+```
 
 `easysociable engine init` remains an **optional** offline scaffold from the CLI package. It is not required to iterate engine methodology when you have git.
 
