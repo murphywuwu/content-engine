@@ -94,26 +94,23 @@ python3 workbench/build.py
 python3 workbench/serve.py --no-open
 ```
 
-Monorepo maintainers can still sync from `apps/cli/content-engine/` via
-`node apps/cli/content-engine/scripts/export-public-core.mjs`.
-
-**Optional offline scaffold** (still never overwrites existing files):
+**Optional:** `easysociable engine init --root <parent> --yes` clones the same
+repo into `<parent>/Content Engine` (never overwrites an existing engine).
 
 ```bash
-easysociable engine init --root <parent-or-engine> --yes
 easysociable engine serve --engine <parent>/Content Engine --no-open
 easysociable engine build --engine <parent>/Content Engine
-# Add --sync-workbench only to refresh workbench files from the CLI package.
+# --sync-workbench refreshes workbench files from the public core checkout
 ```
 
-On a dedicated agent computer (e.g. Grok Bot), prefer `/workspace/Content Engine`.
+On a dedicated agent computer (e.g. Grok Bot), prefer `/workspace` + clone or
+`engine init`. Mixed→split vault: see `scripts/migrate-split-vault.py` in the
+public repo.
 
 `python3` is required for the workbench. Observatory: `http://127.0.0.1:8765/workbench/` — top tabs include **需求库 / Needs**. If `serve.py` is already up, do not start a second server; rebuild only.
 
-`engine init` may add missing starter files (e.g. `products/`, `recommendations/`)
-to older vaults without overwriting user files. It does not invent recommendation
-entries. Engine methodology updates should come from git/core copy, not from
-republishing the CLI.
+Engine methodology updates: `git pull` on the core (or `--sync-workbench`), not
+CLI republishes.
 
 ## Operate
 

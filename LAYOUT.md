@@ -52,13 +52,10 @@ The Content Engine is two logical layers. They may live in **one folder** (defau
 git clone https://github.com/murphywuwu/content-engine.git
 ```
 
-**Monorepo maintainers:** edit `apps/cli/content-engine/starter` + `workbench/`, then:
+**Maintainers:** edit this repository directly and push. The EasySociable CLI no longer vendors a copy of the core.
 
-```bash
-node apps/cli/content-engine/scripts/export-public-core.mjs /tmp/content-engine-public
-# review, commit, push that tree to murphywuwu/content-engine
-```
+`easysociable engine init --yes` clones this repo into `Content Engine/` (never overwrites).
 
-`easysociable engine init` remains an **optional** offline scaffold from the CLI package. It is not required to iterate engine methodology when you have git.
+**Mixed → split vault:** `python3 scripts/migrate-split-vault.py --engine "/path/to/Content Engine" --yes`
 
 Workbench files in an existing engine are **not** overwritten on `engine serve` / `engine build` unless you pass `--sync-workbench` or set `EASYSOCIABLE_SYNC_WORKBENCH=1`.

@@ -46,6 +46,17 @@ Hosted Brands / Templates / Slideshows still use `@easysociable/cli`.
 `easysociable engine init` can scaffold from a bundled copy, but **this repo is the preferred source**.  
 `engine serve` / `build` do not overwrite your local workbench unless you pass `--sync-workbench`.
 
+## Split an existing mixed engine
+
+If you already have one folder with both rules and data:
+
+```bash
+python3 scripts/migrate-split-vault.py --engine "/path/to/Content Engine" --yes
+```
+
+This clones a fresh core beside it and sets `vault_root` to the old folder.
+
 ## License
+
 
 MIT — see [LICENSE](./LICENSE).
