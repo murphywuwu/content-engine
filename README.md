@@ -1,78 +1,53 @@
 # Content Engine
 
-AI can write an endless stream of plausible posts. It cannot decide which ones
-are worth publishing.
+Turn what your audience says into content worth publishing.
 
-Content Engine is built around that gap. It keeps your real audience language,
-your editorial judgment, and your published results as first-class data — so
-every draft is grounded in evidence instead of guesswork. You talk to your
-Agent; it writes Markdown to a folder you own; a local workbench mirrors your
-progress.
+Content Engine helps your Agent move from real audience language to clear
+topics, platform-specific drafts, and learning from published results.
+
+You talk to your Agent. It stores the work in local Markdown files, while the
+workbench gives you a visual view of how your content system grows.
 
 ![Content Engine observatory](./assets/content-engine-observatory.png)
 
-## What it is
-
-- A **local Markdown workspace**. Your profile, audience quotes, topics, drafts,
-  and results live in plain files in one folder.
-- **Conversation-first.** You describe what you want; the Agent creates and
-  updates the files and reports back. You do not edit Markdown by hand.
-- **The files are the source of truth.** The workbench is a read-only mirror,
-  not a control panel.
-
-It is not a hosted service, an image-template product, or an npm package.
-EasySociable is an optional visual layer, not required to run the engine.
-
-## Why it's different
-
-The rules that make this engine feel strict are exactly what keep it honest:
-
-- **Real quotes only.** Needs store verbatim audience language. The Agent never
-  invents a quote, a metric, or a credential you did not give it.
-- **Judgment before production.** Every topic is a one-minute decision card —
-  who it is for, the false belief it corrects, the evidence gap — and it is
-  scored before it can become a draft.
-- **It asks before it commits.** The Agent confirms the platform, the topic's
-  generation mode, and other important writes instead of guessing.
-- **Hard gates.** No drafts or images until your profile, your boundaries, and
-  at least three real Needs exist.
-- **A learning loop.** Published results feed a reusable library of structures
-  and claims, so what worked is reused and what failed stays visible.
-- **Local and yours.** Everything is Markdown in your folder; the workbench
-  only reads it.
-
-## How it works at a glance
-
-Inputs on the left become grounded decisions on the right, and results loop back
-to make the next decision better.
+## How it works
 
 ```mermaid
-flowchart TD
-    P[Profile and boundaries] --> K[Keywords: pain, product, question]
-    K -->|scan real platforms| H[Hits: research triage]
-    Q[Quotes you already have] --> N[Needs: verbatim audience language]
-    H -->|route after you confirm| N
-    C[Capture: deconstruct a viral post] --> L[Craft library: swipe, atoms, claims]
-    N --> T[Topics: judgment card and score gate]
-    PR[Products and Recommendations] -. optional .-> T
-    T --> R[Runs: one per platform, brief to rubric]
-    L -. reuse patterns .-> R
-    R --> S[Published]
-    S -->|what actually worked| L
+flowchart LR
+    A[Understand your audience] --> B[Choose what is worth saying]
+    B --> C[Create for one platform]
+    C --> D[Publish and learn]
+    D -->|better evidence for the next idea| A
 ```
 
-The engine keeps five decisions separate so a plausible draft is never mistaken
-for evidence, strategy, or proof:
+### 1. Understand your audience
 
-1. **Profile** — who is speaking and what they can credibly say.
-2. **Needs** — what the audience actually said or repeatedly showed.
-3. **Topics** — which opportunity deserves a clear point of view.
-4. **Runs** — how one Topic becomes content for one platform.
-5. **Feedback** — what happened after publishing and what to learn from it.
+Build your profile, collect real audience language, and study examples worth
+learning from.
 
-Keywords, captures, and the craft library are **inputs** that feed these
-decisions. Products and Recommendations are **optional context**. Neither is a
-substitute for real audience demand.
+### 2. Choose what is worth saying
+
+Turn audience evidence into a topic with a clear judgment, audience, and reason
+to exist.
+
+### 3. Create for one platform
+
+Turn one topic into a platform-specific brief, draft, review, and publishable
+package.
+
+### 4. Publish and learn
+
+Record what happened. Reuse structures and claims that work. Keep weak ideas
+visible instead of pretending they worked.
+
+## Built-in safeguards
+
+Content Engine keeps the process grounded:
+
+- Audience quotes stay verbatim.
+- Topics are reviewed before drafts are created.
+- Each platform gets its own run.
+- Published results become evidence for future decisions.
 
 ## Install and start
 
