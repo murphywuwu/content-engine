@@ -28,17 +28,19 @@ cd content-engine
 This folder is your local Content Engine. Keep it private if it contains your
 profile, audience research, drafts, or other private knowledge.
 
-### 2. Install the `easysociable-content` skill
+### 2. Install the EasySociable CLI and `easysociable-content` skill
 
-Install the Content skill through the EasySociable CLI:
+Install the EasySociable CLI first, then install the Content skill:
 
 ```bash
+curl -fsSL https://easysociable.com/install.sh | bash
 easysociable install --skills content --yes
 ```
 
-This installs the `easysociable-content` skill for your Agent. The skill
-explains how to operate the engine; `CLAUDE.md` in this folder remains the
-source of truth for this specific engine.
+The first command installs the `easysociable` tool. The second installs the
+`easysociable-content` skill for your Agent. The skill explains how to operate
+the engine; `CLAUDE.md` in this folder remains the source of truth for this
+specific engine.
 
 You do not need to install Node.js packages, Python packages, a database, or a
 separate workbench. The Agent handles the workbench when it is useful.
