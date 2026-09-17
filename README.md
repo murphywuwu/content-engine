@@ -71,20 +71,43 @@ Workbench: your profile appears in the selector at the top right of the
 
 ![Step 1 — profile on the Overview tab](./assets/step-1-profile-overview.png)
 
-### Step 2 — Collect real audience needs
+### Step 2 — Set up your keywords
 
-Say **"scan keywords"** to research, or **"record these audience needs:
-<paste real quotes>"** to log language you already have.
+Say **"set up my keywords"**.
 
-The Agent stages research in Hits and only writes verbatim quotes into Needs
-after you confirm. Needs are evidence, not rewritten ideas — it will not turn a
-headline, product claim, or imagined pain into a fake quote.
+Keywords are how you go looking for real audience language when you do not have
+it yet. The Agent proposes candidates from your profile (audience and pillars),
+and you keep the ones that fit. Each keyword carries an intent:
+
+- **pain** — phrases your audience uses when describing a problem
+- **product** — terms for a product or category people discuss
+- **question** — questions people ask about the topic
+
+You do not need external SEO tools. Pain keywords are searched on real
+platforms in the next step; product and question keywords can carry an optional
+volume note if you have one.
+
+Keywords live in your profile (`keywords.md`), so there is no separate workbench
+tab yet — you will see the payoff in the Hits and Needs tabs after you scan.
+
+If you already have real quotes, you can skip this step and record them directly
+in Step 3.
+
+### Step 3 — Collect real audience needs
+
+Say **"scan keywords"** to research your pain keywords, or **"record these
+audience needs: <paste real quotes>"** to log language you already have.
+
+Scanning searches real platforms (via `agent-reach`: Xiaohongshu, X, Reddit,
+and others) and stages results in Hits. The Agent only writes verbatim quotes
+into Needs after you confirm. Needs are evidence, not rewritten ideas — it will
+not turn a headline, product claim, or imagined pain into a fake quote.
 
 Workbench: the **Needs** and **Hits** tabs.
 
-![Step 2 — the Needs tab](./assets/step-2-needs.png)
+![Step 3 — the Needs tab](./assets/step-3-needs.png)
 
-### Step 3 — Deconstruct a viral post
+### Step 4 — Deconstruct a viral post
 
 Say **"capture this"** and paste the link or structure of a post that worked.
 
@@ -95,9 +118,9 @@ you decide otherwise. Do this whenever you see a post worth learning from.
 
 Workbench: the **Notes & library** tab.
 
-![Step 3 — the Notes & library tab](./assets/step-3-library.png)
+![Step 4 — the Notes & library tab](./assets/step-4-library.png)
 
-### Step 4 — Turn needs into topics
+### Step 5 — Turn needs into topics
 
 Say **"scan needs for topics"**.
 
@@ -108,9 +131,9 @@ Topic is a decision about what is worth saying, not yet a platform draft.
 
 Workbench: the **Topics** tab.
 
-![Step 4 — the Topics tab](./assets/step-4-topics.png)
+![Step 5 — the Topics tab](./assets/step-5-topics.png)
 
-### Step 5 — Open a run and produce content
+### Step 6 — Open a run and produce content
 
 Say **"open a run from T-xxx"** (a topic id).
 
@@ -120,9 +143,9 @@ becomes separate runs, because each platform has different craft rules.
 
 Workbench: the **Run files** tab.
 
-![Step 5 — the Run files tab](./assets/step-5-run.png)
+![Step 6 — the Run files tab](./assets/step-6-run.png)
 
-### Step 6 — Publish and review
+### Step 7 — Publish and review
 
 Say **"record this published post and its feedback: <URL / results>"**.
 
@@ -133,7 +156,7 @@ Topic.
 
 Workbench: the **Shipped & review** tab.
 
-![Step 6 — the Shipped & review tab](./assets/step-6-shipped.png)
+![Step 7 — the Shipped & review tab](./assets/step-7-shipped.png)
 
 ## The operating model
 
@@ -145,8 +168,9 @@ The engine keeps five decisions separate:
 4. **Runs** — how one Topic becomes content for one platform.
 5. **Feedback** — what happened after publishing and what should be learned.
 
-Deconstructing others' posts (Step 3) feeds a reusable craft library that
-informs Topics and Runs. It is an input, not one of these decisions.
+Keywords (Step 2) are how you find audience language, and deconstructing
+others' posts (Step 4) feeds a reusable craft library. Both are inputs that
+inform Topics and Runs, not decisions themselves.
 
 This separation is the reason the Agent asks questions before writing. It
 prevents a plausible draft from being mistaken for evidence, strategy, or
