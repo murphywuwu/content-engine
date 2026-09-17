@@ -59,7 +59,7 @@ you go.
 
 ### Step 1 — Set up your creator profile
 
-Say **"interview me"**.
+Say `interview me`.
 
 The Agent interviews you one dimension at a time — identity, experience, voice,
 values, boundaries, audience — and saves each answer before asking the next. No
@@ -73,7 +73,7 @@ Workbench: your profile appears in the selector at the top right of the
 
 ### Step 2 — Set up your keywords
 
-Say **"set up my keywords"**.
+Say `set up my keywords`.
 
 Keywords are how you go looking for real audience language when you do not have
 it yet. The Agent proposes candidates from your profile (audience and pillars),
@@ -83,9 +83,8 @@ and you keep the ones that fit. Each keyword carries an intent:
 - **product** — terms for a product or category people discuss
 - **question** — questions people ask about the topic
 
-You do not need external SEO tools. Pain keywords are searched on real
-platforms in the next step; product and question keywords can carry an optional
-volume note if you have one.
+Pain keywords are searched on real platforms in the next step; product and
+question keywords can carry an optional volume note if you have one.
 
 Keywords live in your profile (`keywords.md`), so there is no separate workbench
 tab yet — you will see the payoff in the Hits and Needs tabs after you scan.
@@ -95,13 +94,17 @@ in Step 3.
 
 ### Step 3 — Collect real audience needs
 
-Say **"scan keywords"** to research your pain keywords, or **"record these
-audience needs: <paste real quotes>"** to log language you already have.
+Say `scan keywords` to research your pain keywords, or `record these audience
+needs: <paste real quotes>` to log language you already have.
 
-Scanning searches real platforms (via `agent-reach`: Xiaohongshu, X, Reddit,
-and others) and stages results in Hits. The Agent only writes verbatim quotes
-into Needs after you confirm. Needs are evidence, not rewritten ideas — it will
-not turn a headline, product claim, or imagined pain into a fake quote.
+Scanning searches real platforms and stages results in Hits. This needs the
+`agent-reach` skill, which lets your Agent reach Xiaohongshu, X, Reddit, and
+others — install it once from
+[Agent Reach](https://github.com/Panniantong/Agent-Reach)
+([install guide](https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/install.md)).
+The Agent only writes verbatim quotes into Needs after you confirm. Needs are
+evidence, not rewritten ideas — it will not turn a headline, product claim, or
+imagined pain into a fake quote.
 
 Workbench: the **Needs** and **Hits** tabs.
 
@@ -109,7 +112,7 @@ Workbench: the **Needs** and **Hits** tabs.
 
 ### Step 4 — Deconstruct a viral post
 
-Say **"capture this"** and paste the link or structure of a post that worked.
+Say `capture this` and paste the link or structure of a post that worked.
 
 Use this to break down someone else's hit: the Agent captures the source and
 its structure so you can reuse the pattern later. A capture is craft reference,
@@ -122,7 +125,7 @@ Workbench: the **Notes & library** tab.
 
 ### Step 5 — Turn needs into topics
 
-Say **"scan needs for topics"**.
+Say `scan needs for topics`.
 
 The Agent reviews your captured Needs and proposes up to five Topics. Each Topic
 comes with a judgment card: who it is for, the core point of view, the belief it
@@ -135,7 +138,7 @@ Workbench: the **Topics** tab.
 
 ### Step 6 — Open a run and produce content
 
-Say **"open a run from T-xxx"** (a topic id).
+Say `open a run from T-xxx` (a topic id).
 
 The Agent asks which platform to use first, then creates one run per platform
 and guides you through the draft and review stages. A multi-platform request
@@ -147,7 +150,7 @@ Workbench: the **Run files** tab.
 
 ### Step 7 — Publish and review
 
-Say **"record this published post and its feedback: <URL / results>"**.
+Say `record this published post and its feedback: <URL / results>`.
 
 The Agent links the post to its run and proposes what reusable learning to
 update, without inventing metrics. This closes the loop so the next decision is
