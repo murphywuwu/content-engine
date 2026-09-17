@@ -10,30 +10,6 @@ workbench gives you a visual view of how your content system grows.
 
 ![Content Engine observatory](./assets/content-engine-observatory.png)
 
-## How it works
-
-![Content Engine workflow](./assets/content-engine-workflow.png)
-
-### 1. Understand your audience
-
-Build your profile, collect real audience language, and study examples worth
-learning from.
-
-### 2. Choose what is worth saying
-
-Turn audience evidence into a topic with a clear judgment, audience, and reason
-to exist.
-
-### 3. Create for one platform
-
-Turn one topic into a platform-specific brief, draft, review, and publishable
-package.
-
-### 4. Publish and learn
-
-Record what happened. Reuse structures and claims that work. Keep weak ideas
-visible instead of pretending they worked.
-
 ## Install and start
 
 ### 1. Clone the Content Engine
