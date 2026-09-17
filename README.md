@@ -208,7 +208,9 @@ finished post.
 
 Workbench: the **Run files** tab.
 
-![Stage 7 — the Run files tab](./assets/stage-runs.png)
+![Stage 7 — All Runs list](./assets/stage-runs-list.png)
+
+![Stage 7 — run stages](./assets/stage-runs.png)
 
 ### Stage 8 — Publish and close the learning loop
 
