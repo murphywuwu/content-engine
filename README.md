@@ -59,7 +59,7 @@ you go.
 
 ### Step 1 — Set up your creator profile
 
-Say **"采访我"** (or **"interview me"**).
+Say **"interview me"**.
 
 The Agent interviews you one dimension at a time — identity, experience, voice,
 values, boundaries, audience — and saves each answer before asking the next. No
@@ -73,8 +73,8 @@ Workbench: your profile appears in the selector at the top right of the
 
 ### Step 2 — Collect real audience needs
 
-Say **"扫关键词"** to research, or **"记需求：<paste real quotes>"** to log
-language you already have.
+Say **"scan keywords"** to research, or **"record these audience needs:
+<paste real quotes>"** to log language you already have.
 
 The Agent stages research in Hits and only writes verbatim quotes into Needs
 after you confirm. Needs are evidence, not rewritten ideas — it will not turn a
@@ -86,7 +86,7 @@ Workbench: the **Needs** and **Hits** tabs.
 
 ### Step 3 — Deconstruct a viral post
 
-Say **"记一下"** and paste the link or structure of a post that worked.
+Say **"capture this"** and paste the link or structure of a post that worked.
 
 Use this to break down someone else's hit: the Agent captures the source and
 its structure so you can reuse the pattern later. A capture is craft reference,
@@ -99,7 +99,7 @@ Workbench: the **Notes & library** tab.
 
 ### Step 4 — Turn needs into topics
 
-Say **"扫需求选题"**.
+Say **"scan needs for topics"**.
 
 The Agent reviews your captured Needs and proposes up to five Topics. Each Topic
 comes with a judgment card: who it is for, the core point of view, the belief it
@@ -112,7 +112,7 @@ Workbench: the **Topics** tab.
 
 ### Step 5 — Open a run and produce content
 
-Say **"用 T-xxx 开一单"** (open a run from a topic).
+Say **"open a run from T-xxx"** (a topic id).
 
 The Agent asks which platform to use first, then creates one run per platform
 and guides you through the draft and review stages. A multi-platform request
@@ -124,7 +124,7 @@ Workbench: the **Run files** tab.
 
 ### Step 6 — Publish and review
 
-Say **"记录这条发布和反馈：<URL / results>"**.
+Say **"record this published post and its feedback: <URL / results>"**.
 
 The Agent links the post to its run and proposes what reusable learning to
 update, without inventing metrics. This closes the loop so the next decision is
