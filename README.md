@@ -1,22 +1,80 @@
 # Content Engine
 
-Content Engine is a local-first content system for AI-native creators.
+AI can write an endless stream of plausible posts. It cannot decide which ones
+are worth publishing.
 
-It helps an Agent turn real audience signals into a repeatable publishing
-workflow:
-
-**Profile → Needs → Topics → Runs → feedback**
-
-The system is intentionally local. Your profile, audience language, decisions,
-drafts, and feedback live in Markdown files that you control. The Agent reads
-the engine rules and writes to this folder; you do not need to learn the
-folder structure before getting started.
+Content Engine is built around that gap. It keeps your real audience language,
+your editorial judgment, and your published results as first-class data — so
+every draft is grounded in evidence instead of guesswork. You talk to your
+Agent; it writes Markdown to a folder you own; a local workbench mirrors your
+progress.
 
 ![Content Engine observatory](./assets/content-engine-observatory.png)
 
-## Install and start
+## What it is
 
-There are only three things to do.
+- A **local Markdown workspace**. Your profile, audience quotes, topics, drafts,
+  and results live in plain files in one folder.
+- **Conversation-first.** You describe what you want; the Agent creates and
+  updates the files and reports back. You do not edit Markdown by hand.
+- **The files are the source of truth.** The workbench is a read-only mirror,
+  not a control panel.
+
+It is not a hosted service, an image-template product, or an npm package.
+EasySociable is an optional visual layer, not required to run the engine.
+
+## Why it's different
+
+The rules that make this engine feel strict are exactly what keep it honest:
+
+- **Real quotes only.** Needs store verbatim audience language. The Agent never
+  invents a quote, a metric, or a credential you did not give it.
+- **Judgment before production.** Every topic is a one-minute decision card —
+  who it is for, the false belief it corrects, the evidence gap — and it is
+  scored before it can become a draft.
+- **It asks before it commits.** The Agent confirms the platform, the topic's
+  generation mode, and other important writes instead of guessing.
+- **Hard gates.** No drafts or images until your profile, your boundaries, and
+  at least three real Needs exist.
+- **A learning loop.** Published results feed a reusable library of structures
+  and claims, so what worked is reused and what failed stays visible.
+- **Local and yours.** Everything is Markdown in your folder; the workbench
+  only reads it.
+
+## How it works at a glance
+
+Inputs on the left become grounded decisions on the right, and results loop back
+to make the next decision better.
+
+```mermaid
+flowchart TD
+    P[Profile and boundaries] --> K[Keywords: pain, product, question]
+    K -->|scan real platforms| H[Hits: research triage]
+    Q[Quotes you already have] --> N[Needs: verbatim audience language]
+    H -->|route after you confirm| N
+    C[Capture: deconstruct a viral post] --> L[Craft library: swipe, atoms, claims]
+    N --> T[Topics: judgment card and score gate]
+    PR[Products and Recommendations] -. optional .-> T
+    T --> R[Runs: one per platform, brief to rubric]
+    L -. reuse patterns .-> R
+    R --> S[Published]
+    S -->|what actually worked| L
+```
+
+The engine keeps five decisions separate so a plausible draft is never mistaken
+for evidence, strategy, or proof:
+
+1. **Profile** — who is speaking and what they can credibly say.
+2. **Needs** — what the audience actually said or repeatedly showed.
+3. **Topics** — which opportunity deserves a clear point of view.
+4. **Runs** — how one Topic becomes content for one platform.
+5. **Feedback** — what happened after publishing and what to learn from it.
+
+Keywords, captures, and the craft library are **inputs** that feed these
+decisions. Products and Recommendations are **optional context**. Neither is a
+substitute for real audience demand.
+
+## Install and start
 
 ### 1. Clone the Content Engine
 
@@ -47,137 +105,192 @@ separate workbench. The Agent handles the workbench when it is useful.
 
 ### 3. Tell your Agent what you want to do
 
-Open the cloned folder in your Agent and follow the steps below.
+Open the cloned folder in your Agent and follow the stages below.
 
-## Build your account, step by step
+## What to say, at a glance
 
-You do not operate the workbench directly. You tell your Agent what you want in
-one short phrase, and the workbench fills in as a read-only mirror of your
-progress. Each step below is the phrase to say, what to expect, and which
-workbench tab lights up. Screenshots live in `assets/` — capture your own as
-you go.
+You never operate the workbench directly. You say one short phrase, and the
+workbench fills in as a read-only mirror.
 
-### Step 1 — Set up your creator profile
+| Say | And the Agent will |
+| --- | --- |
+| `interview me` | set up your creator profile |
+| `set up my keywords` | generate pain / product / question keywords |
+| `scan keywords` | search real platforms for audience language |
+| `record these audience needs: <quotes>` | log quotes you already have |
+| `capture this <link>` | deconstruct a post into your library |
+| `scan needs for topics` | turn Needs into scored Topics |
+| `open a run from T-xxx` | produce content for a chosen platform |
+| `record this published post and its feedback: <url>` | close the learning loop |
+
+## The engine, stage by stage
+
+### Stage 1 — Profile: who is speaking
 
 Say `interview me`.
 
-The Agent interviews you one dimension at a time — identity, experience, voice,
-values, boundaries, audience — and saves each answer before asking the next. No
-long prompt needed. It will not invent biography, values, or boundaries; where
-it has nothing from you, it writes an empty starter and asks.
+Everything downstream is grounded in your profile, so this comes first. The
+Agent interviews you one dimension at a time — identity, experience, voice,
+values, boundaries, audience — and saves each answer before asking the next. It
+will not invent biography, values, or boundaries; where it has nothing from
+you, it writes an empty starter and asks.
+
+Your profile drives voice, allowed topics, and the platform rules the Agent
+applies later. Without boundaries and a few real Needs, the engine refuses to
+produce drafts or images.
 
 Workbench: your profile appears in the selector at the top right of the
 **Overview** tab.
 
-![Step 1 — profile on the Overview tab](./assets/step-1-profile-overview.png)
+![Stage 1 — profile on the Overview tab](./assets/stage-profile.png)
 
-### Step 2 — Set up your keywords
+### Stage 2 — Keywords: how you go looking
 
 Say `set up my keywords`.
 
-Keywords are how you go looking for real audience language when you do not have
-it yet. The Agent proposes candidates from your profile (audience and pillars),
-and you keep the ones that fit. Each keyword carries an intent:
+Keywords are how you find real audience language when you do not have it yet.
+The Agent proposes candidates from your profile — audience and pillars — and you
+keep the ones that fit. Each keyword carries an intent:
 
 - **pain** — phrases your audience uses when describing a problem
 - **product** — terms for a product or category people discuss
 - **question** — questions people ask about the topic
 
-Pain keywords are searched on real platforms in the next step; product and
+Pain keywords are searched on real platforms in the next stage. Product and
 question keywords can carry an optional volume note if you have one.
 
 Keywords live in your profile (`keywords.md`), so there is no separate workbench
-tab yet — you will see the payoff in the Hits and Needs tabs after you scan.
+tab — you will see the payoff in Hits and Needs after you scan. If you already
+have real quotes, skip ahead and record them directly.
 
-If you already have real quotes, you can skip this step and record them directly
-in Step 3.
+![Stage 2 — your keyword list](./assets/stage-keywords.png)
 
-### Step 3 — Collect real audience needs
+### Stage 3 — Scan, triage, and collect Needs
 
-Say `scan keywords` to research your pain keywords, or `record these audience
-needs: <paste real quotes>` to log language you already have.
+Say `scan keywords` to research, or `record these audience needs: <quotes>` to
+log language you already have.
 
-Scanning searches real platforms and stages results in Hits. This needs the
-`agent-reach` skill, which lets your Agent reach Xiaohongshu, X, Reddit, and
-others — install it once from
-[Agent Reach](https://github.com/Panniantong/Agent-Reach)
-([install guide](https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/install.md)).
-The Agent only writes verbatim quotes into Needs after you confirm. Needs are
-evidence, not rewritten ideas — it will not turn a headline, product claim, or
-imagined pain into a fake quote.
+Scanning searches real platforms and stages every result in **Hits**, a triage
+board — not your Needs. From Hits you route each item to one of three places:
+a real Need, the craft library, or discard. This keeps noise out of your
+evidence.
+
+- Scanning uses the `agent-reach` skill, which lets your Agent reach
+  Xiaohongshu, X, Reddit, and others — install it once from
+  [Agent Reach](https://github.com/Panniantong/Agent-Reach)
+  ([install guide](https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/install.md)).
+- A **Need** is verbatim audience language only. The Agent will not turn a
+  headline, a product claim, or an imagined pain into a fake quote.
+- The graphics hard gate needs at least **three** Needs before any drafts or
+  images.
 
 Workbench: the **Needs** and **Hits** tabs.
 
-![Step 3 — the Needs tab](./assets/step-3-needs.png)
+![Stage 3 — the Needs and Hits tabs](./assets/stage-needs.png)
 
-### Step 4 — Deconstruct a viral post
+### Stage 4 — Capture: deconstruct what already works
 
-Say `capture this` and paste the link or structure of a post that worked.
+Say `capture this <link>` and paste a post or structure worth learning from.
 
-Use this to break down someone else's hit: the Agent captures the source and
-its structure so you can reuse the pattern later. A capture is craft reference,
-not your own audience demand and not a finished idea — it stays a capture until
-you decide otherwise. Do this whenever you see a post worth learning from.
+Use this to break down someone else's hit. The Agent stores the source and its
+structure so you can reuse the pattern later. On your approval, a capture can be
+promoted into the **craft library**:
+
+- **swipe** — a reusable post structure
+- **atoms** — reusable parts: hook, reframe, proof, process, or call to action
+- **claims** — propositions you can defend, each with its own evidence table
+
+A capture is craft reference, not your own audience demand and not a finished
+idea. The library never fills itself silently — every entry needs your yes.
 
 Workbench: the **Notes & library** tab.
 
-![Step 4 — the Notes & library tab](./assets/step-4-library.png)
+![Stage 4 — the Notes and library tab](./assets/stage-library.png)
 
-### Step 5 — Turn needs into topics
+### Stage 5 — Products and Recommendations (optional)
+
+Products and Recommendations give a topic something to point at, but they never
+prove demand on their own.
+
+- **Products** are offers you own. The Agent loads the cited entry before using
+  any pricing, entitlement, or product claim — and never invents them.
+- **Recommendations** are third-party tools or products you review or compare.
+  They require evidence, research dates, limits, and commercial disclosure, and
+  they are never treated as your own product.
+
+A product claim is not an audience Need, and a vendor's marketing is not review
+evidence. The engine keeps these strictly apart.
+
+Workbench: the **Products** and **Recommendations** tabs.
+
+![Stage 5 — the Products and Recommendations tabs](./assets/stage-products.png)
+
+### Stage 6 — Topics: decide what is worth saying
 
 Say `scan needs for topics`.
 
-The Agent reviews your captured Needs and proposes up to five Topics. Each Topic
-comes with a judgment card: who it is for, the core point of view, the belief it
-aims to change, and the evidence gap. Review and choose before producing. A
-Topic is a decision about what is worth saying, not yet a platform draft.
+The Agent reviews your captured Needs and proposes up to five Topics. A Topic is
+not a title — it is a decision card you can read in a minute: who it is for, the
+false belief it corrects, the core judgment, the timing, and the evidence gap.
+
+Before writing a topic to "produce", the Agent asks which **generation mode**
+fits your input rather than guessing:
+
+- `demand` — Needs plus Profile
+- `demand_to_offer` — Needs plus a Product
+- `demand_to_review` — Needs plus a Recommendation
+- `review` — a Recommendation with evidence
+- `offer_education` — a Product and its mechanism
+- `profile_thesis` — your Profile and a pillar
+
+Each produced Topic is scored on five dimensions — context, audience, conflict,
+insight, evidence. A Topic is only **ready** when the opportunity score and the
+audience score both clear their bar. Popularity alone never makes a Topic ready.
 
 Workbench: the **Topics** tab.
 
-![Step 5 — the Topics tab](./assets/step-5-topics.png)
+![Stage 6 — the Topics tab](./assets/stage-topics.png)
 
-### Step 6 — Open a run and produce content
+### Stage 7 — Runs: produce content for a platform
 
 Say `open a run from T-xxx` (a topic id).
 
-The Agent asks which platform to use first, then creates one run per platform
-and guides you through the draft and review stages. A multi-platform request
-becomes separate runs, because each platform has different craft rules.
+The Agent asks which platform to use first. Each platform is its own run with
+its own craft rules, so a multi-platform request becomes separate runs sharing
+one topic — never one draft reused everywhere.
+
+Inside a run, the work moves through gates you approve:
+
+1. **Brief** — a thesis, the reader's before/after belief, and named evidence.
+   It is self-scored, and a weak brief is flagged before you ever see a draft.
+2. **Draft** — written for this platform only, following its craft file.
+3. **Editor** — revised against the platform's quality bar.
+4. **Rubric** — a final score that decides ship or hold.
+
+At each gate the Agent stops for your OK. It will not skip straight to a
+finished post.
 
 Workbench: the **Run files** tab.
 
-![Step 6 — the Run files tab](./assets/step-6-run.png)
+![Stage 7 — the Run files tab](./assets/stage-runs.png)
 
-### Step 7 — Publish and review
+### Stage 8 — Publish and close the learning loop
 
-Say `record this published post and its feedback: <URL / results>`.
+Say `record this published post and its feedback: <url / results>`.
 
-The Agent links the post to its run and proposes what reusable learning to
-update, without inventing metrics. This closes the loop so the next decision is
-better informed — not so that one result is treated as proof for every related
-Topic.
+The Agent records one row per shipped post and links it to its run — without
+inventing metrics. This is where the loop closes:
+
+- Every structure, atom, or claim you used gets its scoreboard updated (uses,
+  wins, losses) — but only from real published results.
+- A claim is promoted to "supported" only after several runs actually back it
+  up **and** you approve. A single win is recorded, never celebrated.
+- What failed stays visible in the feedback, so the next decision is better
+  informed.
 
 Workbench: the **Shipped & review** tab.
 
-![Step 7 — the Shipped & review tab](./assets/step-7-shipped.png)
-
-## The operating model
-
-The engine keeps five decisions separate:
-
-1. **Profile** — who is speaking and what they can credibly say.
-2. **Needs** — what the audience actually said or repeatedly showed.
-3. **Topics** — which opportunity deserves a clear point of view.
-4. **Runs** — how one Topic becomes content for one platform.
-5. **Feedback** — what happened after publishing and what should be learned.
-
-Keywords (Step 2) are how you find audience language, and deconstructing
-others' posts (Step 4) feeds a reusable craft library. Both are inputs that
-inform Topics and Runs, not decisions themselves.
-
-This separation is the reason the Agent asks questions before writing. It
-prevents a plausible draft from being mistaken for evidence, strategy, or
-published learning.
+![Stage 8 — the Shipped and review tab](./assets/stage-published.png)
 
 ## Core and private vault
 
