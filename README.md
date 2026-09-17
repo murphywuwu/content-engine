@@ -12,13 +12,7 @@ workbench gives you a visual view of how your content system grows.
 
 ## How it works
 
-```mermaid
-flowchart LR
-    A[Understand your audience] --> B[Choose what is worth saying]
-    B --> C[Create for one platform]
-    C --> D[Publish and learn]
-    D -->|better evidence for the next idea| A
-```
+![Content Engine workflow](./assets/content-engine-workflow.png)
 
 ### 1. Understand your audience
 
@@ -39,15 +33,6 @@ package.
 
 Record what happened. Reuse structures and claims that work. Keep weak ideas
 visible instead of pretending they worked.
-
-## Built-in safeguards
-
-Content Engine keeps the process grounded:
-
-- Audience quotes stay verbatim.
-- Topics are reviewed before drafts are created.
-- Each platform gets its own run.
-- Published results become evidence for future decisions.
 
 ## Install and start
 
