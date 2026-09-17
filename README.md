@@ -47,104 +47,93 @@ separate workbench. The Agent handles the workbench when it is useful.
 
 ### 3. Tell your Agent what you want to do
 
-Open the cloned folder in your Agent and describe your goal. The Agent should
-follow `easysociable-content` and this engine's `CLAUDE.md`, ask for missing
-information, and show you what it will save before making important writes.
+Open the cloned folder in your Agent and follow the steps below.
 
-Start with one of the scenarios below.
+## Build your account, step by step
 
-## Choose a starting scenario
+You do not operate the workbench directly. You tell your Agent what you want in
+one short phrase, and the workbench fills in as a read-only mirror of your
+progress. Each step below is the phrase to say, what to expect, and which
+workbench tab lights up. Screenshots live in `assets/` — capture your own as
+you go.
 
-### Scenario A: Set up my creator profile
+### Step 1 — Set up your creator profile
 
-Use this when the Agent does not yet know who you are, who you serve, or what
-you can credibly talk about.
+Say **"采访我"** (or **"interview me"**).
 
-```text
-Interview me and set up my Content Engine profile.
-Ask about my audience, experience, point of view, content pillars,
-publishing platforms, voice, and boundaries. Save the answers only after
-showing me the proposed profile files.
-```
+The Agent interviews you one dimension at a time — identity, experience, voice,
+values, boundaries, audience — and saves each answer before asking the next. No
+long prompt needed. It will not invent biography, values, or boundaries; where
+it has nothing from you, it writes an empty starter and asks.
 
-The Agent should establish the profile before producing serious drafts. It
-must not invent biography, experience, values, proof, or boundaries.
+Workbench: your profile appears in the selector at the top right of the
+**Overview** tab.
 
-### Scenario B: Record audience needs
+![Step 1 — profile on the Overview tab](./assets/step-1-profile-overview.png)
 
-Use this when you have customer interviews, comments, support messages,
-community discussions, or other direct audience language.
+### Step 2 — Collect real audience needs
 
-```text
-I want to record audience needs.
-I will paste the original quotes and context. Preserve the quotes verbatim,
-separate my interpretation from the quote, and show me the Needs entries
-before saving them.
-```
+Say **"扫关键词"** to research, or **"记需求：<paste real quotes>"** to log
+language you already have.
 
-Needs are evidence, not rewritten content ideas. The Agent must not turn a
-product claim, headline, or imagined pain into an audience quote.
+The Agent stages research in Hits and only writes verbatim quotes into Needs
+after you confirm. Needs are evidence, not rewritten ideas — it will not turn a
+headline, product claim, or imagined pain into a fake quote.
 
-### Scenario C: Turn needs into topics
+Workbench: the **Needs** and **Hits** tabs.
 
-Use this after you have captured one or more Needs.
+![Step 2 — the Needs tab](./assets/step-2-needs.png)
 
-```text
-Review the captured Needs and propose up to five content Topics.
-For each Topic, explain which Need supports it, who it is for, the core
-judgment, the intended belief change, and the evidence gap. Do not write a
-Run yet.
-```
+### Step 3 — Deconstruct a viral post
 
-Review and choose a Topic before opening a production Run. A Topic is a
-decision about what is worth saying; it is not yet a platform draft.
+Say **"记一下"** and paste the link or structure of a post that worked.
 
-### Scenario D: Open a content Run
+Use this to break down someone else's hit: the Agent captures the source and
+its structure so you can reuse the pattern later. A capture is craft reference,
+not your own audience demand and not a finished idea — it stays a capture until
+you decide otherwise. Do this whenever you see a post worth learning from.
 
-Use this when you have chosen a Topic and want to create platform-specific
-content.
+Workbench: the **Notes & library** tab.
 
-```text
-Open a Run from <topic id>.
-First ask me which platform or platforms to use. Create one Run per platform,
-confirm the selected profile and platform rules, then guide me through the
-draft and review stages.
-```
+![Step 3 — the Notes & library tab](./assets/step-3-library.png)
 
-The Agent must ask for the platform instead of silently choosing one. A
-multi-platform request creates separate Runs because each platform has
-different craft rules.
+### Step 4 — Turn needs into topics
 
-### Scenario E: Capture a source or idea
+Say **"扫需求选题"**.
 
-Use this when you want to save a link, competitor example, research note, or
-unfinished idea for later.
+The Agent reviews your captured Needs and proposes up to five Topics. Each Topic
+comes with a judgment card: who it is for, the core point of view, the belief it
+aims to change, and the evidence gap. Review and choose before producing. A
+Topic is a decision about what is worth saying, not yet a platform draft.
 
-```text
-Capture this source for later:
-<paste the link, notes, or idea>
+Workbench: the **Topics** tab.
 
-Keep it as a Capture. Do not turn it into a Need, Topic, or finished draft
-unless I ask.
-```
+![Step 4 — the Topics tab](./assets/step-4-topics.png)
 
-Capture preserves a source without pretending that it already contains
-audience demand or a publishing decision.
+### Step 5 — Open a run and produce content
 
-### Scenario F: Record feedback after publishing
+Say **"用 T-xxx 开一单"** (open a run from a topic).
 
-Use this after a post has shipped.
+The Agent asks which platform to use first, then creates one run per platform
+and guides you through the draft and review stages. A multi-platform request
+becomes separate runs, because each platform has different craft rules.
 
-```text
-Record this published post and its feedback:
-<paste the URL, result, comments, or observations>
+Workbench: the **Run files** tab.
 
-Link it to the relevant Run and show me what reusable learning should be
-updated, without inventing metrics.
-```
+![Step 5 — the Run files tab](./assets/step-5-run.png)
 
-Published content and feedback close the loop. They should improve future
-decisions, not be mistaken for proof that every related Topic will work.
+### Step 6 — Publish and review
+
+Say **"记录这条发布和反馈：<URL / results>"**.
+
+The Agent links the post to its run and proposes what reusable learning to
+update, without inventing metrics. This closes the loop so the next decision is
+better informed — not so that one result is treated as proof for every related
+Topic.
+
+Workbench: the **Shipped & review** tab.
+
+![Step 6 — the Shipped & review tab](./assets/step-6-shipped.png)
 
 ## The operating model
 
@@ -155,6 +144,9 @@ The engine keeps five decisions separate:
 3. **Topics** — which opportunity deserves a clear point of view.
 4. **Runs** — how one Topic becomes content for one platform.
 5. **Feedback** — what happened after publishing and what should be learned.
+
+Deconstructing others' posts (Step 3) feeds a reusable craft library that
+informs Topics and Runs. It is an input, not one of these decisions.
 
 This separation is the reason the Agent asks questions before writing. It
 prevents a plausible draft from being mistaken for evidence, strategy, or
@@ -168,7 +160,7 @@ By default, this folder is both the engine core and your private vault:
 | Part | Contains | Update policy |
 | --- | --- | --- |
 | Core | `CLAUDE.md`, rules, templates, indexes, and workbench code | Update from this repository |
-| Vault | Your profile, Needs, Topics, Runs, and published records | Keep private and back up |
+| Vault | Your profile, Needs, captures & library, Topics, Runs, and published records | Keep private and back up |
 
 If you want reusable engine rules separate from private data, point
 `vault_root` in `engine.json` to another directory. See
