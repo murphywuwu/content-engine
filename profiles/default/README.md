@@ -6,7 +6,8 @@ Replace this starter profile before the first serious draft.
 |------|------|
 | `pillars.md` | Topics this profile may cover |
 | `audience.md` | Readers + per-platform emphasis |
-| `voice.md` | Identity + Experience + Values + Persona |
+| `voice.md` | Identity + Experience + Values + Persona (how copy sounds) |
+| `brand.md` | Rendered identity: logo, colors, fonts, display name (how it looks) |
 | `stories.md` | Story inventory (cite or none) |
 | `boundaries.md` | Creator must-avoid (Not covering / Never claim) |
 | `expression.md` | Expression likes / dislikes |

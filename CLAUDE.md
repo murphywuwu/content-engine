@@ -38,7 +38,8 @@ This folder is the local **Content Engine** for EasySociable.
 | `profiles/_index.md` | Profile registry |
 | `profiles/<id>/pillars.md` | Topic pillars (what to talk about) |
 | `profiles/<id>/audience.md` | Readers + platform emphasis |
-| `profiles/<id>/voice.md` | Identity + Experience + Values + Persona |
+| `profiles/<id>/voice.md` | Identity + Experience + Values + Persona (how copy sounds) |
+| `profiles/<id>/brand.md` | Rendered identity: logo, colors, fonts, display name (how it looks) |
 | `profiles/<id>/stories.md` | Story inventory (cite or none) |
 | `profiles/<id>/boundaries.md` | Creator must-avoid (Not covering / Never claim) |
 | `profiles/<id>/expression.md` | Expression likes / dislikes |
@@ -68,6 +69,8 @@ This folder is the local **Content Engine** for EasySociable.
 | `runs/_index.md` | Job queue (one row per **platform run**) |
 | `runs/<slug>/` | One platform draft → pack → feedback |
 | `published/_index.md` | One row per **shipped URL** (one run → usually one row) |
+| `media/_index.md` | Local image vault catalog (sha256 dedup, closed tags, `hosted_image_id` cache) |
+| `media/<file>` | Image originals; source of truth, uploaded lazily at render |
 | `exports/<slug>/` | Rendered images for that run (optional `<platform>/` subfolder) |
 
 ## Routing
@@ -86,6 +89,9 @@ This folder is the local **Content Engine** for EasySociable.
 | 生成 topic (no source specified) | **§ Topics** — offer captured needs or ask which explicit input to use |
 | 链接直接选题 / 把 C-xxx 做成选题 | **§ Topics** — create T- (may link capture) |
 | 采访我 / 完善人设 / interview me / who am I as a creator / 建立 profile | **§ Interview** — persist after each dimension; no slideshow |
+| 设置品牌 / 改 logo / 配色 / 字体 / set brand / brand colors | Edit `profiles/<id>/brand.md` (**ask profile** if unset) |
+| 存图 / 记图 / 加素材 / catalog image / add media | **§ Media** — add row to `media/_index.md` (dedup by sha256, tag) |
+| 找图 / find image / which image for … | **§ Media** — retrieve by tag/link from `media/_index.md` |
 | 开一单 / 用 T-xxx 开一单 | **Hard gate first**, then **§ Open a run** — **ask platform(s)** if unset; multi-select → **N runs** (bind `topic_id` if from T-) |
 | Quick draft | Resolve profile; selection; draft in chat |
 | 收成 swipe/atom/claim | **§ Library ingest** after approval |
@@ -381,6 +387,35 @@ easysociable engine validate --root . --require-knowledge
 ### Completion
 
 Hard gate vs first-session (`profile: partial`) vs complete seven dimensions (`profile: complete`) — same table as INTERVIEW.md. Experience / Values / expression are not the hard gate. Needs hard gate is ≥ **3** original quotes; first-session **target** is **5**.
+
+---
+
+## § Brand (rendered identity)
+
+Triggers: 设置品牌 / 改 logo / 配色 / 字体 / set brand / brand colors.
+
+`brand.md` owns **how the profile looks**; `voice.md` owns **how it sounds**. One rule: renders to pixels/color → `brand.md`; only shapes wording → `voice.md`. No overlap.
+
+- Logo is a **media id** from `media/_index.md` (tag `logo`), never an inline path or URL.
+- Colors are hex **tokens** (primary / accent / background / text); fonts are heading/body.
+- **Render binding** rows (`logo hosted_image_id`, `theme snapshot`) are a cache. Only § PagePack writes them, at render time. Do not hand-edit.
+- Local is source of truth. There is no hosted Brand to sync; brand data is materialized into the run at render (see § PagePack).
+
+## § Media (local image vault)
+
+Triggers: 存图 / 记图 / 加素材 / 找图 / catalog image / find image.
+
+**When generating content that needs an image** (product review, slideshow slot, cover), **read `media/_index.md` first** and reuse an existing asset by tag/link. Only ask the user for a new file if none fits.
+
+**Add (ingest):**
+
+1. Compute `sha256` of the file. If that hash already has a row, **reuse that id** — never import a duplicate.
+2. Assign `M-YYYYMMDD-XX`; place the file under `media/`.
+3. Append a row: `file`, `sha256`, one-line `caption`, `tags` (closed set only), `links` (`P-*`/`C-*`/`R-*`/`RUN-*`/`brand`), `rights`. Leave `hosted_image_id` empty.
+
+**Retrieve:** filter `media/_index.md` by tag and/or link to find the right image for the content need. Cite the media id in the pack/draft.
+
+**Do not:** upload here (upload is at render only); store binaries in `runs/`; invent tags outside the closed set; fabricate `rights`.
 
 ---
 
@@ -788,9 +823,13 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
    - slots, language, pillar, swipe_id, claim_id  
    - page 1 `role` is not automatically `cover`  
 2. **Pack Card** in chat — user may `改 pack：…`.  
-3. Hand off to **easysociable-slideshow**: it picks templates by platform + canvas + slot shape, then opens Studio. Topology lock means a wrong arc needs a **new Run**, not slot rewrite.  
-4. **Render / Download:** pixels leave the product from Studio Download (not CLI render). After the user downloads, copy files under **`exports/<slug>/`** if needed; set pack `job_id`, `export_path`, status `done`; set `runs/_index` `pack`/`export` to yes. If slideshow skill is **not** available: status `not_requested` / blocked — **do not fake images**.  
-5. User **图 OK** or revise slots (same topology) / new Run (different arc).
+3. **Materialize local assets (single-direction, at render only):** for the logo in `profiles/<id>/brand.md` and any slot images that reference a `media/` id with an **empty** `hosted_image_id`, upload once and cache the returned id back into `media/_index.md` (and `brand.md` render binding). Pass `brand.md` colors/fonts as **inline theme tokens** — no hosted Brand record is required.  
+   ```bash
+   easysociable images upload --file media/<file>   # → returns image id → write to hosted_image_id
+   ```
+4. Hand off to **easysociable-slideshow**: it picks templates by platform + canvas + slot shape, then opens Studio. Topology lock means a wrong arc needs a **new Run**, not slot rewrite.  
+5. **Render / Download:** pixels leave the product from Studio Download (not CLI render). After the user downloads, copy files under **`exports/<slug>/`** if needed; set pack `job_id`, `export_path`, status `done`; set `runs/_index` `pack`/`export` to yes. If slideshow skill is **not** available: status `not_requested` / blocked — **do not fake images**.  
+6. User **图 OK** or revise slots (same topology) / new Run (different arc).
 
 ### Pack Card
 

@@ -472,6 +472,38 @@ def merge_engagement(*parts: dict[str, str]) -> dict[str, str]:
                 out[k] = v
     return out
 
+def parse_media(md: str | None = None) -> list[dict]:
+    if md is None:
+        md = read("media/_index.md")
+    rows = table_with(
+        md,
+        "id", "file", "sha256", "caption", "tags", "links", "rights", "hosted_image_id",
+    )
+    out = []
+    for row in rows:
+        ident = (row.get("id") or "").strip().strip("`")
+        if not ident.startswith("M-"):
+            continue
+        f = (row.get("file") or "").strip().strip("`")
+        src = f if f.startswith("media/") else (f"media/{f}" if f else "")
+        hosted = (row.get("hosted_image_id") or "").strip()
+        out.append(
+            {
+                "id": ident,
+                "file": f,
+                "src": src,
+                "sha256": (row.get("sha256") or "").strip(),
+                "caption": (row.get("caption") or "").strip(),
+                "tags": [t for t in re.split(r"\s+", (row.get("tags") or "").strip()) if t],
+                "links": [l for l in re.split(r"[\s,]+", (row.get("links") or "").strip()) if l],
+                "rights": (row.get("rights") or "").strip(),
+                "hosted_image_id": hosted,
+                "hosted": bool(hosted),
+            }
+        )
+    return out
+
+
 def build_graph() -> dict:
     nodes: dict[str, dict] = {}
     edges: list[dict] = []
@@ -487,7 +519,7 @@ def build_graph() -> dict:
     for p in profiles:
         base = p["path"].rstrip("/") + "/"
         files = {}
-        for name in ("README", "voice", "audience", "pillars", "lanes", "keywords", "handles"):
+        for name in ("README", "voice", "brand", "audience", "pillars", "lanes", "keywords", "handles"):
             rel = f"{base}{name}.md"
             if (ROOT / rel).exists():
                 files[name.lower()] = rel
@@ -1472,6 +1504,8 @@ def build_graph() -> dict:
         "hits_index_present": (ROOT / "hits" / "_index.md").exists(),
         "products_index_present": (ROOT / "products" / "_index.md").exists(),
         "keywords": keywords,
+        "media": parse_media(),
+        "media_index_present": (ROOT / "media" / "_index.md").exists(),
         "nodes": list(nodes.values()),
         "edges": uniq,
     }
@@ -1514,6 +1548,19 @@ def _self_check() -> None:
     res = extract_runs_table(dummy_md)
     assert len(res) == 1 and res[0]["run_id"] == "RUN-1" and res[0]["scheduled"] == "2026-09-18", res
     print("extract_runs_table self-check ok")
+
+    media_md = (
+        "| id | file | sha256 | caption | tags | links | rights | hosted_image_id |\n"
+        "|----|------|--------|---------|------|-------|--------|-----------------|\n"
+        "| M-20260917-01 | logo.png | abc123 | Brand logo | logo brand | brand, P-001 | own-screenshot | img_9 |\n"
+        "| (fill) | | | | | | | |\n"
+    )
+    mres = parse_media(media_md)
+    assert len(mres) == 1, mres
+    assert mres[0]["id"] == "M-20260917-01" and mres[0]["src"] == "media/logo.png", mres
+    assert mres[0]["tags"] == ["logo", "brand"] and mres[0]["links"] == ["brand", "P-001"], mres
+    assert mres[0]["hosted"] is True, mres
+    print("parse_media self-check ok")
     core, vault = load_roots(_WB)
     assert core == _WB.parent
     assert vault == core or (core / "engine.json").exists()

@@ -35,12 +35,15 @@ The Content Engine is two logical layers. They may live in **one folder** (defau
 - `workbench/` (`build.py`, `serve.py`, `template.html`)
 - `topics/scoring.md`, `topics/_template-item.md`, skeleton indexes
 - `needs|_hits|…` → `_template.md`, empty `_index.md`, README only
+- `media/` → empty `_index.md`, README only (image originals are vault)
+- `profiles/default/brand.md` → starter fill (not a filled creator brand)
 - `platforms/*.md`, `runs/_template/**`
 - Starter `profiles/default/**` fills (not a filled creator vault)
 
 **Vault (keep private):**
 
-- Filled `profiles/<id>/`, `needs/entries`, `hits/entries`, `topics/items`
+- Filled `profiles/<id>/` (incl. `brand.md`), `needs/entries`, `hits/entries`, `topics/items`
+- `media/` image originals and filled `media/_index.md` rows
 - `runs/RUN-*`, inbox entries, published rows, export binaries/paths
 - Real account handles and overrides
 

@@ -334,6 +334,17 @@
       font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
       font-size: 17px; line-height: 1.35; margin: 6px 0 0;
     }
+    .mediagrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
+    .mediacard { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .mediacard .thumb {
+      aspect-ratio: 4 / 3; background: #ece7df; display: flex;
+      align-items: center; justify-content: center; overflow: hidden;
+    }
+    .mediacard .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mediacard .thumb.thumb-missing { color: var(--faint); font-size: 24px; }
+    .mediameta { padding: 10px 12px; display: grid; gap: 6px; }
+    .mediameta .ttl { font-size: 13px; line-height: 1.3; margin: 0; }
+    .mediameta .hid { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--accent); }
     .prof-stats {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 18px;
     }
@@ -1146,7 +1157,10 @@
         title: "Content Engine · 观察台",
         brand: "观察台",
         search: "搜索 ID、一句话、来源…",
-        overview: "总览", needs: "需求库", hits: "Hits", products: "产品库", recommendations: "推荐库", topics: "选题库", notes: "记录与知识", runs: "Run 档案", pub: "发布与复盘",
+        overview: "总览", needs: "需求库", hits: "Hits", products: "产品库", recommendations: "推荐库", topics: "选题库", notes: "记录与知识", runs: "Run 档案", pub: "发布与复盘", media: "图库",
+        media_empty: "media/_index.md 里还没有素材",
+        media_hosted: "已上传",
+        media_local: "仅本地",
         runs_sub_calendar: "📅 日历排期",
         runs_sub_heatmap: "🟩 发布热力图",
         runs_sub_all: "🗂 全部 Run",
@@ -1355,7 +1369,10 @@
         title: "Content Engine · Observatory",
         brand: "Observatory",
         search: "Search ID, one-liner, source…",
-        overview: "Overview", needs: "Needs", hits: "Hits", products: "Products", recommendations: "Recommendations", topics: "Topics", notes: "Notes & library", runs: "Run files", pub: "Shipped & review",
+        overview: "Overview", needs: "Needs", hits: "Hits", products: "Products", recommendations: "Recommendations", topics: "Topics", notes: "Notes & library", runs: "Run files", pub: "Shipped & review", media: "Media",
+        media_empty: "No media in media/_index.md",
+        media_hosted: "Uploaded",
+        media_local: "Local only",
         runs_sub_calendar: "📅 Calendar & Schedule",
         runs_sub_heatmap: "🟩 Heatmap",
         runs_sub_all: "🗂 All Runs",
@@ -1637,6 +1654,7 @@
 
     let view = "overview";
     let notesTab = "notes";
+    let mediaTag = "";
     let libKind = "";
     let libSubtype = "";
     let libStatus = "";
@@ -2028,7 +2046,7 @@
       sel.innerHTML = `<option value="">${t("ip_all")}</option>` +
         ids.map(id => `<option value="${id}" ${id === profileScope ? "selected" : ""}>${id}</option>`).join("");
       tabs.innerHTML = "";
-      for (const id of ["overview", "hits", "needs", "products", "recommendations", "topics", "notes", "runs", "pub"]) {
+      for (const id of ["overview", "hits", "needs", "products", "recommendations", "topics", "notes", "media", "runs", "pub"]) {
         const b = document.createElement("button");
         b.textContent = t(id);
         b.dataset.view = id;
@@ -2305,6 +2323,7 @@
       if (view === "recommendations") renderRecommendations();
       if (view === "topics") renderTopics();
       if (view === "notes") renderNotes();
+      if (view === "media") renderMedia();
       if (view === "runs") renderRuns();
       if (view === "pub") renderPub();
       renderInsp();
@@ -2664,6 +2683,49 @@
       });
       if (!recommendations.length) cards.innerHTML = `<p class='empty'>No recommendations in recommendations/_index.md</p>`;
       $list.appendChild(cards);
+    }
+
+    function renderMedia() {
+      $list.innerHTML = "";
+      const q = $q.value.trim().toLowerCase();
+      const all = (GRAPH.media || []).filter(m => {
+        if (!q) return true;
+        const blob = [m.id, m.caption, (m.tags || []).join(" "), (m.links || []).join(" "), m.rights, m.file].join(" ").toLowerCase();
+        return blob.includes(q);
+      });
+      const tags = [...new Set(all.flatMap(m => m.tags || []))].sort();
+      if (mediaTag && !tags.includes(mediaTag)) mediaTag = "";
+      if (tags.length) {
+        $list.appendChild(chipRow(t("media"), tags.map(tg => ({ id: tg, label: tg })), mediaTag, (id) => { mediaTag = id; render(); }));
+      }
+      const items = all.filter(m => !mediaTag || (m.tags || []).includes(mediaTag));
+      const grid = document.createElement("div");
+      grid.className = "mediagrid";
+      items.forEach(m => grid.appendChild(mediaCard(m)));
+      if (!items.length) grid.innerHTML = `<p class='empty'>${t("media_empty")}</p>`;
+      $list.appendChild(grid);
+    }
+
+    function mediaCard(m) {
+      const card = document.createElement("div");
+      card.className = "mediacard";
+      const tagPills = (m.tags || []).map(tg => `<span class="pill">${esc(tg)}</span>`).join("");
+      const hosted = m.hosted
+        ? `<span class="pill ok" title="${esc(m.hosted_image_id)}">${t("media_hosted")}</span>`
+        : `<span class="pill">${t("media_local")}</span>`;
+      const links = (m.links || []).map(l => `<span class="pill">${esc(l)}</span>`).join("");
+      const src = m.src ? "/" + m.src.replace(/^\/+/, "") : "";
+      const thumb = src
+        ? `<div class="thumb"><img loading="lazy" src="${esc(src)}" alt="${esc(m.caption || m.id)}" onerror="this.remove()"></div>`
+        : `<div class="thumb thumb-missing">?</div>`;
+      card.innerHTML = `${thumb}
+        <div class="mediameta">
+          <div class="hid">${esc(m.id)}</div>
+          <p class="ttl">${esc(m.caption || m.file || "")}</p>
+          <div class="pill-row">${tagPills}${hosted}</div>
+          ${links ? `<div class="pill-row">${links}</div>` : ""}
+        </div>`;
+      return card;
     }
 
     function renderOverview() {
