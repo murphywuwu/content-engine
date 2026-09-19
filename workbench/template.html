@@ -1150,7 +1150,19 @@
     </div>
   </div>
   <script>
-    const GRAPH = /*__GRAPH__*/null;
+    let GRAPH = /*__GRAPH__*/null;
+    if (!GRAPH || !Array.isArray(GRAPH.nodes)) {
+      GRAPH = {
+        generated_at: "",
+        nodes: [],
+        edges: [],
+        profiles: [],
+        keywords: [],
+        media: [],
+        pillars: {},
+        pillars_by_profile: {},
+      };
+    }
     const TRACE_ORDER = ["raw", "capture", "hit", "need", "product", "recommendation", "topic", "swipe", "atom", "claim", "run", "published"];
     const STR = {
       zh: {
@@ -1643,14 +1655,19 @@
     }
     function scoped(kind) { return GRAPH.nodes.filter(n => n.kind === kind && inScope(n)); }
 
-    const byId = Object.fromEntries(GRAPH.nodes.map(n => [n.id, n]));
-    const adj = new Map();
-    for (const e of GRAPH.edges) {
-      if (!adj.has(e.from)) adj.set(e.from, []);
-      if (!adj.has(e.to)) adj.set(e.to, []);
-      adj.get(e.from).push(e.to);
-      adj.get(e.to).push(e.from);
+    let byId = {};
+    let adj = new Map();
+    function rebuildIndexes() {
+      byId = Object.fromEntries((GRAPH.nodes || []).map(n => [n.id, n]));
+      adj = new Map();
+      for (const e of GRAPH.edges || []) {
+        if (!adj.has(e.from)) adj.set(e.from, []);
+        if (!adj.has(e.to)) adj.set(e.to, []);
+        adj.get(e.from).push(e.to);
+        adj.get(e.to).push(e.from);
+      }
     }
+    rebuildIndexes();
 
     let view = "overview";
     let notesTab = "notes";
@@ -1701,7 +1718,45 @@
     const STAGE_ORDER = ["idea", "brief", "packet", "draft", "editor", "rubric", "pack", "feedback"];
     let runModal = null; // { id, stage }
     let mdFetchToken = 0;
-    document.getElementById("stamp").textContent = GRAPH.generated_at;
+    document.getElementById("stamp").textContent = GRAPH.generated_at || "";
+
+    function graphApiUrl(name) {
+      return new URL(name, location.href).toString();
+    }
+
+    async function loadLiveGraph() {
+      if (!isHttpServe()) return false;
+      const res = await fetch(graphApiUrl("api/graph"), { cache: "no-store" });
+      if (!res.ok) throw new Error(`graph ${res.status}`);
+      const next = await res.json();
+      if (!next || !Array.isArray(next.nodes)) throw new Error("invalid graph");
+      GRAPH = next;
+      rebuildIndexes();
+      document.getElementById("stamp").textContent = GRAPH.generated_at || "";
+      return true;
+    }
+
+    function watchVault() {
+      if (!isHttpServe() || typeof EventSource === "undefined") return;
+      let timer = 0;
+      const es = new EventSource(graphApiUrl("api/events"));
+      es.onmessage = () => {
+        clearTimeout(timer);
+        // Debounce bursts of Agent writes into one refetch.
+        timer = setTimeout(async () => {
+          try {
+            await loadLiveGraph();
+            applyChrome();
+            render();
+          } catch (err) {
+            console.warn("workbench live reload failed", err);
+          }
+        }, 250);
+      };
+      es.onerror = () => {
+        // Browser will retry EventSource; no hard fail.
+      };
+    }
 
     function vaultFetchUrl(rel) {
       return "../" + String(rel || "").replace(/^\/+/, "");
@@ -4383,8 +4438,17 @@
       }
     }
 
-    applyChrome();
-    render();
+    async function boot() {
+      try {
+        await loadLiveGraph();
+      } catch (err) {
+        console.warn("workbench live graph unavailable; using baked snapshot if present", err);
+      }
+      applyChrome();
+      render();
+      watchVault();
+    }
+    boot();
 
   </script>
 </body>
