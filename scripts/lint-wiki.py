@@ -25,14 +25,14 @@ INVERSE = {
 }
 # `next` is allowed one-way; still counted in overflow.
 
-ROW_RE = re.compile(
-    r"^\|\s*(?P<id>W-[A-Za-z0-9_-]+)\s*\|(?P<rest>.*)\|\s*$"
-)
-SEE_ALSO_RE = re.compile(
-    r"^\|\s*(?P<rel>related|contradicts|parent|child|next)\s*\|\s*"
-    r"(?P<id>W-[A-Za-z0-9_-]+)\s*\|",
-    re.IGNORECASE,
-)
+WID_RE = re.compile(r"W-[A-Za-z0-9_-]+")
+
+
+def extract_wid(cell: str) -> str:
+    """Bare W-… or [[…W-…]] / [[…\\|W-…]]."""
+    cell = (cell or "").replace("\\|", "|").strip()
+    m = WID_RE.search(cell)
+    return m.group(0) if m else ""
 STATUS_RE = re.compile(r"^status:\s*(?P<status>\S+)\s*$", re.MULTILINE)
 EMPTYISH = frozenset({"", "none", "—", "-", "n/a", "na"})
 
@@ -53,8 +53,8 @@ class Page:
 
 
 def _cells(line: str) -> list[str]:
-    parts = [c.strip() for c in line.strip().strip("|").split("|")]
-    return parts
+    raw = line.replace("\\|", "\x1e")
+    return [c.replace("\x1e", "|").strip() for c in raw.strip().strip("|").split("|")]
 
 
 def _is_sep(line: str) -> bool:
@@ -89,15 +89,17 @@ def parse_index(index_path: Path) -> list[tuple[str, str, str]]:
     text = index_path.read_text(encoding="utf-8")
     out: list[tuple[str, str, str]] = []
     for line in text.splitlines():
-        m = ROW_RE.match(line.strip())
-        if not m:
+        if not line.strip().startswith("|"):
+            continue
+        if _is_sep(line):
             continue
         cells = _cells(line)
         if len(cells) < 9:
             continue
-        wid, status, file_cell = cells[0], cells[2], cells[8]
-        if wid.lower() == "id":
+        wid = extract_wid(cells[0])
+        if not wid:
             continue
+        status, file_cell = cells[2], cells[8]
         out.append((wid, status, file_cell))
     return out
 
@@ -115,9 +117,19 @@ def parse_page(path: Path) -> Page:
         if "\n## " in body:
             body = body.split("\n## ", 1)[0]
         for line in body.splitlines():
-            m = SEE_ALSO_RE.match(line.strip())
-            if m:
-                see.append((m.group("rel").lower(), m.group("id")))
+            if not line.strip().startswith("|") or _is_sep(line):
+                continue
+            cells = _cells(line)
+            if len(cells) < 2:
+                continue
+            rel = cells[0].lower()
+            if rel not in INVERSE and rel != "next":
+                continue
+            if rel == "rel":
+                continue
+            target = extract_wid(cells[1])
+            if target:
+                see.append((rel, target))
 
     contradictions_open = False
     if "## Contradictions" in text:
@@ -163,16 +175,20 @@ def lint_engine(engine: Path) -> list[Finding]:
             wid in pages and pages[wid].status.lower() == "stale"
         ):
             findings.append(Finding("stale", wid))
-        target = (wiki / file_cell).resolve() if file_cell else None
-        # also accept pages/W-id.md relative to wiki/
+        # strip [[wikilink]] / alias for path resolve
+        path_hint = file_cell.replace("\\|", "|").strip()
+        m_link = re.search(r"\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]", path_hint)
+        if m_link:
+            path_hint = m_link.group(1).strip()
         ok = False
-        if file_cell:
+        if path_hint or wid:
             candidates = [
-                engine / file_cell,
-                wiki / file_cell,
+                engine / path_hint if path_hint else Path(),
+                wiki / path_hint if path_hint else Path(),
                 pages_dir / f"{wid}.md",
+                engine / f"{path_hint}.md" if path_hint and not path_hint.endswith(".md") else Path(),
             ]
-            ok = any(c.is_file() for c in candidates)
+            ok = any(c.is_file() for c in candidates if str(c) not in {".", ""})
         if not ok:
             findings.append(Finding("missing", f"{wid} file={file_cell!r}"))
 
@@ -280,8 +296,8 @@ status: active
 ## See also
 | rel | id | note |
 |-----|-----|------|
-| related | W-B | |
-| related | W-ORPHAN | |
+| related | [[wiki/pages/W-B\\|W-B]] | |
+| related | [[wiki/pages/W-ORPHAN\\|W-ORPHAN]] | |
 """,
             encoding="utf-8",
         )
@@ -296,7 +312,7 @@ status: stale
 ## See also
 | rel | id | note |
 |-----|-----|------|
-| related | W-X | broken |
+| related | [[wiki/pages/W-X\\|W-X]] | broken |
 """,
             encoding="utf-8",
         )
@@ -311,7 +327,7 @@ status: seed
 ## See also
 | rel | id | note |
 |-----|-----|------|
-| related | W-A | |
+| related | [[wiki/pages/W-A\\|W-A]] | |
 """,
             encoding="utf-8",
         )

@@ -19,7 +19,7 @@ A short map for one recurring lesson (e.g. “not knowing what to say”):
 - which library parts fit or should be avoided
 - links to related notebook pages
 
-It is **not** a second index of every vault file. Needs, topics, and runs stay in their own folders; pages only link ids.
+It is **not** a second index of every vault file. Needs, topics, and runs stay in their own folders; pages only **hang** them via Obsidian `[[wikilinks]]` (`[[path|id]]`) so Backlinks and the graph work.
 
 ## Agent rules (summary)
 

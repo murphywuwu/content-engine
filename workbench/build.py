@@ -482,10 +482,12 @@ def parse_wiki_pages(md: str | None = None) -> list[dict]:
     )
     out = []
     for row in rows:
-        ident = (row.get("id") or "").strip().strip("`")
+        ident_cell = (row.get("id") or "").strip().strip("`")
+        m_id = WIKI_PAGE_RE.search(ident_cell)
+        ident = m_id.group(0) if m_id else ident_cell
         if not ident.startswith("W-"):
             continue
-        f = (row.get("file") or "").strip().strip("`")
+        f = wiki_path(row.get("file") or "") or (row.get("file") or "").strip().strip("`")
         if f and not f.startswith("wiki/"):
             f = f"wiki/pages/{f}" if not f.startswith("pages/") else f"wiki/{f}"
         if f and not f.endswith(".md"):

@@ -392,7 +392,8 @@ Triggers: 维护笔记 / 扫笔记 / lint 笔记 / hang on W- / create lesson.
 - One recurring lesson → one `W-`. Prefer merge over near-duplicate pages.  
 - Agent writes pages; human reads. Schema = this section + `wiki/_template.md`.  
 - Closed see-also rels: `related` | `contradicts` | `parent` | `child` | `next` — pairwise, ≤5 per page.  
-- Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.
+- Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.  
+- **Obsidian wikilinks required** on every hung id and see-also target. Same style as other vault indexes: `[[path]]` or, in **table cells**, `[[path\|id]]` (backslash-escape the alias `|` or the row splits). Bare `W-…` / `N-…` text does **not** create Backlinks.
 
 ### Lint (required when user says lint 笔记 / wiki lint)
 
