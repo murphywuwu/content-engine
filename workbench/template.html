@@ -1169,10 +1169,13 @@
         title: "Content Engine · 观察台",
         brand: "观察台",
         search: "搜索 ID、一句话、来源…",
-        overview: "总览", needs: "需求库", hits: "Hits", products: "产品库", recommendations: "推荐库", topics: "选题库", notes: "记录与知识", runs: "Run 档案", pub: "发布与复盘", media: "图库",
+        overview: "总览", needs: "需求库", hits: "Hits", products: "产品库", recommendations: "推荐库", topics: "选题库", wiki: "笔记", notes: "记下的", library: "零件库", runs: "Run 档案", pub: "发布与复盘", media: "图库",
         media_empty: "media/_index.md 里还没有素材",
         media_hosted: "已上传",
         media_local: "仅本地",
+        wiki_empty: "wiki/_index.md 里还没有笔记页",
+        wiki_believe: "我们现在相信",
+        notes_in: "记下的", notes_lib: "零件库",
         runs_sub_calendar: "📅 日历排期",
         runs_sub_heatmap: "🟩 发布热力图",
         runs_sub_all: "🗂 全部 Run",
@@ -1381,10 +1384,13 @@
         title: "Content Engine · Observatory",
         brand: "Observatory",
         search: "Search ID, one-liner, source…",
-        overview: "Overview", needs: "Needs", hits: "Hits", products: "Products", recommendations: "Recommendations", topics: "Topics", notes: "Notes & library", runs: "Run files", pub: "Shipped & review", media: "Media",
+        overview: "Overview", needs: "Needs", hits: "Hits", products: "Products", recommendations: "Recommendations", topics: "Topics", wiki: "Wiki", notes: "Captured", library: "Library", runs: "Run files", pub: "Shipped & review", media: "Media",
         media_empty: "No media in media/_index.md",
         media_hosted: "Uploaded",
         media_local: "Local only",
+        wiki_empty: "No notebook pages in wiki/_index.md",
+        wiki_believe: "We believe",
+        notes_in: "Captured", notes_lib: "Library",
         runs_sub_calendar: "📅 Calendar & Schedule",
         runs_sub_heatmap: "🟩 Heatmap",
         runs_sub_all: "🗂 All Runs",
@@ -2101,7 +2107,7 @@
       sel.innerHTML = `<option value="">${t("ip_all")}</option>` +
         ids.map(id => `<option value="${id}" ${id === profileScope ? "selected" : ""}>${id}</option>`).join("");
       tabs.innerHTML = "";
-      for (const id of ["overview", "hits", "needs", "products", "recommendations", "topics", "notes", "media", "runs", "pub"]) {
+      for (const id of ["overview", "hits", "needs", "products", "recommendations", "topics", "wiki", "notes", "library", "media", "runs", "pub"]) {
         const b = document.createElement("button");
         b.textContent = t(id);
         b.dataset.view = id;
@@ -2377,7 +2383,9 @@
       if (view === "products") renderProducts();
       if (view === "recommendations") renderRecommendations();
       if (view === "topics") renderTopics();
+      if (view === "wiki") renderWiki();
       if (view === "notes") renderNotes();
+      if (view === "library") renderLibrary();
       if (view === "media") renderMedia();
       if (view === "runs") renderRuns();
       if (view === "pub") renderPub();
@@ -2740,6 +2748,104 @@
       $list.appendChild(cards);
     }
 
+    function renderWiki() {
+      $list.innerHTML = "";
+      const q = $q.value.trim().toLowerCase();
+      const all = (GRAPH.wiki || []).filter(w => {
+        if (!q) return true;
+        const blob = [w.id, w.title, w.one_liner, w.status, w.pillar, w.profile].join(" ").toLowerCase();
+        return blob.includes(q);
+      });
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      all.forEach(w => {
+        const meta = [w.status, w.pillar, w.updated].filter(Boolean).join(" · ");
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "row";
+        el.innerHTML = `<span class="stripe"></span><div><div class="hid">${esc(w.id)}</div><div class="ttl">${esc(w.title || w.one_liner || w.id)}</div><p class="note">${esc(w.one_liner || t("wiki_believe"))}</p><p class="note">${esc(meta)}</p></div>`;
+        el.onclick = () => {
+          if (w.file) openMd(w.file, w.id);
+        };
+        cards.appendChild(el);
+      });
+      if (!all.length) cards.innerHTML = `<p class='empty'>${t("wiki_empty")}</p>`;
+      $list.appendChild(cards);
+    }
+
+    function renderLibrary() {
+      $list.innerHTML = "";
+      const items = GRAPH.nodes.filter(n => n.lib && inScope(n));
+      const subtypeOf = (n) => n.atom_type || n.form || n.claim_type || "";
+      const kinds = [...new Set(items.map(n => n.kind))];
+      const pool = items.filter(n => !libKind || n.kind === libKind);
+      const subs = [...new Set(pool.map(subtypeOf).filter(Boolean))].sort();
+      const statusVocab = {
+        swipe: ["trial", "working", "dead"],
+        atom: ["trial", "working", "dead"],
+        claim: ["hypothesis", "supported", "weakened", "retired"],
+      };
+      const statuses = statusVocab[libKind] || [];
+      const box = document.createElement("div");
+      box.className = "filt";
+      box.appendChild(chipRow(t("f_lib_kind"), kinds.map(k => ({ id: k, label: kindName(k) })), libKind, (id) => {
+        libKind = id;
+        libSubtype = "";
+        libStatus = "";
+        renderLibrary();
+        renderInsp();
+      }));
+      box.appendChild(chipRow(t("f_lib_subtype"), subs.map(s => ({ id: s, label: s })), libSubtype, (id) => {
+        libSubtype = id;
+        renderLibrary();
+        renderInsp();
+      }));
+      if (libKind) {
+        box.appendChild(chipRow(t("f_lib_status"), statuses.map(s => ({ id: s, label: s })), libStatus, (id) => {
+          libStatus = id;
+          renderLibrary();
+          renderInsp();
+        }));
+      }
+      $list.appendChild(box);
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      let rows = pool.filter(qmatch);
+      if (libSubtype) rows = rows.filter(n => subtypeOf(n) === libSubtype);
+      if (libStatus) rows = rows.filter(n => n.status === libStatus);
+      rows.sort((a, b) => String(a.ident).localeCompare(String(b.ident)));
+      rows.forEach(n => {
+        const meta = [n.status, subtypeOf(n), n.platforms].filter(Boolean).join(" · ");
+        cards.appendChild(listRowEl(n, meta));
+      });
+      if (!rows.length) cards.innerHTML = `<p class='empty'>${t("notes_lib")}: empty</p>`;
+      $list.appendChild(cards);
+    }
+
+    function renderNotes() {
+      $list.innerHTML = "";
+      notesTab = "notes";
+      const box = document.createElement("div");
+      box.className = "filt";
+      box.appendChild(chipRow(t("f_cap_ingest"), [
+        { id: "ingested", label: t("f_cap_ingested") },
+        { id: "not_ingested", label: t("f_cap_not_ingested") },
+      ], capIngest, (id) => {
+        capIngest = id;
+        renderNotes();
+        renderInsp();
+      }));
+      $list.appendChild(box);
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      let caps = nodesOf("capture").filter(qmatch).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      if (capIngest === "ingested") caps = caps.filter(c => c.status === "ingested");
+      if (capIngest === "not_ingested") caps = caps.filter(c => c.status !== "ingested");
+      caps.forEach(c => cards.appendChild(listRowEl(c, `${c.type} · ${c.status} · raw ${c.has_raw ? t("raw_yes") : t("raw_no")}`)));
+      if (!caps.length) cards.innerHTML = `<p class='empty'>${t("no_note")}</p>`;
+      $list.appendChild(cards);
+    }
+
     function renderMedia() {
       $list.innerHTML = "";
       const q = $q.value.trim().toLowerCase();
@@ -2901,87 +3007,6 @@
           paint();
         }
       );
-    }
-
-    function renderNotes() {
-      $list.innerHTML = "";
-      if (notesTab === "needs") notesTab = "notes";
-      const sub = document.createElement("div");
-      sub.className = "subtabs";
-      sub.innerHTML = `<button data-t="notes">${t("notes_in")}</button><button data-t="lib">${t("notes_lib")}</button>`;
-      $list.appendChild(sub);
-      sub.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.t === notesTab));
-      sub.onclick = (e) => {
-        const tab = e.target.dataset.t;
-        if (!tab) return;
-        notesTab = tab;
-        renderNotes();
-        renderInsp();
-      };
-      if (notesTab === "notes") {
-        const box = document.createElement("div");
-        box.className = "filt";
-        box.appendChild(chipRow(t("f_cap_ingest"), [
-          { id: "ingested", label: t("f_cap_ingested") },
-          { id: "not_ingested", label: t("f_cap_not_ingested") },
-        ], capIngest, (id) => {
-          capIngest = id;
-          renderNotes();
-          renderInsp();
-        }));
-        $list.appendChild(box);
-        const cards = document.createElement("div");
-        cards.className = "cards";
-        let caps = nodesOf("capture").filter(qmatch).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-        if (capIngest === "ingested") caps = caps.filter(c => c.status === "ingested");
-        if (capIngest === "not_ingested") caps = caps.filter(c => c.status !== "ingested");
-        caps.forEach(c => cards.appendChild(listRowEl(c, `${c.type} · ${c.status} · raw ${c.has_raw ? t("raw_yes") : t("raw_no")}`)));
-        if (!caps.length) cards.innerHTML = `<p class='empty'>${t("no_note")}</p>`;
-        $list.appendChild(cards);
-        return;
-      }
-      const items = GRAPH.nodes.filter(n => n.lib && inScope(n));
-      const subtypeOf = (n) => n.atom_type || n.form || n.claim_type || "";
-      const kinds = [...new Set(items.map(n => n.kind))];
-      const pool = items.filter(n => !libKind || n.kind === libKind);
-      const subs = [...new Set(pool.map(subtypeOf).filter(Boolean))].sort();
-      const statusVocab = {
-        swipe: ["trial", "working", "dead"],
-        atom: ["trial", "working", "dead"],
-        claim: ["hypothesis", "supported", "weakened", "retired"],
-      };
-      const statuses = statusVocab[libKind] || [];
-      const box = document.createElement("div");
-      box.className = "filt";
-      box.appendChild(chipRow(t("f_lib_kind"), kinds.map(k => ({ id: k, label: kindName(k) })), libKind, (id) => {
-        libKind = id;
-        libSubtype = "";
-        libStatus = "";
-        renderNotes();
-        renderInsp();
-      }));
-      box.appendChild(chipRow(t("f_lib_subtype"), subs.map(s => ({ id: s, label: s })), libSubtype, (id) => {
-        libSubtype = id;
-        renderNotes();
-        renderInsp();
-      }));
-      if (libKind) {
-        box.appendChild(chipRow(t("f_lib_status"), statuses.map(s => ({ id: s, label: s })), libStatus, (id) => {
-          libStatus = id;
-          renderNotes();
-          renderInsp();
-        }));
-      }
-      $list.appendChild(box);
-      const cards = document.createElement("div");
-      cards.className = "cards";
-      let rows = items.filter(qmatch);
-      if (libKind) rows = rows.filter(n => n.kind === libKind);
-      if (libSubtype) rows = rows.filter(n => subtypeOf(n) === libSubtype);
-      if (libStatus) rows = rows.filter(n => n.status === libStatus);
-      rows.forEach(n => cards.appendChild(rowEl(n, `${kindName(n.kind)}${subtypeOf(n) ? " · " + subtypeOf(n) : ""}`)));
-      if (!rows.length) cards.innerHTML = `<p class='empty'>${t("no_note")}</p>`;
-      $list.appendChild(cards);
     }
 
     function topicIdOf(n) {

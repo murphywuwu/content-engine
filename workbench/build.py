@@ -35,6 +35,7 @@ CLAIM_RE = re.compile(r"\bC-(?!\d{8})[a-z0-9-]+\b")
 RUN_RE = re.compile(r"RUN-[A-Za-z0-9-]+")
 PRODUCT_RE = re.compile(r"\bP-[A-Za-z0-9-]+\b")
 RECOMMENDATION_RE = re.compile(r"\bR-[A-Za-z0-9-]+\b")
+WIKI_PAGE_RE = re.compile(r"\bW-[A-Za-z0-9-]+\b")
 WIKI = re.compile(r"\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]")
 
 
@@ -471,6 +472,40 @@ def merge_engagement(*parts: dict[str, str]) -> dict[str, str]:
             if k in out and v and not out[k]:
                 out[k] = v
     return out
+
+def parse_wiki_pages(md: str | None = None) -> list[dict]:
+    if md is None:
+        md = read("wiki/_index.md")
+    rows = table_with(
+        md,
+        "id", "title", "status", "pillar", "profile", "need_count", "runs", "one_liner", "file", "updated",
+    )
+    out = []
+    for row in rows:
+        ident = (row.get("id") or "").strip().strip("`")
+        if not ident.startswith("W-"):
+            continue
+        f = (row.get("file") or "").strip().strip("`")
+        if f and not f.startswith("wiki/"):
+            f = f"wiki/pages/{f}" if not f.startswith("pages/") else f"wiki/{f}"
+        if f and not f.endswith(".md"):
+            f = f"{f}.md"
+        out.append(
+            {
+                "id": ident,
+                "title": (row.get("title") or "").strip(),
+                "status": (row.get("status") or "").strip(),
+                "pillar": (row.get("pillar") or "").strip(),
+                "profile": (row.get("profile") or "").strip(),
+                "need_count": (row.get("need_count") or "").strip(),
+                "runs": (row.get("runs") or "").strip(),
+                "one_liner": (row.get("one_liner") or "").strip(),
+                "file": f,
+                "updated": (row.get("updated") or "").strip(),
+            }
+        )
+    return out
+
 
 def parse_media(md: str | None = None) -> list[dict]:
     if md is None:
@@ -1105,7 +1140,7 @@ def build_graph() -> dict:
             edge(n["id"], nid("topic", tid), "evidence_for")
 
     for row in table_with(
-        read("swipe/_index.md"),
+        read("library/swipe/_index.md") if (ROOT / "library/swipe/_index.md").exists() else read("swipe/_index.md"),
         "id",
         "file",
         "platforms",
@@ -1121,8 +1156,10 @@ def build_graph() -> dict:
     ):
         ident = row["id"]
         fpath = row["file"]
-        if fpath and not fpath.startswith("swipe/"):
-            fpath = f"swipe/{fpath}"
+        if fpath and not fpath.startswith("library/swipe/") and not fpath.startswith("swipe/"):
+            fpath = f"library/swipe/{fpath}" if (ROOT / "library/swipe").is_dir() else f"swipe/{fpath}"
+        if fpath and fpath.startswith("swipe/") and (ROOT / "library/swipe").is_dir():
+            fpath = f"library/{fpath}"
         if fpath and not fpath.endswith(".md"):
             fpath = f"{fpath}.md"
         add_node(
@@ -1148,8 +1185,9 @@ def build_graph() -> dict:
         for cid in CAPTURE_RE.findall(row["source"]):
             edge(nid("swipe", ident), nid("capture", cid), "sourced_from")
 
+    atoms_index = "library/atoms/_index.md" if (ROOT / "library/atoms/_index.md").exists() else "wiki/atoms/_index.md"
     for row in table_with(
-        read("wiki/atoms/_index.md"),
+        read(atoms_index),
         "id",
         "file",
         "type",
@@ -1163,8 +1201,10 @@ def build_graph() -> dict:
     ):
         ident = row["id"]
         fpath = row["file"]
-        if fpath and not fpath.startswith("wiki/"):
-            fpath = f"wiki/atoms/{fpath}"
+        if fpath and not fpath.startswith("library/atoms/") and not fpath.startswith("wiki/atoms/"):
+            fpath = f"library/atoms/{fpath}" if (ROOT / "library/atoms").is_dir() else f"wiki/atoms/{fpath}"
+        if fpath and fpath.startswith("wiki/atoms/") and (ROOT / "library/atoms").is_dir():
+            fpath = f"library/atoms/{fpath.split('/')[-1]}"
         if fpath and not fpath.endswith(".md"):
             fpath = f"{fpath}.md"
         add_node(
@@ -1185,12 +1225,13 @@ def build_graph() -> dict:
                 },
             )
         )
-        if (ROOT / fpath).exists():
+        if fpath and (ROOT / fpath).exists():
             for cid in CAPTURE_RE.findall(read(fpath)):
                 edge(nid("atom", ident), nid("capture", cid), "sourced_from")
 
+    claims_index = "library/claims/_index.md" if (ROOT / "library/claims/_index.md").exists() else "wiki/claims/_index.md"
     for row in table_with(
-        read("wiki/claims/_index.md"),
+        read(claims_index),
         "id",
         "file",
         "type",
@@ -1204,8 +1245,10 @@ def build_graph() -> dict:
     ):
         ident = row["id"]
         fpath = row["file"]
-        if fpath and not fpath.startswith("wiki/"):
-            fpath = f"wiki/claims/{fpath}"
+        if fpath and not fpath.startswith("library/claims/") and not fpath.startswith("wiki/claims/"):
+            fpath = f"library/claims/{fpath}" if (ROOT / "library/claims").is_dir() else f"wiki/claims/{fpath}"
+        if fpath and fpath.startswith("wiki/claims/") and (ROOT / "library/claims").is_dir():
+            fpath = f"library/claims/{fpath.split('/')[-1]}"
         if fpath and not fpath.endswith(".md"):
             fpath = f"{fpath}.md"
         evidence_runs = []
@@ -1506,6 +1549,8 @@ def build_graph() -> dict:
         "keywords": keywords,
         "media": parse_media(),
         "media_index_present": (ROOT / "media" / "_index.md").exists(),
+        "wiki": parse_wiki_pages(),
+        "wiki_index_present": (ROOT / "wiki" / "_index.md").exists(),
         "nodes": list(nodes.values()),
         "edges": uniq,
     }

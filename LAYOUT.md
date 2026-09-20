@@ -36,6 +36,8 @@ The Content Engine is two logical layers. They may live in **one folder** (defau
 - `topics/scoring.md`, `topics/_template-item.md`, skeleton indexes
 - `needs|_hits|…` → `_template.md`, empty `_index.md`, README only
 - `media/` → empty `_index.md`, README only (image originals are vault)
+- `wiki/` → `_index.md`, `_template.md`, `_unfiled.md`, empty `pages/` (notes only)
+- `library/` → `swipe|atoms|claims` empty indexes + templates (craft catalog)
 - `profiles/default/brand.md` → starter fill (not a filled creator brand)
 - `platforms/*.md`, `runs/_template/**`
 - Starter `profiles/default/**` fills (not a filled creator vault)
@@ -43,6 +45,7 @@ The Content Engine is two logical layers. They may live in **one folder** (defau
 **Vault (keep private):**
 
 - Filled `profiles/<id>/` (incl. `brand.md`), `needs/entries`, `hits/entries`, `topics/items`
+- Filled `wiki/pages/W-*.md` and `library/` craft bodies
 - `media/` image originals and filled `media/_index.md` rows
 - `runs/RUN-*`, inbox entries, published rows, export binaries/paths
 - Real account handles and overrides

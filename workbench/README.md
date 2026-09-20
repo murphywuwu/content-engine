@@ -15,6 +15,8 @@ python3 workbench/serve.py
 
 With the server running, **Markdown edits refresh the observatory automatically** (no `build.py` required). The browser loads `template.html`, fetches `/api/graph`, and listens to `/api/events` (SSE) for vault changes.
 
+Tabs include **Wiki** (lesson notebook `wiki/`) and **Library** (craft under `library/`).
+
 Optional offline bake (file:// only):
 
 ```bash

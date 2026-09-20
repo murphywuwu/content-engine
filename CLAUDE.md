@@ -63,9 +63,12 @@ This folder is the local **Content Engine** for EasySociable.
 | `topics/_index.md` | Topic queue (one row per topic + `item` + src engagement) |
 | `topics/items/T-*.md` | Opportunity card (human half) + Score/Trace appendix |
 | `topics/scoring.md` | Scout gate + opportunity five-dim (context/audience/conflict/insight/evidence) |
-| `swipe/_index.md` | Structures (+ `profiles` column) |
-| `wiki/atoms/_index.md` | Atoms (+ `profiles`) |
-| `wiki/claims/_index.md` | Claims (+ `profiles`) |
+| `library/swipe/_index.md` | Structures (+ `profiles` column) |
+| `library/atoms/_index.md` | Atoms (+ `profiles`) |
+| `library/claims/_index.md` | Claims (+ `profiles`) |
+| `wiki/_index.md` | Notebook map (lesson pages `W-*`) |
+| `wiki/pages/W-*.md` | One lesson = one compiled map (Agent writes; you read) |
+| `wiki/_unfiled.md` | Captures/needs not yet hung on a `W-` |
 | `runs/_index.md` | Job queue (one row per **platform run**) |
 | `runs/<slug>/` | One platform draft → pack → feedback |
 | `published/_index.md` | One row per **shipped URL** (one run → usually one row) |
@@ -77,14 +80,15 @@ This folder is the local **Content Engine** for EasySociable.
 
 | User intent | Action |
 |-------------|--------|
-| capture / 记一下 (+ link) | **§ Capture** only — **not** topics by default |
-| 记需求 / 用户原话 / 评论导出 | **§ Needs** only |
+| capture / 记一下 (+ link) | **§ Capture** only — **not** topics by default; hang on `W-` or `_unfiled` |
+| 记需求 / 用户原话 / 评论导出 | **§ Needs** only; hang on `W-` or `_unfiled` |
+| 维护笔记 / 扫笔记 / lint 笔记 / wiki | **§ Wiki** |
 | 加关键词 / 更新关键词库 | Edit `profiles/<id>/keywords.md` (**ask profile** if unset) |
 | 从需求生成关键词 / 生成 listen\|search\|ask 词 | **§ Keywords · Generate** (chat → confirm → write) |
 | 加/改 handles | Edit `profiles/<id>/handles.md`; keep **≤8** |
 | 扫关键词 / 扫 K-xx / 看 @handle | **§ Keywords** scan (**listen** default) → **§ Hits** |
 | 路由 Hit / H-xx | **§ Hits** → Needs or Capture+library / discard |
-| **扫需求选题** | **§ Topics** from `needs/` where `status=captured`; max 5 `produce` |
+| **扫需求选题** | **§ Topics** — **read matching `W-` first**, then from `needs/` where `status=captured`; max 5 `produce` |
 | 扫 inbox 选题 | **§ Topics** — from captures without topic yet (max 5) |
 | 生成 topic (no source specified) | **§ Topics** — offer captured needs or ask which explicit input to use |
 | 链接直接选题 / 把 C-xxx 做成选题 | **§ Topics** — create T- (may link capture) |
@@ -92,11 +96,11 @@ This folder is the local **Content Engine** for EasySociable.
 | 设置品牌 / 改 logo / 配色 / 字体 / set brand / brand colors | Edit `profiles/<id>/brand.md` (**ask profile** if unset) |
 | 存图 / 记图 / 加素材 / catalog image / add media | **§ Media** — add row to `media/_index.md` (dedup by sha256, tag) |
 | 找图 / find image / which image for … | **§ Media** — retrieve by tag/link from `media/_index.md` |
-| 开一单 / 用 T-xxx 开一单 | **Hard gate first**, then **§ Open a run** — **ask platform(s)** if unset; multi-select → **N runs** (bind `topic_id` if from T-) |
+| 开一单 / 用 T-xxx 开一单 | **Hard gate first**, then **§ Open a run** — **ask platform(s)** if unset; **read linked `W-` before Selection**; multi-select → **N runs** (bind `topic_id` if from T-) |
 | Quick draft | Resolve profile; selection; draft in chat |
-| 收成 swipe/atom/claim | **§ Library ingest** after approval |
+| 收成 swipe/atom/claim | **§ Library ingest** after approval → files under `library/` |
 | 选题后同意进 inbox | Capture that URL/C-link then optional library offer |
-| Post URL after ship | feedback + **§ Published index** |
+| Post URL after ship | feedback + **§ Published index** + **update linked `W-` battles / parts** |
 | 复盘 / 批准晋级 | Claims promote + published index |
 | Update pillars/audience | Edit **`profiles/<id>/…`** |
 | 更新产品 / 产品库 | Edit **`products/`**; keep dates and source of truth |
@@ -133,10 +137,17 @@ Then:
 ### Do not
 
 - Use deprecated `inbox/capture.md` (removed)  
-- Silent-write swipe/atoms/claims  
+- Silent-write swipe/atoms/claims under `library/`  
 - Treat capture as a finished run  
 - Reply “saved” without **Capture Card**  
 - Invent facts not in the user message / source  
+- Invent a new `W-` when the lesson is unclear — use **§ Wiki** hang-or-unfiled  
+
+### After store (notebook)
+
+1. Try to match an existing active/seed `W-` (same pain / pillar / reader job).  
+2. If matched: append the `C-` under **Related captures** on that page; touch `updated`.  
+3. If not: append a row to `wiki/_unfiled.md` and ask hang vs create — **do not** invent a slug.
 
 ### entry file (minimal shape)
 
@@ -303,18 +314,20 @@ relationships before drafting.
 1. If needs exist with `status=captured`, offer **扫需求选题**.
 2. Otherwise ask which explicit input to use.
 
-0. Resolve profile **Language** (`voice.md` → pillars → `engine.json` locale).
+0. Resolve profile **Language** (`voice.md` → pillars → `engine.json` locale).  
+0b. **Notebook first:** read matching `wiki/pages/W-*.md` (`active`/`seed`) for the same pain/pillar. Note battles already fought and **Do not do**. Same “we believe” + existing win/loss → prefer `discard` or demand a new cut — do not mint a lookalike `produce` by default.  
 1. Hard filters (`scoring.md`); else skip.
 2. **Scout gate** — set `purpose` + `scout_label`; if `discard`, do not create T-. Needs-sourced default `scout_label=demand` (ally/foil/craft_only still allowed when honest).
 3. **Mode pick** — if proceeding toward `produce`, **ask** `generation_mode` (six modes). Recommend `demand` for Need-led input; wait for user choice. Do not write a `produce` T- before the choice. Validate required ids for that mode.
 4. If `produce` (or user forces score):
-   a. Write the **decision card** first (`topics/_template-item.md` upper half), in profile Language: Verdict, Why this status, Who it’s for, Core judgment, Next step, then What problem / What they believe / What cut / Why now / What should change / Based on / Gaps / Suggested form. Keep the summary short; no enum lists, heat, or weighted arithmetic in the readable layer. Set frontmatter `generation_mode` to the chosen mode.
+   a. Write the **decision card** first (`topics/_template-item.md` upper half), in profile Language: Verdict, Why this status, Who it’s for, Core judgment, Next step, then What problem / What they believe / What cut / Why now / What should change / Based on / Gaps / Suggested form. Keep the summary short; no enum lists, heat, or weighted arithmetic in the readable layer. Set frontmatter `generation_mode` to the chosen mode. Cite `W-` id in Trace when used.
    b. Score all 5 opportunity dims (0–10) → `opp_score`. Put **numbers only** in `## Score`. Do not repeat the card as table notes.
-   c. Fill `## Trace` (ids, src heat) and `## Constraints` (writer must-nots). Write `topics/items/T-….md`.
+   c. Fill `## Trace` (ids, src heat, `W-` ids) and `## Constraints` (writer must-nots). Write `topics/items/T-….md`.
 5. If `library`: optional light item with `status: library`, or capture offer only. Source needs stay `captured` (or `retired` if the user discards).
 6. Add row on `topics/_index.md` (`item` + `src_*` when external). `one_liner` = the card’s core-judgment sentence, same language.
 7. If this T- was `produce` from `N-` ids: update each `needs/_index.md` row + entry to `status=promoted` and `topic_ids` containing this T-. Skip if no T- was written (`discard`).
-8. Output the **Decision Card** in chat — same shape and language as the file’s readable layer, not a score walkthrough. Optional operator gloss in another language is chat-only.
+8. If `produce` and a `W-` matched (or user named one): append the T- to that page’s **Battles fought** as `pending`.  
+9. Output the **Decision Card** in chat — same shape and language as the file’s readable layer, not a score walkthrough. Optional operator gloss in another language is chat-only.
 
 **Important:** “What do they believe now?” must name the false belief. If you cannot, conflict cannot score above 5. Brief inherits the readable judgment layer, not the Score table.
 
@@ -355,12 +368,40 @@ On `用 T-xxx 开一单`: **ask platform(s)** if unset (multi-select OK). Create
 
 ## § Swipe / atom library
 
-- **Catalog:** `swipe/_index.md` / `wiki/atoms/_index.md` are the selection entrypoints (Approach B).  
+- **Catalog:** `library/swipe/_index.md` / `library/atoms/_index.md` / `library/claims/_index.md` are the selection entrypoints (Approach B).  
+- **Notebook first:** when a Topic links a `W-`, read that page’s **Parts that fit / Do not do** before opening library indexes.  
 - **Hit-status:** `trial` | `working` | `dead` (not claim epistemology).  
 - **Hits cache:** index columns `n` `win` `loss` from **our** `published.result`.  
 - **Use history:** `published/_index.md` (columns `swipe` / `atoms`). **Do not** put an Evidence table in swipe/atom files.  
-- **New item:** template + index row; default `trial`, n=win=loss=0.  
+- **New item:** template + index row under `library/`; default `trial`, n=win=loss=0.  
 - **From capture / run:** only via **§ Library ingest**. Never silent seed from runs.
+
+---
+
+## § Wiki (notebook / lesson map)
+
+Triggers: 维护笔记 / 扫笔记 / lint 笔记 / hang on W- / create lesson.
+
+**Role:** Compiled lesson pages (`wiki/pages/W-*.md`). Not a second inventory of needs/topics/runs. Not craft parts (`library/`).
+
+### Rules
+
+- One recurring lesson → one `W-`. Prefer merge over near-duplicate pages.  
+- Agent writes pages; human reads. Schema = this section + `wiki/_template.md`.  
+- Closed see-also rels: `related` | `contradicts` | `parent` | `child` | `next` — pairwise, ≤5 per page.  
+- Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.  
+- Lint (on request): unpaired see-also, stale pages, unfiled backlog, open contradictions.
+
+### When other sections must touch wiki
+
+| Event | Wiki action |
+|-------|-------------|
+| Capture stored | Hang `C-` or unfiled |
+| Need ingested | Hang `N-`; may revise **We believe** / contradictions / still missing |
+| Topic `produce` written | Append T- to **Battles** as `pending` on matching `W-` |
+| Before Scout (扫需求选题) | Read matching active `W-` pages first |
+| Before run Selection | Read linked `W-` parts table first |
+| Ship / 复盘 | Update battle result + parts fits/avoid + believe line if learned |
 
 ---
 
@@ -502,6 +543,7 @@ retired   → user discarded
 ```
 
 3. Synonym merge: propose → user yes → same `N-` stays `captured`, `frequency += 1`, append sighting. Retire a mistaken duplicate.
+4. **Notebook:** hang `N-` on matching `W-` (**Readers say**) or append `wiki/_unfiled.md`. May revise **We believe** / contradictions / still missing. Do not invent a new `W-` without user naming the lesson.
 
 Hard gate: `needs/_index.md` ≥ **3** `N-` rows once `needs/` exists (empty index fails). Target **5**. Prefer scanning needs before inbox.
 
@@ -578,7 +620,9 @@ Human gates (chat only):
 
 Before brief body, evaluate catalogs (Approach B + **profile + this run’s platform**).
 
-Filter every catalog row:
+0. **Notebook first:** if the Topic (or Need) links a `W-`, open `wiki/pages/W-….md` and read **Parts that fit** / **Do not do**. Prefer `fits` ids; never auto-pick `avoid`. If nothing fits, choose `none` and say why — do not force a part.
+
+Filter every catalog row under `library/`:
 
 - `platforms` includes this run’s platform (or `*`)  
 - `profiles` is `*` **or** includes current `profile_id`  
@@ -768,7 +812,8 @@ On confirmed ship for this run:
 2. Optional stub.  
 3. `runs/_index` status → `published`.  
 4. **§ Catalog evidence** for every cited swipe / atom / claim id (skip `none`).  
-5. Weekly 复盘: start from **published** `_index`. Same topic’s other platforms = other runs / other published rows.
+5. **Notebook:** if a `W-` is linked from the Topic/Need, update **Battles fought** (`win`/`loss`) and **Parts that fit** (`fits`/`avoid`) from this ship; revise **We believe** only when the learning is explicit.  
+6. Weekly 复盘: start from **published** `_index`. Same topic’s other platforms = other runs / other published rows.
 
 ### § Catalog evidence (required on ship)
 
@@ -888,9 +933,9 @@ These gates are for **new ingest**, not for promoting `working` (that uses our `
 
 | Ask | Create |
 |-----|--------|
-| 收成 swipe | `swipe/` + index, `trial`, n=win=loss=0 |
-| 收成 atom | `wiki/atoms/`, set `type`, `trial`, n=win=loss=0 |
-| 收成 claim | `wiki/claims/`, `hypothesis`, n=win=loss=0 |
+| 收成 swipe | `library/swipe/` + index, `trial`, n=win=loss=0 |
+| 收成 atom | `library/atoms/`, set `type`, `trial`, n=win=loss=0 |
+| 收成 claim | `library/claims/`, `hypothesis`, n=win=loss=0 |
 
 ### § Claims promote
 

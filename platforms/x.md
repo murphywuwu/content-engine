@@ -74,5 +74,5 @@ Do **not** default to:
 ## Out of scope here
 
 - Carousel / slideshow page structure → run `pack` + EasySociable skills; see also `linkedin.md` / `ig.md` / `tiktok.md` for visual-native networks  
-- Learned strategies → `wiki/claims/`; techniques → `wiki/atoms/`  
+- Learned strategies → `library/claims/`; techniques → `library/atoms/`  
 - Multi-platform native rules → other `platforms/*.md` files (do **not** paste X copy into Threads/LI/IG/TT unchanged)  

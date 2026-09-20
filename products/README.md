@@ -34,5 +34,5 @@ Needs (demand evidence) + Profile (identity)
   Topic or Run.
 - Use `product_fit: none` for useful education that does not need a product
   connection. Do not force a CTA into every Topic.
-- Product claims here describe the offer. The `wiki/claims/` catalog tracks
+- Product claims here describe the offer. The `library/claims/` catalog tracks
   propositions tested through published content; they are different objects.
