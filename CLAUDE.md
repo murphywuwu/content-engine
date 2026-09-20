@@ -82,7 +82,7 @@ This folder is the local **Content Engine** for EasySociable.
 |-------------|--------|
 | capture / 记一下 (+ link) | **§ Capture** only — **not** topics by default; hang on `W-` or `_unfiled` |
 | 记需求 / 用户原话 / 评论导出 | **§ Needs** only; hang on `W-` or `_unfiled` |
-| 维护笔记 / 扫笔记 / lint 笔记 / wiki | **§ Wiki** |
+| 维护笔记 / 扫笔记 / lint 笔记 / wiki | **§ Wiki** (lint → `python3 scripts/lint-wiki.py --engine .`) |
 | 加关键词 / 更新关键词库 | Edit `profiles/<id>/keywords.md` (**ask profile** if unset) |
 | 从需求生成关键词 / 生成 listen\|search\|ask 词 | **§ Keywords · Generate** (chat → confirm → write) |
 | 加/改 handles | Edit `profiles/<id>/handles.md`; keep **≤8** |
@@ -315,7 +315,10 @@ relationships before drafting.
 2. Otherwise ask which explicit input to use.
 
 0. Resolve profile **Language** (`voice.md` → pillars → `engine.json` locale).  
-0b. **Notebook first:** read matching `wiki/pages/W-*.md` (`active`/`seed`) for the same pain/pillar. Note battles already fought and **Do not do**. Same “we believe” + existing win/loss → prefer `discard` or demand a new cut — do not mint a lookalike `produce` by default.  
+0b. **Notebook hard gate (lookalike):** read matching `wiki/pages/W-*.md` (`active`/`seed`) for the same pain/pillar.  
+   - If a page’s **We believe** covers this Need/cut **and** **Battles fought** already has `win` or `loss` for that same cut → **default `purpose=discard`** (or require user to name a **new cut** in chat before `produce`).  
+   - Do **not** write a lookalike `produce` T- unless the user explicitly overrides after seeing the W- battles.  
+   - Cite every `W-` read in Trace.  
 1. Hard filters (`scoring.md`); else skip.
 2. **Scout gate** — set `purpose` + `scout_label`; if `discard`, do not create T-. Needs-sourced default `scout_label=demand` (ally/foil/craft_only still allowed when honest).
 3. **Mode pick** — if proceeding toward `produce`, **ask** `generation_mode` (six modes). Recommend `demand` for Need-led input; wait for user choice. Do not write a `produce` T- before the choice. Validate required ids for that mode.
@@ -369,7 +372,7 @@ On `用 T-xxx 开一单`: **ask platform(s)** if unset (multi-select OK). Create
 ## § Swipe / atom library
 
 - **Catalog:** `library/swipe/_index.md` / `library/atoms/_index.md` / `library/claims/_index.md` are the selection entrypoints (Approach B).  
-- **Notebook first:** when a Topic links a `W-`, read that page’s **Parts that fit / Do not do** before opening library indexes.  
+- **Notebook hard gate:** when a Topic links a `W-`, read that page’s **Parts that fit / Do not do** before opening library indexes; Open card must cite `W-…` or `W-: none`.  
 - **Hit-status:** `trial` | `working` | `dead` (not claim epistemology).  
 - **Hits cache:** index columns `n` `win` `loss` from **our** `published.result`.  
 - **Use history:** `published/_index.md` (columns `swipe` / `atoms`). **Do not** put an Evidence table in swipe/atom files.  
@@ -389,8 +392,39 @@ Triggers: 维护笔记 / 扫笔记 / lint 笔记 / hang on W- / create lesson.
 - One recurring lesson → one `W-`. Prefer merge over near-duplicate pages.  
 - Agent writes pages; human reads. Schema = this section + `wiki/_template.md`.  
 - Closed see-also rels: `related` | `contradicts` | `parent` | `child` | `next` — pairwise, ≤5 per page.  
-- Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.  
-- Lint (on request): unpaired see-also, stale pages, unfiled backlog, open contradictions.
+- Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.
+
+### Lint (required when user says lint 笔记 / wiki lint)
+
+Run (preferred):
+
+```bash
+python3 scripts/lint-wiki.py --engine .
+```
+
+Or walk pages by hand. **Report only — do not auto-fix** unless user 批准 each fix.
+
+| Check | Fail when |
+|-------|-----------|
+| Unpaired see-also | A lists `rel → W-B` but B does not list the inverse (`related`↔`related`, `contradicts`↔`contradicts`, `parent`↔`child`, `next` may be one-way) |
+| See-also overflow | A page has >5 see-also rows |
+| Stale open | `status=stale` on index or frontmatter |
+| Unfiled backlog | `wiki/_unfiled.md` has data rows (not only header) |
+| Open contradictions | **Contradictions** section is non-empty and not exactly `none` / `—` |
+| Missing file | Index row `file` path does not exist |
+| Orphan page | `wiki/pages/W-*.md` exists but no index row |
+
+Chat card:
+
+```text
+🩺 Wiki lint
+【Unpaired】 …
+【Stale】 …
+【Unfiled】 n rows
+【Contradictions】 …
+【Missing/orphan】 …
+Reply 批准 fix: … / 再观察
+```
 
 ### When other sections must touch wiki
 
@@ -399,8 +433,8 @@ Triggers: 维护笔记 / 扫笔记 / lint 笔记 / hang on W- / create lesson.
 | Capture stored | Hang `C-` or unfiled |
 | Need ingested | Hang `N-`; may revise **We believe** / contradictions / still missing |
 | Topic `produce` written | Append T- to **Battles** as `pending` on matching `W-` |
-| Before Scout (扫需求选题) | Read matching active `W-` pages first |
-| Before run Selection | Read linked `W-` parts table first |
+| Before Scout (扫需求选题) | **Hard:** read matching `W-`; apply lookalike gate (§ Topics 0b) |
+| Before run Selection | **Hard:** read linked `W-` parts table; cite `W-` on Open card |
 | Ship / 复盘 | Update battle result + parts fits/avoid + believe line if learned |
 
 ---
@@ -620,7 +654,12 @@ Human gates (chat only):
 
 Before brief body, evaluate catalogs (Approach B + **profile + this run’s platform**).
 
-0. **Notebook first:** if the Topic (or Need) links a `W-`, open `wiki/pages/W-….md` and read **Parts that fit** / **Do not do**. Prefer `fits` ids; never auto-pick `avoid`. If nothing fits, choose `none` and say why — do not force a part.
+0. **Notebook hard gate:** resolve linked `W-` from Topic Trace / Need hang / user.  
+   - If a `W-` exists for this lesson: **must** open `wiki/pages/W-….md` and read **Parts that fit** / **Do not do** **before** opening any `library/*/_index.md`.  
+   - Selection may only use ids marked `fits`, or `none`. Ids marked `avoid` are **forbidden**.  
+   - If the page has no fits row: Selection = `none` + why (still valid).  
+   - If no `W-` is linked: say so on the Open card, then fall back to library indexes (legacy). Prefer hanging a `W-` next time.  
+   - Open / Selection card **must** name `W-…` or `W-: none`.
 
 Filter every catalog row under `library/`:
 
@@ -964,6 +1003,7 @@ Reply 批准 … / 否决 / 再观察
 
 ### Self-check (Topic / Opportunity)
 
+- [ ] Notebook lookalike gate applied (W- read; no silent duplicate produce)  
 - [ ] Decision card filled (结论 / 状态原因 / 适合谁 / 核心判断 / 下一步)
 - [ ] Readable judgment filled (问题 / 当前相信什么 / 我们的角度 / 为什么现在 / 看完后的改变 / 依据 / 缺口 / 形式)
 - [ ] False belief named in 「他们现在相信什么」 (not just a conflict score)
@@ -985,6 +1025,7 @@ Reply 批准 … / 否决 / 再观察
 - [ ] Image pack only for this run’s platform; exports under `exports/<slug>/`  
 - [ ] Each ship → published row; this run → `published`  
 - [ ] `idea.md` has `swipe_id` / `atoms` / `claim_id` matching the Open card (not only chat)  
+- [ ] Open/Selection card cites `W-…` or `W-: none`; no `avoid` parts selected  
 - [ ] Cited swipe/atom/claim index `n`/`win`/`loss` bumped **on ship only**; status unchanged unless user 批准  
 - [ ] Swipe/atom: no Evidence section; claim Evidence table updated if claim used  
 - [ ] Selection dropped `dead`/`retired`; did not treat claim `supported` as a hit-rank  
