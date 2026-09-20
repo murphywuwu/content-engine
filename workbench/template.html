@@ -1173,7 +1173,7 @@
         media_empty: "media/_index.md 里还没有素材",
         media_hosted: "已上传",
         media_local: "仅本地",
-        wiki_empty: "wiki/_index.md 里还没有笔记页",
+        wiki_empty: "该 profile 的 wiki/pages/<profile>/ 下还没有 W- 笔记",
         wiki_believe: "我们现在相信",
         notes_in: "记下的", notes_lib: "零件库",
         runs_sub_calendar: "📅 日历排期",
@@ -1388,7 +1388,7 @@
         media_empty: "No media in media/_index.md",
         media_hosted: "Uploaded",
         media_local: "Local only",
-        wiki_empty: "No notebook pages in wiki/_index.md",
+        wiki_empty: "No W- pages under wiki/pages/<profile>/ for this profile",
         wiki_believe: "We believe",
         notes_in: "Captured", notes_lib: "Library",
         runs_sub_calendar: "📅 Calendar & Schedule",
@@ -2752,6 +2752,9 @@
       $list.innerHTML = "";
       const q = $q.value.trim().toLowerCase();
       const all = (GRAPH.wiki || []).filter(w => {
+        if (profileScope && w.profile && w.profile !== "*" && w.profile !== profileScope && w.profile !== "_shared") {
+          return false;
+        }
         if (!q) return true;
         const blob = [w.id, w.title, w.one_liner, w.status, w.pillar, w.profile].join(" ").toLowerCase();
         return blob.includes(q);
@@ -2759,7 +2762,7 @@
       const cards = document.createElement("div");
       cards.className = "cards";
       all.forEach(w => {
-        const meta = [w.status, w.pillar, w.updated].filter(Boolean).join(" · ");
+        const meta = [w.profile, w.status, w.pillar, w.updated].filter(Boolean).join(" · ");
         const el = document.createElement("button");
         el.type = "button";
         el.className = "row";

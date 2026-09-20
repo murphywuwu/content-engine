@@ -45,7 +45,7 @@ The Content Engine is two logical layers. They may live in **one folder** (defau
 **Vault (keep private):**
 
 - Filled `profiles/<id>/` (incl. `brand.md`), `needs/entries`, `hits/entries`, `topics/items`
-- Filled `wiki/pages/W-*.md` and `library/` craft bodies
+- Filled `wiki/pages/<profile>/W-*.md` and `library/` craft bodies
 - `media/` image originals and filled `media/_index.md` rows
 - `runs/RUN-*`, inbox entries, published rows, export binaries/paths
 - Real account handles and overrides

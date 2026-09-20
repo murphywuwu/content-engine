@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-"""Lint Content Engine wiki notebook pages (report only).
+"""Lint Content Engine wiki notebooks (report only).
 
   python3 scripts/lint-wiki.py --engine .
   python3 scripts/lint-wiki.py --self-check
 
-Checks: unpaired see-also, overflow (>5), stale status, unfiled backlog,
-open contradictions, missing index files, orphan pages.
+Pages live under wiki/pages/<profile>/W-*.md. wiki/_index.md is a thin
+profile→folder map, not a per-note catalog.
 """
 
 from __future__ import annotations
 
 import argparse
 import re
-import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,17 +22,10 @@ INVERSE = {
     "parent": "child",
     "child": "parent",
 }
-# `next` is allowed one-way; still counted in overflow.
 
 WID_RE = re.compile(r"W-[A-Za-z0-9_-]+")
-
-
-def extract_wid(cell: str) -> str:
-    """Bare W-… or [[…W-…]] / [[…\\|W-…]]."""
-    cell = (cell or "").replace("\\|", "|").strip()
-    m = WID_RE.search(cell)
-    return m.group(0) if m else ""
 STATUS_RE = re.compile(r"^status:\s*(?P<status>\S+)\s*$", re.MULTILINE)
+PROFILE_RE = re.compile(r"^profile:\s*(?P<profile>\S+)\s*$", re.MULTILINE)
 EMPTYISH = frozenset({"", "none", "—", "-", "n/a", "na"})
 
 
@@ -47,9 +39,16 @@ class Finding:
 class Page:
     wid: str
     path: Path
+    profile: str
     status: str = ""
     see_also: list[tuple[str, str]] = field(default_factory=list)
     contradictions_open: bool = False
+
+
+def extract_wid(cell: str) -> str:
+    cell = (cell or "").replace("\\|", "|").strip()
+    m = WID_RE.search(cell)
+    return m.group(0) if m else ""
 
 
 def _cells(line: str) -> list[str]:
@@ -72,9 +71,8 @@ def _data_rows(section: str) -> list[str]:
         cells = _cells(line)
         if not cells:
             continue
-        # skip header-ish first cells
         head = cells[0].lower()
-        if head in {"id", "rel", "date", "kind", "need_id", "capture_id", "topic_id"}:
+        if head in {"id", "rel", "date", "kind", "need_id", "capture_id", "topic_id", "profile"}:
             continue
         if all(c == "" for c in cells):
             continue
@@ -82,38 +80,40 @@ def _data_rows(section: str) -> list[str]:
     return rows
 
 
-def parse_index(index_path: Path) -> list[tuple[str, str, str]]:
-    """Return (id, status, file) rows from wiki/_index.md."""
+def parse_notebook_index(index_path: Path) -> list[tuple[str, str]]:
+    """Return (profile, path_hint) from thin wiki/_index.md."""
     if not index_path.exists():
         return []
-    text = index_path.read_text(encoding="utf-8")
-    out: list[tuple[str, str, str]] = []
-    for line in text.splitlines():
-        if not line.strip().startswith("|"):
-            continue
-        if _is_sep(line):
+    out: list[tuple[str, str]] = []
+    for line in index_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip().startswith("|") or _is_sep(line):
             continue
         cells = _cells(line)
-        if len(cells) < 9:
+        if len(cells) < 2:
             continue
-        wid = extract_wid(cells[0])
-        if not wid:
+        profile = cells[0].strip().strip("`")
+        if not profile or profile.lower() == "profile":
             continue
-        status, file_cell = cells[2], cells[8]
-        out.append((wid, status, file_cell))
+        path_hint = cells[1].replace("\\|", "|").strip()
+        m = re.search(r"\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]", path_hint)
+        if m:
+            path_hint = m.group(1).strip()
+        out.append((profile, path_hint))
     return out
 
 
-def parse_page(path: Path) -> Page:
+def parse_page(path: Path, profile: str) -> Page:
     text = path.read_text(encoding="utf-8")
     wid = path.stem
     status_m = STATUS_RE.search(text)
     status = status_m.group("status") if status_m else ""
+    prof_m = PROFILE_RE.search(text)
+    if prof_m and prof_m.group("profile") not in {"*", "PROFILE_ID"}:
+        profile = prof_m.group("profile")
 
     see: list[tuple[str, str]] = []
     if "## See also" in text:
         body = text.split("## See also", 1)[1]
-        # stop at next ## if any
         if "\n## " in body:
             body = body.split("\n## ", 1)[0]
         for line in body.splitlines():
@@ -123,9 +123,7 @@ def parse_page(path: Path) -> Page:
             if len(cells) < 2:
                 continue
             rel = cells[0].lower()
-            if rel not in INVERSE and rel != "next":
-                continue
-            if rel == "rel":
+            if rel == "rel" or (rel not in INVERSE and rel != "next"):
                 continue
             target = extract_wid(cells[1])
             if target:
@@ -144,15 +142,40 @@ def parse_page(path: Path) -> Page:
         if bullets and not all(b in EMPTYISH for b in bullets):
             contradictions_open = True
 
-    return Page(wid=wid, path=path, status=status, see_also=see, contradictions_open=contradictions_open)
+    return Page(
+        wid=wid,
+        path=path,
+        profile=profile,
+        status=status,
+        see_also=see,
+        contradictions_open=contradictions_open,
+    )
+
+
+def discover_pages(pages_dir: Path) -> tuple[dict[tuple[str, str], Page], list[Finding]]:
+    pages: dict[tuple[str, str], Page] = {}
+    findings: list[Finding] = []
+    if not pages_dir.is_dir():
+        return pages, findings
+    for path in sorted(pages_dir.rglob("W-*.md")):
+        rel = path.relative_to(pages_dir)
+        if len(rel.parts) == 1:
+            findings.append(Finding("misplaced", f"{rel} (put under pages/<profile>/)"))
+            profile = "_"
+        else:
+            profile = rel.parts[0]
+        page = parse_page(path, profile)
+        key = (page.profile if page.profile != "_" else profile, page.wid)
+        if key in pages:
+            findings.append(Finding("duplicate", f"{key[0]}/{key[1]}"))
+        pages[key] = page
+    return pages, findings
 
 
 def unfiled_count(unfiled_path: Path) -> int:
     if not unfiled_path.exists():
         return 0
-    text = unfiled_path.read_text(encoding="utf-8")
-    # table after first heading
-    return len(_data_rows(text))
+    return len(_data_rows(unfiled_path.read_text(encoding="utf-8")))
 
 
 def lint_engine(engine: Path) -> list[Finding]:
@@ -160,73 +183,67 @@ def lint_engine(engine: Path) -> list[Finding]:
     pages_dir = wiki / "pages"
     findings: list[Finding] = []
 
-    index_rows = parse_index(wiki / "_index.md")
-    index_ids = {r[0] for r in index_rows}
-    index_by_id = {r[0]: r for r in index_rows}
+    notebooks = parse_notebook_index(wiki / "_index.md")
+    for profile, path_hint in notebooks:
+        candidates = [
+            engine / path_hint if path_hint else Path(),
+            wiki / path_hint if path_hint else Path(),
+            pages_dir / profile,
+        ]
+        if not any(c.is_dir() for c in candidates if str(c) not in {".", ""}):
+            findings.append(Finding("missing_notebook", f"{profile} path={path_hint!r}"))
 
-    pages: dict[str, Page] = {}
-    if pages_dir.is_dir():
-        for path in sorted(pages_dir.glob("W-*.md")):
-            page = parse_page(path)
-            pages[page.wid] = page
+    pages, extra = discover_pages(pages_dir)
+    findings.extend(extra)
 
-    for wid, status, file_cell in index_rows:
-        if status.strip().lower() == "stale" or (
-            wid in pages and pages[wid].status.lower() == "stale"
-        ):
-            findings.append(Finding("stale", wid))
-        # strip [[wikilink]] / alias for path resolve
-        path_hint = file_cell.replace("\\|", "|").strip()
-        m_link = re.search(r"\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]", path_hint)
-        if m_link:
-            path_hint = m_link.group(1).strip()
-        ok = False
-        if path_hint or wid:
-            candidates = [
-                engine / path_hint if path_hint else Path(),
-                wiki / path_hint if path_hint else Path(),
-                pages_dir / f"{wid}.md",
-                engine / f"{path_hint}.md" if path_hint and not path_hint.endswith(".md") else Path(),
-            ]
-            ok = any(c.is_file() for c in candidates if str(c) not in {".", ""})
-        if not ok:
-            findings.append(Finding("missing", f"{wid} file={file_cell!r}"))
+    # pages keyed for see-also within profile
+    by_prof_wid = pages
+    wid_only: dict[str, list[tuple[str, str]]] = {}
+    for (prof, wid), page in pages.items():
+        wid_only.setdefault(wid, []).append((prof, wid))
 
-    for wid, page in pages.items():
-        if wid not in index_ids:
-            findings.append(Finding("orphan", str(page.path.relative_to(engine))))
-        if len(page.see_also) > 5:
-            findings.append(Finding("overflow", f"{wid} has {len(page.see_also)} see-also"))
+    for (prof, wid), page in pages.items():
+        if page.status.lower() == "stale":
+            findings.append(Finding("stale", f"{prof}/{wid}"))
         if page.contradictions_open:
-            findings.append(Finding("contradictions", wid))
-        if page.status.lower() == "stale" and not any(
-            f.kind == "stale" and f.detail == wid for f in findings
-        ):
-            findings.append(Finding("stale", wid))
+            findings.append(Finding("contradictions", f"{prof}/{wid}"))
+        if len(page.see_also) > 5:
+            findings.append(Finding("overflow", f"{prof}/{wid} has {len(page.see_also)} see-also"))
+        # frontmatter profile should match folder (except _shared)
+        if page.profile not in {prof, "*", "_shared"} and prof not in {"_", "_shared"}:
+            if page.profile and prof != page.profile:
+                findings.append(Finding("profile_mismatch", f"{page.path.name}: folder={prof} fm={page.profile}"))
 
-    # unpaired see-also (skip next as one-way)
-    for wid, page in pages.items():
+    for (prof, wid), page in pages.items():
         for rel, target in page.see_also:
             if rel == "next":
                 continue
             want = INVERSE.get(rel)
             if not want:
                 continue
-            other = pages.get(target)
+            other = by_prof_wid.get((prof, target))
             if other is None:
-                findings.append(Finding("unpaired", f"{wid} {rel}→{target} (missing page)"))
-                continue
+                # fallback: unique wid elsewhere
+                alts = wid_only.get(target) or []
+                if len(alts) == 1:
+                    other = by_prof_wid.get(alts[0])
+                else:
+                    findings.append(
+                        Finding("unpaired", f"{prof}/{wid} {rel}→{target} (missing page)")
+                    )
+                    continue
             if not any(r == want and t == wid for r, t in other.see_also):
                 findings.append(
-                    Finding("unpaired", f"{wid} {rel}→{target} needs {target} {want}→{wid}")
+                    Finding(
+                        "unpaired",
+                        f"{prof}/{wid} {rel}→{target} needs {other.profile}/{target} {want}→{wid}",
+                    )
                 )
 
     n_unfiled = unfiled_count(wiki / "_unfiled.md")
     if n_unfiled:
         findings.append(Finding("unfiled", f"{n_unfiled} rows"))
 
-    # silence unused
-    _ = index_by_id
     return findings
 
 
@@ -237,8 +254,10 @@ def format_report(findings: list[Finding]) -> str:
         "stale": [],
         "unfiled": [],
         "contradictions": [],
-        "missing": [],
-        "orphan": [],
+        "missing_notebook": [],
+        "misplaced": [],
+        "duplicate": [],
+        "profile_mismatch": [],
     }
     for f in findings:
         buckets.setdefault(f.kind, []).append(f.detail)
@@ -246,34 +265,37 @@ def format_report(findings: list[Finding]) -> str:
     def join(xs: list[str]) -> str:
         return ", ".join(xs) if xs else "—"
 
+    missing = (
+        buckets["missing_notebook"]
+        + buckets["misplaced"]
+        + buckets["duplicate"]
+        + buckets["profile_mismatch"]
+    )
     lines = [
         "🩺 Wiki lint",
         f"【Unpaired】 {join(buckets['unpaired'] + buckets.get('overflow', []))}",
         f"【Stale】 {join(buckets['stale'])}",
         f"【Unfiled】 {join(buckets['unfiled']) if buckets['unfiled'] else '0 rows'}",
         f"【Contradictions】 {join(buckets['contradictions'])}",
-        f"【Missing/orphan】 {join(buckets['missing'] + buckets['orphan'])}",
+        f"【Missing/orphan】 {join(missing)}",
         "Reply 批准 fix: … / 再观察",
     ]
     return "\n".join(lines)
 
 
 def self_check() -> None:
-    """Tiny fixture engine; asserts expected findings. No frameworks."""
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         wiki = root / "wiki"
-        pages = wiki / "pages"
+        pages = wiki / "pages" / "demo"
         pages.mkdir(parents=True)
         (root / "CLAUDE.md").write_text("# test\n", encoding="utf-8")
-
         (wiki / "_index.md").write_text(
             """# Wiki index
-| id | title | status | pillar | profile | need_count | runs | one_liner | file | updated |
-|----|-------|--------|--------|---------|------------|------|-----------|------|---------|
-| W-A | A | active | none | * | 0 | 0 | believe A | pages/W-A.md | 2026-01-01 |
-| W-B | B | stale | none | * | 0 | 0 | believe B | pages/W-B.md | 2026-01-01 |
-| W-MISS | Gone | active | none | * | 0 | 0 | x | pages/W-MISS.md | 2026-01-01 |
+| profile | path | one_liner |
+|---------|------|-----------|
+| demo | [[wiki/pages/demo]] | demo notebook |
+| gone | [[wiki/pages/gone]] | missing folder |
 """,
             encoding="utf-8",
         )
@@ -289,15 +311,15 @@ def self_check() -> None:
             """---
 id: W-A
 status: active
+profile: demo
 ---
 # A
 ## Contradictions
-- open fight with old claim
+- open fight
 ## See also
 | rel | id | note |
 |-----|-----|------|
-| related | [[wiki/pages/W-B\\|W-B]] | |
-| related | [[wiki/pages/W-ORPHAN\\|W-ORPHAN]] | |
+| related | [[wiki/pages/demo/W-B\\|W-B]] | |
 """,
             encoding="utf-8",
         )
@@ -305,6 +327,7 @@ status: active
             """---
 id: W-B
 status: stale
+profile: demo
 ---
 # B
 ## Contradictions
@@ -312,22 +335,22 @@ status: stale
 ## See also
 | rel | id | note |
 |-----|-----|------|
-| related | [[wiki/pages/W-X\\|W-X]] | broken |
+| related | [[wiki/pages/demo/W-X\\|W-X]] | broken |
 """,
             encoding="utf-8",
         )
-        (pages / "W-ORPHAN.md").write_text(
+        (wiki / "pages" / "W-FLAT.md").write_text(
             """---
-id: W-ORPHAN
+id: W-FLAT
 status: seed
+profile: demo
 ---
-# Orphan
+# Flat
 ## Contradictions
 - none
 ## See also
 | rel | id | note |
 |-----|-----|------|
-| related | [[wiki/pages/W-A\\|W-A]] | |
 """,
             encoding="utf-8",
         )
@@ -337,18 +360,18 @@ status: seed
         assert "stale" in kinds, findings
         assert "unfiled" in kinds, findings
         assert "contradictions" in kinds, findings
-        assert "missing" in kinds, findings
-        assert "orphan" in kinds, findings
+        assert "missing_notebook" in kinds, findings
+        assert "misplaced" in kinds, findings
         assert "unpaired" in kinds, findings
 
-        # clean engine: empty tables → no findings
         clean = root / "clean"
-        (clean / "wiki" / "pages").mkdir(parents=True)
+        (clean / "wiki" / "pages" / "p1").mkdir(parents=True)
         (clean / "CLAUDE.md").write_text("#\n", encoding="utf-8")
         (clean / "wiki" / "_index.md").write_text(
             """# Wiki index
-| id | title | status | pillar | profile | need_count | runs | one_liner | file | updated |
-|----|-------|--------|--------|---------|------------|------|-----------|------|---------|
+| profile | path | one_liner |
+|---------|------|-----------|
+| p1 | [[wiki/pages/p1]] | ok |
 """,
             encoding="utf-8",
         )
@@ -364,10 +387,10 @@ status: seed
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Lint wiki notebook pages (report only)")
+    ap = argparse.ArgumentParser(description="Lint wiki notebooks (report only)")
     ap.add_argument("--engine", help="Content Engine root")
-    ap.add_argument("--self-check", action="store_true", help="Run fixture asserts and exit")
-    ap.add_argument("--json", action="store_true", help="Print findings as kind:detail lines")
+    ap.add_argument("--self-check", action="store_true")
+    ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
     if args.self_check:

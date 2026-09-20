@@ -66,8 +66,9 @@ This folder is the local **Content Engine** for EasySociable.
 | `library/swipe/_index.md` | Structures (+ `profiles` column) |
 | `library/atoms/_index.md` | Atoms (+ `profiles`) |
 | `library/claims/_index.md` | Claims (+ `profiles`) |
-| `wiki/_index.md` | Notebook map (lesson pages `W-*`) |
-| `wiki/pages/W-*.md` | One lesson = one compiled map (Agent writes; you read) |
+| `wiki/_index.md` | Thin map: profile → `pages/<profile>/` (not a per-W catalog) |
+| `wiki/pages/<profile>/W-*.md` | One lesson = one compiled map (Agent writes; you read) |
+| `wiki/pages/_shared/` | Optional cross-profile lessons (rare) |
 | `wiki/_unfiled.md` | Captures/needs not yet hung on a `W-` |
 | `runs/_index.md` | Job queue (one row per **platform run**) |
 | `runs/<slug>/` | One platform draft → pack → feedback |
@@ -315,7 +316,7 @@ relationships before drafting.
 2. Otherwise ask which explicit input to use.
 
 0. Resolve profile **Language** (`voice.md` → pillars → `engine.json` locale).  
-0b. **Notebook hard gate (lookalike):** read matching `wiki/pages/W-*.md` (`active`/`seed`) for the same pain/pillar.  
+0b. **Notebook hard gate (lookalike):** read matching `wiki/pages/<profile>/W-*.md` (`active`/`seed`) for the same pain/pillar.  
    - If a page’s **We believe** covers this Need/cut **and** **Battles fought** already has `win` or `loss` for that same cut → **default `purpose=discard`** (or require user to name a **new cut** in chat before `produce`).  
    - Do **not** write a lookalike `produce` T- unless the user explicitly overrides after seeing the W- battles.  
    - Cite every `W-` read in Trace.  
@@ -385,15 +386,16 @@ On `用 T-xxx 开一单`: **ask platform(s)** if unset (multi-select OK). Create
 
 Triggers: 维护笔记 / 扫笔记 / lint 笔记 / hang on W- / create lesson.
 
-**Role:** Compiled lesson pages (`wiki/pages/W-*.md`). Not a second inventory of needs/topics/runs. Not craft parts (`library/`).
+**Role:** Compiled lesson pages under `wiki/pages/<profile>/W-*.md` (one notebook per profile). Not a second inventory of needs/topics/runs. Not craft parts (`library/`). `wiki/_index.md` only maps profile → folder.
 
 ### Rules
 
-- One recurring lesson → one `W-`. Prefer merge over near-duplicate pages.  
+- One recurring lesson → one `W-` **inside that profile’s folder**. Prefer merge over near-duplicate pages.  
 - Agent writes pages; human reads. Schema = this section + `wiki/_template.md`.  
 - Closed see-also rels: `related` | `contradicts` | `parent` | `child` | `next` — pairwise, ≤5 per page.  
 - Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.  
-- **Obsidian wikilinks required** on every hung id and see-also target. Same style as other vault indexes: `[[path]]` or, in **table cells**, `[[path\|id]]` (backslash-escape the alias `|` or the row splits). Bare `W-…` / `N-…` text does **not** create Backlinks.
+- **Obsidian wikilinks required** on every hung id and see-also target. Same style as other vault indexes: `[[path]]` or, in **table cells**, `[[path\|id]]`. Prefer `[[wiki/pages/<profile>/W-…\|W-…]]`. Bare `W-…` / `N-…` text does **not** create Backlinks.  
+- Do **not** maintain a per-note row in `wiki/_index.md` — scan the folder. Optional `wiki/pages/_shared/` for rare cross-profile lessons.
 
 ### Lint (required when user says lint 笔记 / wiki lint)
 
@@ -407,13 +409,13 @@ Or walk pages by hand. **Report only — do not auto-fix** unless user 批准 ea
 
 | Check | Fail when |
 |-------|-----------|
-| Unpaired see-also | A lists `rel → W-B` but B does not list the inverse (`related`↔`related`, `contradicts`↔`contradicts`, `parent`↔`child`, `next` may be one-way) |
+| Unpaired see-also | A lists `rel → W-B` but B does not list the inverse (same profile first) |
 | See-also overflow | A page has >5 see-also rows |
-| Stale open | `status=stale` on index or frontmatter |
+| Stale open | `status=stale` on frontmatter |
 | Unfiled backlog | `wiki/_unfiled.md` has data rows (not only header) |
 | Open contradictions | **Contradictions** section is non-empty and not exactly `none` / `—` |
-| Missing file | Index row `file` path does not exist |
-| Orphan page | `wiki/pages/W-*.md` exists but no index row |
+| Missing notebook | Index profile row points at a folder that does not exist |
+| Misplaced page | `W-*.md` sits directly under `pages/` instead of `pages/<profile>/` |
 
 Chat card:
 
@@ -656,7 +658,7 @@ Human gates (chat only):
 Before brief body, evaluate catalogs (Approach B + **profile + this run’s platform**).
 
 0. **Notebook hard gate:** resolve linked `W-` from Topic Trace / Need hang / user.  
-   - If a `W-` exists for this lesson: **must** open `wiki/pages/W-….md` and read **Parts that fit** / **Do not do** **before** opening any `library/*/_index.md`.  
+   - If a `W-` exists for this lesson: **must** open `wiki/pages/<profile>/W-….md` and read **Parts that fit** / **Do not do** **before** opening any `library/*/_index.md`.  
    - Selection may only use ids marked `fits`, or `none`. Ids marked `avoid` are **forbidden**.  
    - If the page has no fits row: Selection = `none` + why (still valid).  
    - If no `W-` is linked: say so on the Open card, then fall back to library indexes (legacy). Prefer hanging a `W-` next time.  

@@ -3,11 +3,13 @@ id: W-SLUG
 title:
 status: seed
 pillar: none
-profile: "*"
+profile: PROFILE_ID
 updated: YYYY-MM-DD
 ---
 
 # Title
+
+Path: `wiki/pages/<profile>/W-SLUG.md` (never flat under `pages/`).
 
 ## We believe
 
@@ -19,7 +21,7 @@ One sentence. Topic cuts must not silently contradict this; to oppose it, edit t
 |---------|------|
 | [[needs/entries/N-YYYYMMDD-XX\|N-YYYYMMDD-XX]] | short map note |
 
-Verbatim quotes stay in `needs/entries/`. **Always** Obsidian `[[wikilinks]]`. Inside tables escape the alias pipe: `[[path\|id]]` — bare ids do not create Backlinks.
+Verbatim quotes stay in `needs/entries/`. **Always** Obsidian `[[wikilinks]]`. Inside tables escape the alias pipe: `[[path\|id]]`.
 
 ## Related captures
 
@@ -63,6 +65,6 @@ Open a run: read this table **before** `library/*/_index.md`. `none` is still al
 
 | rel | id | note |
 |-----|-----|------|
-| related | [[wiki/pages/W-other\|W-other]] | |
+| related | [[wiki/pages/PROFILE/W-other\|W-other]] | |
 
-Closed rels: `related` | `contradicts` | `parent` | `child` | `next`. Keep ≤5 rows. Links must be **pairwise** (A→B and B→A). `next` may be one-way. Always `[[wiki/pages/W-…\|W-…]]` in the id cell.
+Closed rels: `related` | `contradicts` | `parent` | `child` | `next`. Keep ≤5 rows. Pairwise (A→B and B→A). `next` may be one-way. Prefer same-profile paths: `[[wiki/pages/<profile>/W-…\|W-…]]`.

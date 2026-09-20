@@ -1,21 +1,16 @@
 # Wiki index (notebook map)
 
-One row = one lesson page. Full map in **`file`**. Newest / most recently updated on top.
+One row = **one profile notebook**. Lesson pages live under `pages/<profile>/W-*.md`.  
+This file is **not** a catalog of every `W-` — the folder is the source of truth.
 
-| id | title | status | pillar | profile | need_count | runs | one_liner | file | updated |
-|----|-------|--------|--------|---------|------------|------|-----------|------|---------|
-
-## Status values
-
-| status | Meaning |
-|--------|---------|
-| `seed` | Materials hung; no stable “we believe” yet |
-| `active` | Read before Scout / Selection |
-| `stale` | Conclusion may be outdated — lint should flag |
-| `unfiled` | Staged on the waiting list; not a real lesson yet |
+| profile | path | one_liner |
+|---------|------|-----------|
+| | [[wiki/pages/PROFILE]] | |
 
 ## Agent rules
 
-- Prefer merging into an existing `W-` over creating a near-duplicate.
-- `one_liner` = the page’s **我们现在相信** / **We believe** sentence.
-- Never overwrite a filled page on `engine update` (vault data).
+- Create `wiki/pages/<profile>/` when the profile gets its first lesson (match `profiles/_index.md` id).  
+- New lesson → `wiki/pages/<profile>/W-….md` + frontmatter `profile: <id>`.  
+- Read / hang / Selection hard gates: only that profile’s folder (plus optional `wiki/pages/_shared/` if it exists).  
+- Cross-profile links are rare; if used, wikilink the **full path**.  
+- Do not maintain a per-note row here — status / one_liner live on the page frontmatter + title.

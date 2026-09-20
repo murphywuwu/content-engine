@@ -1,12 +1,14 @@
 # wiki/
 
-**Notebook layer only** — lesson maps the Agent maintains and you read.
+**Notebook layer** — one lesson map per recurring belief. Agent writes; you read.
 
 | Path | Role |
 |------|------|
-| `_index.md` | Notebook registry (map for the workbench) |
+| `_index.md` | Thin map: profile → `pages/<profile>/` (not a W- catalog) |
 | `_template.md` | New lesson page shape |
-| `pages/W-*.md` | One lesson = one page |
+| `pages/<profile>/W-*.md` | That profile’s notebook |
+| `pages/_shared/` | Optional cross-profile lessons (rare) |
+| `_unfiled.md` | Hang queue |
 
 Craft parts (swipe / atoms / claims) live under **`library/`**, not here.
 
@@ -15,11 +17,11 @@ Craft parts (swipe / atoms / claims) live under **`library/`**, not here.
 A short map for one recurring lesson (e.g. “not knowing what to say”):
 
 - what we believe now
-- which Needs / Captures / Topics / Runs hang on it
+- which Needs / Captures / Topics / Runs hang on it (via Obsidian `[[wikilinks]]`)
 - which library parts fit or should be avoided
-- links to related notebook pages
+- links to related notebook pages in the **same profile folder**
 
-It is **not** a second index of every vault file. Needs, topics, and runs stay in their own folders; pages only **hang** them via Obsidian `[[wikilinks]]` (`[[path|id]]`) so Backlinks and the graph work.
+It is **not** a second index of every vault file. The folder listing is the catalog.
 
 ## Agent rules (summary)
 

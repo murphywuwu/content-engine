@@ -473,37 +473,87 @@ def merge_engagement(*parts: dict[str, str]) -> dict[str, str]:
                 out[k] = v
     return out
 
-def parse_wiki_pages(md: str | None = None) -> list[dict]:
+def parse_wiki_notebooks(md: str | None = None) -> list[dict]:
+    """Thin registry: profile → notebook folder (not a per-W catalog)."""
     if md is None:
         md = read("wiki/_index.md")
-    rows = table_with(
-        md,
-        "id", "title", "status", "pillar", "profile", "need_count", "runs", "one_liner", "file", "updated",
-    )
+    rows = table_with(md, "profile", "path", "one_liner")
     out = []
     for row in rows:
-        ident_cell = (row.get("id") or "").strip().strip("`")
-        m_id = WIKI_PAGE_RE.search(ident_cell)
-        ident = m_id.group(0) if m_id else ident_cell
-        if not ident.startswith("W-"):
+        profile = (row.get("profile") or "").strip().strip("`")
+        if not profile or profile.lower() == "profile":
             continue
-        f = wiki_path(row.get("file") or "") or (row.get("file") or "").strip().strip("`")
-        if f and not f.startswith("wiki/"):
-            f = f"wiki/pages/{f}" if not f.startswith("pages/") else f"wiki/{f}"
-        if f and not f.endswith(".md"):
-            f = f"{f}.md"
+        path = wiki_path(row.get("path") or "") or (row.get("path") or "").strip().strip("`")
+        if path.endswith(".md"):
+            path = path[: -len(".md")]
         out.append(
             {
-                "id": ident,
-                "title": (row.get("title") or "").strip(),
-                "status": (row.get("status") or "").strip(),
-                "pillar": (row.get("pillar") or "").strip(),
-                "profile": (row.get("profile") or "").strip(),
-                "need_count": (row.get("need_count") or "").strip(),
-                "runs": (row.get("runs") or "").strip(),
+                "profile": profile,
+                "path": path,
                 "one_liner": (row.get("one_liner") or "").strip(),
-                "file": f,
-                "updated": (row.get("updated") or "").strip(),
+            }
+        )
+    return out
+
+
+def parse_wiki_pages() -> list[dict]:
+    """Scan wiki/pages/<profile>/W-*.md (and legacy flat pages/W-*.md)."""
+    pages_root = ROOT / "wiki" / "pages"
+    out: list[dict] = []
+    if not pages_root.is_dir():
+        return out
+
+    paths = sorted(pages_root.rglob("W-*.md"))
+    for path in paths:
+        if path.name.startswith("_"):
+            continue
+        rel = path.relative_to(ROOT).as_posix()
+        try:
+            rel_pages = path.relative_to(pages_root)
+        except ValueError:
+            continue
+        parts = rel_pages.parts
+        if len(parts) == 1:
+            profile_from_dir = ""
+        else:
+            profile_from_dir = parts[0]
+
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        meta = frontmatter(text)
+        wid = (meta.get("id") or path.stem).strip()
+        if not wid.startswith("W-"):
+            wid = path.stem
+        title = (meta.get("title") or "").strip()
+        if not title:
+            for line in text.splitlines():
+                if line.startswith("# "):
+                    title = line[2:].strip()
+                    break
+        profile = (meta.get("profile") or profile_from_dir or "").strip()
+        if profile == "*":
+            profile = profile_from_dir or "*"
+        believe = ""
+        if "## We believe" in text:
+            body = text.split("## We believe", 1)[1]
+            if "\n## " in body:
+                body = body.split("\n## ", 1)[0]
+            for line in body.splitlines():
+                s = line.strip()
+                if s and not s.startswith("#"):
+                    believe = s
+                    break
+        out.append(
+            {
+                "id": wid,
+                "title": title,
+                "status": (meta.get("status") or "").strip(),
+                "pillar": (meta.get("pillar") or "").strip(),
+                "profile": profile,
+                "need_count": "",
+                "runs": "",
+                "one_liner": believe,
+                "file": rel,
+                "updated": (meta.get("updated") or "").strip(),
             }
         )
     return out
@@ -1552,6 +1602,7 @@ def build_graph() -> dict:
         "media": parse_media(),
         "media_index_present": (ROOT / "media" / "_index.md").exists(),
         "wiki": parse_wiki_pages(),
+        "wiki_notebooks": parse_wiki_notebooks(),
         "wiki_index_present": (ROOT / "wiki" / "_index.md").exists(),
         "nodes": list(nodes.values()),
         "edges": uniq,
