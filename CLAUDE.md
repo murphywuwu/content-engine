@@ -81,31 +81,31 @@ This folder is the local **Content Engine** for EasySociable.
 
 | User intent | Action |
 |-------------|--------|
-| capture / 记一下 (+ link) | **§ Capture** only — **not** topics by default; hang on `W-` or `_unfiled` |
-| 记需求 / 用户原话 / 评论导出 | **§ Needs** only; hang on `W-` or `_unfiled` |
+| capture / 记一下 (+ link) | **§ Capture** only — **not** topics by default; **must** hang `C-` on `W-` or `_unfiled` (else not stored) |
+| 记需求 / 用户原话 / 评论导出 | **§ Needs** only; **must** hang `N-` on `W-` or `_unfiled` (else not stored) |
 | 维护笔记 / 扫笔记 / lint 笔记 / wiki | **§ Wiki** (lint → `python3 scripts/lint-wiki.py --engine .`) |
 | 加关键词 / 更新关键词库 | Edit `profiles/<id>/keywords.md` (**ask profile** if unset) |
 | 从需求生成关键词 / 生成 listen\|search\|ask 词 | **§ Keywords · Generate** (chat → confirm → write) |
 | 加/改 handles | Edit `profiles/<id>/handles.md`; keep **≤8** |
 | 扫关键词 / 扫 K-xx / 看 @handle | **§ Keywords** scan (**listen** default) → **§ Hits** |
-| 路由 Hit / H-xx | **§ Hits** → Needs or Capture+library / discard |
+| 路由 Hit / H-xx | **§ Hits** → Needs or Capture+library / discard — **never hang `H-` on wiki** |
 | **扫需求选题** | **§ Topics** — **read matching `W-` first**, then from `needs/` where `status=captured`; max 5 `produce` |
 | 扫 inbox 选题 | **§ Topics** — from captures without topic yet (max 5) |
 | 生成 topic (no source specified) | **§ Topics** — offer captured needs or ask which explicit input to use |
 | 链接直接选题 / 把 C-xxx 做成选题 | **§ Topics** — create T- (may link capture) |
 | 采访我 / 完善人设 / interview me / who am I as a creator / 建立 profile | **§ Interview** — persist after each dimension; no slideshow |
 | 设置品牌 / 改 logo / 配色 / 字体 / set brand / brand colors | Edit `profiles/<id>/brand.md` (**ask profile** if unset) |
-| 存图 / 记图 / 加素材 / catalog image / add media | **§ Media** — add row to `media/_index.md` (dedup by sha256, tag) |
+| 存图 / 记图 / 加素材 / catalog image / add media | **§ Media** — `media/_index.md` only; **do not** hang `M-` on wiki |
 | 找图 / find image / which image for … | **§ Media** — retrieve by tag/link from `media/_index.md` |
 | 开一单 / 用 T-xxx 开一单 | **Hard gate first**, then **§ Open a run** — **ask platform(s)** if unset; **read linked `W-` before Selection**; multi-select → **N runs** (bind `topic_id` if from T-) |
 | Quick draft | Resolve profile; selection; draft in chat |
-| 收成 swipe/atom/claim | **§ Library ingest** after approval → files under `library/` |
+| 收成 swipe/atom/claim | **§ Library ingest** after approval → `library/` only; **do not** write Parts on ingest |
 | 选题后同意进 inbox | Capture that URL/C-link then optional library offer |
 | Post URL after ship | feedback + **§ Published index** + **update linked `W-` battles / parts** |
 | 复盘 / 批准晋级 | Claims promote + published index |
 | Update pillars/audience | Edit **`profiles/<id>/…`** |
-| 更新产品 / 产品库 | Edit **`products/`**; keep dates and source of truth |
-| 推荐 / 评测第三方产品 | Edit **`recommendations/`**; record evidence and disclosure |
+| 更新产品 / 产品库 | Edit **`products/`**; wiki only if a `W-` Product link already cites that `P-` |
+| 推荐 / 评测第三方产品 | Edit **`recommendations/`**; wiki only if a lesson is about that `R-` |
 | Update account binding | Edit **`accounts/_index.md`** |
 | 出图 | **Hard gate first**, then **§ PagePack + render**. Fail → list missing files; no handoff unless user says **强制继续** / **force continue** |
 
@@ -144,11 +144,14 @@ Then:
 - Invent facts not in the user message / source  
 - Invent a new `W-` when the lesson is unclear — use **§ Wiki** hang-or-unfiled  
 
-### After store (notebook)
+### After store (notebook) — required or the capture is not stored
+
+Hang on **this profile’s** notebook only.
 
 1. Try to match an existing active/seed `W-` (same pain / pillar / reader job).  
-2. If matched: append the `C-` under **Related captures** on that page; touch `updated`.  
-3. If not: append a row to `wiki/_unfiled.md` and ask hang vs create — **do not** invent a slug.
+2. If matched: append the `C-` under **Related captures** (`[[inbox/entries/C-…\|C-…]]`); touch `updated`.  
+3. If not: append a row to `wiki/_unfiled.md` and ask hang vs create — **do not** invent a slug.  
+4. Chat card **must** name `W-…` or `unfiled`. Index + entry without this step → incomplete; do not say “saved”.
 
 ### entry file (minimal shape)
 
@@ -184,6 +187,7 @@ profile: default
 - inbox/_index: yes
 - entry: inbox/entries/C-….md
 - raw: no | raw/….md + raw/_index
+- notebook: W-… | unfiled
 
 【Refine】
 A) OK as stored
@@ -203,7 +207,7 @@ B) Refine notes
 Reply number(s) or 不入库.
 ```
 
-On approval: create catalog files per **§ Library ingest**, set inbox `library` column (e.g. `swipe:S2`).  
+On approval: create catalog files per **§ Library ingest**, set inbox `library` column (e.g. `swipe:S2`). Do **not** append those ids to a `W-` Parts table here.  
 Path A (capture): **no** engagement gates on *your* posts.  
 
 Optional: if user also says「同时选题/打分」, run **§ Topics** for this capture.
@@ -243,6 +247,7 @@ Need (demand evidence) + Profile (identity) + optional Product (offer facts)
 - Keep exact pricing and entitlements in the dated product entry. Do not copy
   stale prices into other files.
 - Do not invent proof, customers, outcomes, metrics, or testimonials.
+- **Wiki:** creating or editing a `P-` does **not** hang a notebook row. Update a `W-` **Product link** only when that page already cites this product and the cited fact changed.
 
 ### Product fit
 
@@ -390,6 +395,7 @@ Triggers: 维护笔记 / 扫笔记 / lint 笔记 / hang on W- / create lesson.
 
 ### Rules
 
+- **Drawers vs notebook:** indexes store files; `W-` stores lessons. Heat (Hits) never enters a `W-`.  
 - One recurring lesson → one `W-` **inside that profile’s folder**. Prefer merge over near-duplicate pages.  
 - Agent writes pages; human reads. Schema = this section + `wiki/_template.md`.  
 - Closed see-also rels: `related` | `contradicts` | `parent` | `child` | `next` — pairwise, ≤5 per page.  
@@ -431,14 +437,24 @@ Reply 批准 fix: … / 再观察
 
 ### When other sections must touch wiki
 
-| Event | Wiki action |
-|-------|-------------|
-| Capture stored | Hang `C-` or unfiled |
-| Need ingested | Hang `N-`; may revise **We believe** / contradictions / still missing |
-| Topic `produce` written | Append T- to **Battles** as `pending` on matching `W-` |
-| Before Scout (扫需求选题) | **Hard:** read matching `W-`; apply lookalike gate (§ Topics 0b) |
-| Before run Selection | **Hard:** read linked `W-` parts table; cite `W-` on Open card |
-| Ship / 复盘 | Update battle result + parts fits/avoid + believe line if learned |
+口诀：抽屉负责收东西。作文本负责长记性。热气不进作文本。  
+Hang only on `wiki/pages/<this-profile>/` (or `_unfiled`). Never invent a `W-` to clear a queue.
+
+| Event | Wiki? | Action |
+|-------|-------|--------|
+| Capture stored | **Must** | Hang `C-` on matching `W-` **Related captures**, or `_unfiled`. Incomplete without this. |
+| Need ingested | **Must** | Hang `N-` on **Readers say**, or `_unfiled`. May revise **We believe** / contradictions / still missing. Incomplete without this. |
+| Hit scan / triage | **Never** | `hits/` only. Do not put `H-` on any `W-`. |
+| Hit → Need (after confirm) | via Need | Follow Need row (hang `N-`, not `H-`). |
+| Hit → library (after confirm) | via Capture | Follow Capture row (hang `C-`, not `H-`). |
+| Product / recommendation create or price edit | **No** (default) | Stay in `products/` / `recommendations/`. Touch a `W-` **only if** that page’s **Product link** already cites this id **and** the cited fact changed, or the user is writing a lesson about it. |
+| Media ingest | **No** (default) | Stay in `media/`. Cite `M-` on a `W-` only if the user says this image **proves that lesson** (or it is the brand logo the lesson depends on). |
+| Library ingest (swipe/atom/claim) | **No** | Catalog only. **Parts that fit** updates on Selection / ship / 复盘 — not on 入库. |
+| Topic `produce` written | **Must** (if a `W-` matches) | Append T- to **Battles** as `pending`. |
+| Before Scout | **Read** | Lookalike gate (§ Topics 0b). |
+| Before run Selection | **Read** | Parts table; Open card cites `W-…` or `W-: none`. |
+| Ship / 复盘 | **Must** (if linked) | Battle result + parts fits/avoid; **We believe** only when the learning is explicit. |
+| Interview / keywords / brand tokens | **No** | Profile files only. |
 
 ---
 
@@ -493,7 +509,7 @@ Triggers: 存图 / 记图 / 加素材 / 找图 / catalog image / find image.
 
 **Retrieve:** filter `media/_index.md` by tag and/or link to find the right image for the content need. Cite the media id in the pack/draft.
 
-**Do not:** upload here (upload is at render only); store binaries in `runs/`; invent tags outside the closed set; fabricate `rights`.
+**Do not:** upload here (upload is at render only); store binaries in `runs/`; invent tags outside the closed set; fabricate `rights`; hang `M-` on a `W-` just because a row was added. Wiki cite only if the image is evidence for that lesson or the brand logo it depends on.
 
 ---
 
@@ -529,7 +545,7 @@ Id `H-YYYYMMDD-XX`. Status: `triage` → `routed_need` | `routed_library` | `dis
 【Suggest】 need | library | discard
 ```
 
-On scan: `keyword_id` + `src_*` when known. Route need → **§ Needs**. Route library → **§ Capture** + library offer. Never Hit → Topic.
+On scan: `keyword_id` + `src_*` when known. Route need → **§ Needs**. Route library → **§ Capture** + library offer. Never Hit → Topic. **Never hang `H-` on wiki** (not Readers say, not Related captures, not unfiled). Heat stays in `hits/` until routed; the Need or Capture hang is what may touch the notebook.
 
 ---
 
@@ -576,11 +592,12 @@ retired   → user discarded
 【Source】 comment | dm | consult | faq | student | other
 【Frequency】 1
 【Stored】 needs/_index + needs/entries/N-….md
+【Notebook】 W-… | unfiled
 【Merge】 new | merged into N-… (frequency now k, status still captured)
 ```
 
 3. Synonym merge: propose → user yes → same `N-` stays `captured`, `frequency += 1`, append sighting. Retire a mistaken duplicate.
-4. **Notebook:** hang `N-` on matching `W-` (**Readers say**) or append `wiki/_unfiled.md`. May revise **We believe** / contradictions / still missing. Do not invent a new `W-` without user naming the lesson.
+4. **Notebook (required or the need is not stored):** hang `N-` on matching `W-` (**Readers say**, `[[needs/entries/N-…\|N-…]]`) or append `wiki/_unfiled.md`. May revise **We believe** / contradictions / still missing. Do not invent a new `W-` without user naming the lesson. Chat card must name `W-…` or `unfiled`.
 
 Hard gate: `needs/_index.md` ≥ **3** `N-` rows once `needs/` exists (empty index fails). Target **5**. Prefer scanning needs before inbox.
 
@@ -965,6 +982,7 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
 | Mixing claim epistemology with swipe/atom hit-status |
 | `## Evidence` table in a swipe or atom file |
 | Auto-changing `status` when bumping `n`/`win`/`loss` |
+| Writing new catalog rows onto a `W-` **Parts that fit** at ingest (that is Selection / ship only) |
 
 ### Engagement gates (path B only)
 
@@ -1002,7 +1020,13 @@ Reply 批准 … / 否决 / 再观察
 
 - [ ] `inbox/_index.md` row + `inbox/entries/C-….md`  
 - [ ] `raw/` file + `raw/_index.md` only if criteria matched  
-- [ ] Capture Card + library offer when structure/link
+- [ ] Capture Card + library offer when structure/link  
+- [ ] Notebook: `C-` on this profile’s `W-` **or** `_unfiled`; card names which  
+
+### Self-check (Need)
+
+- [ ] `needs/_index.md` row + `needs/entries/N-….md`; quote verbatim  
+- [ ] Notebook: `N-` on **Readers say** **or** `_unfiled`; card names which; no new `W-` invented to clear queue  
 
 ### Self-check (Topic / Opportunity)
 

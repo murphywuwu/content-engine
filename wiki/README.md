@@ -25,4 +25,10 @@ It is **not** a second index of every vault file. The folder listing is the cata
 
 ## Agent rules (summary)
 
-See `CLAUDE.md` → § Wiki. Capture / Needs / Topics / Open a run / Ship update these pages. Do not invent a new `W-` when the lesson is unclear — leave unfiled and ask.
+See `CLAUDE.md` → § Wiki.
+
+**Must hang** (this profile’s folder, or `_unfiled`): Needs `N-`, Captures `C-`, Topic battles, ship/复盘.  
+**Never hang:** Hits `H-`.  
+**Do not hang on create:** Products, recommendations, media, library ingest. Cite on a `W-` only when that lesson already depends on them (or user is writing that lesson).
+
+Do not invent a new `W-` when the lesson is unclear — leave unfiled and ask. Index + entry without hang is not stored.
