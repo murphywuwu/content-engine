@@ -169,6 +169,7 @@
     .row[data-kind="profile"] .stripe { background: #8b6b4a; }
     .row[data-kind="account"] .stripe { background: #5c6b7a; }
     .row[data-kind="wiki"] .stripe { background: #9c3d32; }
+    .row[data-kind="media"] .stripe { background: #6b8f9e; }
     .row[data-kind="product"] .stripe { background: #7a6b9e; }
     .wiki-graph-wrap {
       margin: 0 0 18px; border: 1px solid var(--line); border-radius: 16px;
@@ -385,6 +386,7 @@
       font-size: 17px; line-height: 1.35; margin: 6px 0 0;
     }
     .mediagrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
+    .mediacard.sel { border-color: var(--accent); box-shadow: var(--shadow); }
     .mediacard { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
     .mediacard .thumb {
       aspect-ratio: 4 / 3; background: #ece7df; display: flex;
@@ -1213,7 +1215,7 @@
         pillars_by_profile: {},
       };
     }
-    const TRACE_ORDER = ["raw", "capture", "hit", "need", "product", "recommendation", "wiki", "topic", "swipe", "atom", "claim", "run", "published"];
+    const TRACE_ORDER = ["raw", "capture", "hit", "need", "product", "recommendation", "media", "wiki", "topic", "swipe", "atom", "claim", "run", "published"];
     const STR = {
       zh: {
         title: "Content Engine · 观察台",
@@ -1223,6 +1225,9 @@
         media_empty: "media/_index.md 里还没有素材",
         media_hosted: "已上传",
         media_local: "仅本地",
+        media_subject: "主体",
+        media_role: "角色",
+        media_f_tag: "标签",
         wiki_empty: "该 profile 的 wiki/pages/<profile>/ 下还没有 W- 笔记",
         wiki_believe: "我们现在相信",
         wiki_graph_title: "知识图谱",
@@ -1428,7 +1433,7 @@
         thin_warn: "数据不足：result 不是 win / flat / loss，不画趋势。",
         topic_bind: "选题绑定：{t} · swipe {s} · claim {c}",
         supersedes: "取代 {id}", superseded_by: "被取代 {id}",
-        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "需求", kind_product: "产品", kind_recommendation: "推荐对象", kind_wiki: "判断", kind_topic: "选题", kind_swipe: "Swipe",
+        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "需求", kind_product: "产品", kind_recommendation: "推荐对象", kind_wiki: "判断", kind_media: "素材", kind_topic: "选题", kind_swipe: "Swipe",
         kind_atom: "Atom", kind_claim: "Claim", kind_run: "Run", kind_published: "发布",
         kv_kind: "类型", kv_date: "日期", kv_status: "状态", kv_plat: "平台", kv_score: "分数", kv_relevance: "关联度", kv_ownership: "归属度", kv_product_relevance: "产品关联",
         kv_use: "使用", kv_src: "来源", kv_result: "结果", kv_pillar: "支柱",
@@ -1444,6 +1449,9 @@
         media_empty: "No media in media/_index.md",
         media_hosted: "Uploaded",
         media_local: "Local only",
+        media_subject: "Subject",
+        media_role: "Role",
+        media_f_tag: "Tag",
         wiki_empty: "No W- pages under wiki/pages/<profile>/ for this profile",
         wiki_believe: "We believe",
         wiki_graph_title: "Knowledge graph",
@@ -1648,7 +1656,7 @@
         thin_warn: "Too thin to review: result is not win / flat / loss. No chart.",
         topic_bind: "Topic: {t} · swipe {s} · claim {c}",
         supersedes: "supersedes {id}", superseded_by: "superseded by {id}",
-        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "Need", kind_product: "Product", kind_recommendation: "Recommendation", kind_wiki: "Judgment", kind_topic: "Topic", kind_swipe: "Swipe",
+        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "Need", kind_product: "Product", kind_recommendation: "Recommendation", kind_wiki: "Judgment", kind_media: "Media", kind_topic: "Topic", kind_swipe: "Swipe",
         kind_atom: "Atom", kind_claim: "Claim", kind_run: "Run", kind_published: "Shipped",
         kv_kind: "Kind", kv_date: "Date", kv_status: "Status", kv_plat: "Platform", kv_score: "Score", kv_relevance: "Relevance", kv_ownership: "Ownership", kv_product_relevance: "Product relevance",
         kv_use: "Use", kv_src: "Source", kv_result: "Result", kv_pillar: "Pillar",
@@ -1739,6 +1747,8 @@
     let view = "overview";
     let notesTab = "notes";
     let mediaTag = "";
+    let mediaSubject = "";
+    let mediaRole = "";
     let libKind = "";
     let libSubtype = "";
     let libStatus = "";
@@ -2256,6 +2266,15 @@
       if (view === "wiki" && $list.querySelector(".wiki-graph-svg")) {
         $list.querySelectorAll(".wiki-graph-svg .node").forEach(g => {
           g.classList.toggle("sel", g.dataset.id === id);
+        });
+        renderInsp();
+        return;
+      }
+      if (view === "media" && $list.querySelector(".mediagrid")) {
+        $list.querySelectorAll(".mediacard").forEach(card => {
+          const hid = card.querySelector(".hid");
+          const mid = hid ? `media:${hid.textContent}` : "";
+          card.classList.toggle("sel", mid === id);
         });
         renderInsp();
         return;
@@ -3240,17 +3259,44 @@
     function renderMedia() {
       $list.innerHTML = "";
       const q = $q.value.trim().toLowerCase();
-      const all = (GRAPH.media || []).filter(m => {
+      const catalog = (GRAPH.media || []).map(m => {
+        const node = byId[`media:${m.id}`];
+        return node ? { ...m, ...node, id: m.id } : m;
+      });
+      const all = catalog.filter(m => {
         if (!q) return true;
-        const blob = [m.id, m.caption, (m.tags || []).join(" "), (m.links || []).join(" "), m.rights, m.file].join(" ").toLowerCase();
+        const blob = [m.id, m.caption, m.role, (m.tags || []).join(" "), (m.links || []).join(" "), (m.subjects || []).join(" "), m.rights, m.file].join(" ").toLowerCase();
         return blob.includes(q);
       });
+      const subjects = [...new Set(all.flatMap(m => m.subjects || []))].sort();
+      const roles = [...new Set(all.map(m => m.role).filter(Boolean))].sort();
       const tags = [...new Set(all.flatMap(m => m.tags || []))].sort();
+      if (mediaSubject && !subjects.includes(mediaSubject)) mediaSubject = "";
+      if (mediaRole && !roles.includes(mediaRole)) mediaRole = "";
       if (mediaTag && !tags.includes(mediaTag)) mediaTag = "";
-      if (tags.length) {
-        $list.appendChild(chipRow(t("media"), tags.map(tg => ({ id: tg, label: tg })), mediaTag, (id) => { mediaTag = id; render(); }));
+      const filt = document.createElement("div");
+      filt.className = "filt";
+      if (subjects.length) {
+        filt.appendChild(chipRow(t("media_subject"), subjects.map(s => ({ id: s, label: s })), mediaSubject, (id) => {
+          mediaSubject = id; renderMedia(); renderInsp();
+        }));
       }
-      const items = all.filter(m => !mediaTag || (m.tags || []).includes(mediaTag));
+      if (roles.length) {
+        filt.appendChild(chipRow(t("media_role"), roles.map(r => ({ id: r, label: r })), mediaRole, (id) => {
+          mediaRole = id; renderMedia(); renderInsp();
+        }));
+      }
+      if (tags.length) {
+        filt.appendChild(chipRow(t("media_f_tag"), tags.map(tg => ({ id: tg, label: tg })), mediaTag, (id) => {
+          mediaTag = id; renderMedia(); renderInsp();
+        }));
+      }
+      if (filt.childNodes.length) $list.appendChild(filt);
+      const items = all.filter(m =>
+        (!mediaSubject || (m.subjects || []).includes(mediaSubject))
+        && (!mediaRole || m.role === mediaRole)
+        && (!mediaTag || (m.tags || []).includes(mediaTag))
+      );
       const grid = document.createElement("div");
       grid.className = "mediagrid";
       items.forEach(m => grid.appendChild(mediaCard(m)));
@@ -3260,12 +3306,13 @@
 
     function mediaCard(m) {
       const card = document.createElement("div");
-      card.className = "mediacard";
+      card.className = "mediacard" + (selected === `media:${m.id}` ? " sel" : "");
       const tagPills = (m.tags || []).map(tg => `<span class="pill">${esc(tg)}</span>`).join("");
+      const rolePill = m.role ? `<span class="pill">${esc(m.role)}</span>` : "";
       const hosted = m.hosted
         ? `<span class="pill ok" title="${esc(m.hosted_image_id)}">${t("media_hosted")}</span>`
         : `<span class="pill">${t("media_local")}</span>`;
-      const links = (m.links || []).map(l => `<span class="pill">${esc(l)}</span>`).join("");
+      const links = (m.subjects || m.links || []).map(l => `<span class="pill">${esc(l)}</span>`).join("");
       const src = m.src ? "/" + m.src.replace(/^\/+/, "") : "";
       const thumb = src
         ? `<div class="thumb"><img loading="lazy" src="${esc(src)}" alt="${esc(m.caption || m.id)}" onerror="this.remove()"></div>`
@@ -3274,9 +3321,10 @@
         <div class="mediameta">
           <div class="hid">${esc(m.id)}</div>
           <p class="ttl">${esc(m.caption || m.file || "")}</p>
-          <div class="pill-row">${tagPills}${hosted}</div>
+          <div class="pill-row">${rolePill}${tagPills}${hosted}</div>
           ${links ? `<div class="pill-row">${links}</div>` : ""}
         </div>`;
+      card.onclick = () => select(`media:${m.id}`);
       return card;
     }
 

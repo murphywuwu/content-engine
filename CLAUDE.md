@@ -303,6 +303,7 @@ source type changes what is read next; it does not bypass the Profile Notebook.
 - Opportunity dims (produce only): `context` `audience` `conflict` `insight` `evidence` (0–10) → `opp_score`. Reasons live in the readable judgment layer, not in a score-table note column.
 - `ready` requires **opp_score ≥ 7.5 and audience ≥ 6**
 - `generation_mode` may be `demand` | `demand_to_offer` | `offer_education` | `review` | `profile_thesis` | `domain_explanation` | `comparison` | `response` | `craft_only`
+- For `review` / `comparison` / `offer_education` with visuals: after locking `P-*` or `R-*`, retrieve images per **§ Media** (subject link → role). Cite `M-*` in Trace when used.
 - `src_likes` / `src_replies` / `src_bookmarks` (+ views if known) + `engagement_at` on **index** when source is external
 - Do **not** fold `src_*` into opp_score; among **ready** only, prefer replies/bookmarks over views
 - **Language (hard):** Readable judgment + `one_liner` + Decision Card body = profile public language from `voice.md` **Language** (else pillars “Primary public language”, else `engine.json` locale). Verbatim Needs/Capture quotes stay untranslated. Operator chat may add a short gloss in another language; the Topic file and `ready` card body do not. Wrong-language prose → fix before `ready`.
@@ -508,17 +509,29 @@ Triggers: 设置品牌 / 改 logo / 配色 / 字体 / set brand / brand colors.
 
 Triggers: 存图 / 记图 / 加素材 / 找图 / catalog image / find image.
 
-**When generating content that needs an image** (product review, slideshow slot, cover), **read `media/_index.md` first** and reuse an existing asset by tag/link. Only ask the user for a new file if none fits.
+**Model:** `M-*` is a graph node that **illustrates** a subject. Owned offers → `P-*`. Third-party review subjects → `R-*`. Retrieval is by subject link first — not vision search.
+
+**When generating content that needs an image** (product review, slideshow slot, cover): lock the subject (`P-*` or `R-*`), then **read `media/_index.md`** and filter by that link + `role`. Only ask for a new file if none fits.
 
 **Add (ingest):**
 
-1. Compute `sha256` of the file. If that hash already has a row, **reuse that id** — never import a duplicate.
-2. Assign `M-YYYYMMDD-XX`; place the file under `media/`.
-3. Append a row: `file`, `sha256`, one-line `caption`, `tags` (closed set only), `links` (`P-*`/`C-*`/`R-*`/`RUN-*`/`brand`), `rights`. Leave `hosted_image_id` empty.
+1. Resolve subject: user names an existing `P-*` / `R-*`, or create `R-*` first for a third-party review target. If `tags` will include `product` or `screenshot` and there is **no** subject → **stop and ask**; do not write a row.
+2. Compute `sha256` of the file. If that hash already has a row, **reuse that id** — never import a duplicate.
+3. Assign `M-YYYYMMDD-XX`; place the file under `media/`.
+4. Append a row: `file`, `sha256`, one-line `caption`, `tags` (closed set), **`role`** (`logo`|`home`|`pricing`|`settings`|`compare`|`proof`|`other`), `links` (must include `P-*` or `R-*` when tags are product/screenshot; may also include `C-*`/`RUN-*`/`brand`), `rights`. Leave `hosted_image_id` empty.
+5. Chat **Media Card**: id · subject · role · caption · tags.
 
-**Retrieve:** filter `media/_index.md` by tag and/or link to find the right image for the content need. Cite the media id in the pack/draft.
+**Retrieve (reviews / comparison / offer visuals):**
 
-**Do not:** upload here (upload is at render only); store binaries in `runs/`; invent tags outside the closed set; fabricate `rights`; hang `M-` on a `W-` just because a row was added. Wiki cite only if the image is evidence for that lesson or the brand logo it depends on.
+1. Profile-first notebook read (unchanged).
+2. Lock subject `P-*` or `R-*` from the Topic / user brief (`generation_mode` `review` | `comparison` | `offer_education`).
+3. Filter `media/_index.md` where `links` contains that subject.
+4. Pick by needed `role` (and caption). Cite `M-*` ids in Topic Trace / Run selection / pack — never copy binaries into `runs/`.
+5. If missing roles → list the gap and ask the user to ingest; **do not** scan the vault with vision.
+
+**Lint:** `python3 scripts/lint-media.py --engine .` (report only).
+
+**Do not:** upload here (upload is at render only); store binaries in `runs/`; invent tags/roles outside the closed sets; fabricate `rights`; hang `M-` on a `W-` just because a row was added; invent a subject to clear the gate. Wiki cite only if the image is evidence for that lesson or the brand logo it depends on.
 
 ---
 

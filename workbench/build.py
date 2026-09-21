@@ -36,6 +36,8 @@ RUN_RE = re.compile(r"RUN-[A-Za-z0-9-]+")
 PRODUCT_RE = re.compile(r"\bP-[A-Za-z0-9-]+\b")
 RECOMMENDATION_RE = re.compile(r"\bR-[A-Za-z0-9-]+\b")
 WIKI_PAGE_RE = re.compile(r"\bW-[A-Za-z0-9-]+\b")
+MEDIA_RE = re.compile(r"\bM-\d{8}-\d{2}\b")
+SUBJECT_LINK_RE = re.compile(r"\b(?:P|R)-\d{3}\b")
 WIKI = re.compile(r"\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]")
 
 
@@ -565,10 +567,16 @@ def parse_wiki_pages() -> list[dict]:
 def parse_media(md: str | None = None) -> list[dict]:
     if md is None:
         md = read("media/_index.md")
+    # Prefer schema with role; fall back for older indexes.
     rows = table_with(
         md,
-        "id", "file", "sha256", "caption", "tags", "links", "rights", "hosted_image_id",
+        "id", "file", "sha256", "caption", "tags", "role", "links", "rights", "hosted_image_id",
     )
+    if not rows:
+        rows = table_with(
+            md,
+            "id", "file", "sha256", "caption", "tags", "links", "rights", "hosted_image_id",
+        )
     out = []
     for row in rows:
         ident = (row.get("id") or "").strip().strip("`")
@@ -577,6 +585,8 @@ def parse_media(md: str | None = None) -> list[dict]:
         f = (row.get("file") or "").strip().strip("`")
         src = f if f.startswith("media/") else (f"media/{f}" if f else "")
         hosted = (row.get("hosted_image_id") or "").strip()
+        links = [l for l in re.split(r"[\s,]+", (row.get("links") or "").strip()) if l]
+        subjects = SUBJECT_LINK_RE.findall(" ".join(links))
         out.append(
             {
                 "id": ident,
@@ -585,7 +595,9 @@ def parse_media(md: str | None = None) -> list[dict]:
                 "sha256": (row.get("sha256") or "").strip(),
                 "caption": (row.get("caption") or "").strip(),
                 "tags": [t for t in re.split(r"\s+", (row.get("tags") or "").strip()) if t],
-                "links": [l for l in re.split(r"[\s,]+", (row.get("links") or "").strip()) if l],
+                "role": (row.get("role") or "").strip(),
+                "links": links,
+                "subjects": subjects,
                 "rights": (row.get("rights") or "").strip(),
                 "hosted_image_id": hosted,
                 "hosted": bool(hosted),
@@ -964,6 +976,38 @@ def build_graph() -> dict:
                     },
                 )
             )
+
+    for m in parse_media():
+        add_node(
+            node(
+                "media",
+                m["id"],
+                m["caption"] or m["id"],
+                m["src"] or "media/_index.md",
+                {
+                    "file": m["file"],
+                    "src": m["src"],
+                    "sha256": m["sha256"],
+                    "caption": m["caption"],
+                    "tags": m["tags"],
+                    "role": m.get("role", ""),
+                    "links": m["links"],
+                    "subjects": m.get("subjects", []),
+                    "rights": m["rights"],
+                    "hosted_image_id": m["hosted_image_id"],
+                    "hosted": m["hosted"],
+                },
+            )
+        )
+        media_id = nid("media", m["id"])
+        for sub in m.get("subjects") or []:
+            kind = "product" if sub.startswith("P-") else "recommendation"
+            edge(media_id, nid(kind, sub), "illustrates")
+        for link in m.get("links") or []:
+            if link.startswith("C-"):
+                edge(nid("capture", link), media_id, "has_media")
+            elif link.startswith("RUN-"):
+                edge(nid("run", link), media_id, "uses_media")
 
     for row in table_with(read("raw/_index.md"), "id", "date", "capture_id", "file", "type", "source_url", "one_liner"):
         ident = row["id"]
@@ -1744,15 +1788,16 @@ def _self_check() -> None:
     print("extract_runs_table self-check ok")
 
     media_md = (
-        "| id | file | sha256 | caption | tags | links | rights | hosted_image_id |\n"
-        "|----|------|--------|---------|------|-------|--------|-----------------|\n"
-        "| M-20260917-01 | logo.png | abc123 | Brand logo | logo brand | brand, P-001 | own-screenshot | img_9 |\n"
-        "| (fill) | | | | | | | |\n"
+        "| id | file | sha256 | caption | tags | role | links | rights | hosted_image_id |\n"
+        "|----|------|--------|---------|------|------|-------|--------|-----------------|\n"
+        "| M-20260917-01 | logo.png | abc123 | Brand logo | logo | logo | brand, P-001 | own-screenshot | img_9 |\n"
+        "| (fill) | | | | | | | | |\n"
     )
     mres = parse_media(media_md)
     assert len(mres) == 1, mres
     assert mres[0]["id"] == "M-20260917-01" and mres[0]["src"] == "media/logo.png", mres
-    assert mres[0]["tags"] == ["logo", "brand"] and mres[0]["links"] == ["brand", "P-001"], mres
+    assert mres[0]["tags"] == ["logo"] and mres[0]["links"] == ["brand", "P-001"], mres
+    assert mres[0]["role"] == "logo" and mres[0]["subjects"] == ["P-001"], mres
     assert mres[0]["hosted"] is True, mres
     print("parse_media self-check ok")
     core, vault = load_roots(_WB)
