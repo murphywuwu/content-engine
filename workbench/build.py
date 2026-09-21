@@ -490,6 +490,7 @@ def parse_wiki_notebooks(md: str | None = None) -> list[dict]:
             {
                 "profile": profile,
                 "path": path,
+                "root_file": f"{path}/README.md",
                 "one_liner": (row.get("one_liner") or "").strip(),
             }
         )
@@ -547,6 +548,8 @@ def parse_wiki_pages() -> list[dict]:
                 "id": wid,
                 "title": title,
                 "status": (meta.get("status") or "").strip(),
+                "state": (meta.get("state") or "").strip(),
+                "confidence": (meta.get("confidence") or "").strip(),
                 "pillar": (meta.get("pillar") or "").strip(),
                 "profile": profile,
                 "need_count": "",

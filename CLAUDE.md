@@ -2,7 +2,7 @@
 
 This folder is the local **Content Engine** for EasySociable.
 
-**Human interface:** conversation only. The user does **not** edit markdown by hand. Observatory UI: `workbench/` at `http://127.0.0.1:8765/workbench/`.  
+**Human interface:** conversation only. The user does **not** edit markdown by hand. Observatory UI: `workbench/` at `http://127.0.0.1:8765/workbench/`.
 **Agent interface:** you create/update files; always return a structured result card in chat. After markdown writes, run `python3 workbench/build.py` (leave `serve.py` running if already up).
 
 ## Defaults (v1)
@@ -10,20 +10,20 @@ This folder is the local **Content Engine** for EasySociable.
 - Folder tree: **English** (`Content Engine/`). Do not ask language.
 - **Core vs vault:** see `LAYOUT.md`. Default `engine.json` `vault_root` is `"."` (this folder is both). Optional split: point `vault_root` at a private data directory; keep `CLAUDE.md` + `workbench/` on core.
 - Default **account:** first **active** handle in `accounts/_index.md` (starter: `your-handle` — replace it)
-- **开一单:** do **not** silent-default platform — **ask**; multi-select → **N runs**  
+- **开一单:** do **not** silent-default platform — **ask**; multi-select → **N runs**
 - Do not invent metrics, customers, or quotes the user did not provide
 
 ### Resolve account → profile (required)
 
-1. Read **`accounts/_index.md`** for the handle (default: first active row)  
-2. Get `profile_id`, `voice`, `platforms`, `default_platform`, `overrides`  
-3. Load **`profiles/<profile_id>/pillars.md`** + **`audience.md`** (core + current platform section)  
-4. Voice: if account `voice` is `profile` or empty → **`profiles/<profile_id>/voice.md`** (Identity + **Experience** + **Values** + Persona); else load the explicit path. Never invent bio facts not in Identity / Experience.  
-   `boundaries.md`: missing → **hard-gate fail**. Write empty starter (`## Not covering` / `## Never claim` headings), then interview; **never invent boundaries**.  
-   `stories.md` / `expression.md`: missing → `profile: partial`, continue.  
-   Do not invent bio / stories / values absent from those files. Topics listed in `boundaries.md` → stop; do not write.  
-5. If `overrides` is **non-empty**, read that path (e.g. `accounts/overrides/<handle>.md`) and apply last  
-6. Craft: **always** load `platforms/<platform>.md` for the active platform (see `platforms/README.md` for id → file; `instagram` → `ig.md`). Missing file → stop and tell the user; do not invent craft rules.  
+1. Read **`accounts/_index.md`** for the handle (default: first active row)
+2. Get `profile_id`, `voice`, `platforms`, `default_platform`, `overrides`
+3. Load **`profiles/<profile_id>/pillars.md`** + **`audience.md`** (core + current platform section)
+4. Voice: if account `voice` is `profile` or empty → **`profiles/<profile_id>/voice.md`** (Identity + **Experience** + **Values** + Persona); else load the explicit path. Never invent bio facts not in Identity / Experience.
+   `boundaries.md`: missing → **hard-gate fail**. Write empty starter (`## Not covering` / `## Never claim` headings), then interview; **never invent boundaries**.
+   `stories.md` / `expression.md`: missing → `profile: partial`, continue.
+   Do not invent bio / stories / values absent from those files. Topics listed in `boundaries.md` → stop; do not write.
+5. If `overrides` is **non-empty**, read that path (e.g. `accounts/overrides/<handle>.md`) and apply last
+6. Craft: **always** load `platforms/<platform>.md` for the active platform (see `platforms/README.md` for id → file; `instagram` → `ig.md`). Missing file → stop and tell the user; do not invent craft rules.
 7. Catalog filter: swipe/atoms/claims where `platforms` matches **and** (`profiles` is `*` **or** contains `profile_id`)
 8. If a Topic or draft mentions an offer, load `products/_index.md` and the
    cited `products/entries/P-*.md`. Never invent product pricing, entitlements,
@@ -119,38 +119,38 @@ User stores an idea, link, competitor structure, or source — not a pure Q&A.
 
 ### Always write (scheme B)
 
-1. **`inbox/entries/C-YYYYMMDD-XX.md`** — working notes (our understanding; not necessarily full source text)  
-2. **Row at top of `inbox/_index.md`** — registry (id, type, one_liner, profile, entry path, raw path, library, status)  
+1. **`inbox/entries/C-YYYYMMDD-XX.md`** — working notes (our understanding; not necessarily full source text)
+2. **Row at top of `inbox/_index.md`** — registry (id, type, one_liner, profile, entry path, raw path, library, status)
 
-Id: `C-YYYYMMDD-XX` sequential per day (`01`, `02`, …).  
+Id: `C-YYYYMMDD-XX` sequential per day (`01`, `02`, …).
 Default `profile`: current account’s `profile_id`.
 
 ### Also write raw when
 
-- URL worth revisiting, multi-step structure, media, or user says important  
+- URL worth revisiting, multi-step structure, media, or user says important
 
 Then:
 
-1. Body: `raw/YYYY-MM-DD-short-slug.md` (authoritative text/structure/media links)  
-2. Row in **`raw/_index.md`** with `capture_id`  
-3. Set inbox row `raw` column to that file  
+1. Body: `raw/YYYY-MM-DD-short-slug.md` (authoritative text/structure/media links)
+2. Row in **`raw/_index.md`** with `capture_id`
+3. Set inbox row `raw` column to that file
 
 ### Do not
 
-- Use deprecated `inbox/capture.md` (removed)  
-- Silent-write swipe/atoms/claims under `library/`  
-- Treat capture as a finished run  
-- Reply “saved” without **Capture Card**  
-- Invent facts not in the user message / source  
-- Invent a new `W-` when the lesson is unclear — use **§ Wiki** hang-or-unfiled  
+- Use deprecated `inbox/capture.md` (removed)
+- Silent-write swipe/atoms/claims under `library/`
+- Treat capture as a finished run
+- Reply “saved” without **Capture Card**
+- Invent facts not in the user message / source
+- Invent a new `W-` when the lesson is unclear — use **§ Wiki** hang-or-unfiled
 
 ### After store (notebook) — required or the capture is not stored
 
 Hang on **this profile’s** notebook only.
 
-1. Try to match an existing active/seed `W-` (same pain / pillar / reader job).  
-2. If matched: append the `C-` under **Related captures** (`[[inbox/entries/C-…\|C-…]]`); touch `updated`.  
-3. If not: append a row to `wiki/_unfiled.md` and ask hang vs create — **do not** invent a slug.  
+1. Try to match an existing active/seed `W-` (same pain / pillar / reader job).
+2. If matched: append the `C-` under **Related captures** (`[[inbox/entries/C-…\|C-…]]`); touch `updated`.
+3. If not: append a row to `wiki/_unfiled.md` and ask hang vs create — **do not** invent a slug.
 4. Chat card **must** name `W-…` or `unfiled`. Index + entry without this step → incomplete; do not say “saved”.
 
 ### entry file (minimal shape)
@@ -207,8 +207,8 @@ B) Refine notes
 Reply number(s) or 不入库.
 ```
 
-On approval: create catalog files per **§ Library ingest**, set inbox `library` column (e.g. `swipe:S2`). Do **not** append those ids to a `W-` Parts table here.  
-Path A (capture): **no** engagement gates on *your* posts.  
+On approval: create catalog files per **§ Library ingest**, set inbox `library` column (e.g. `swipe:S2`). Do **not** append those ids to a `W-` Parts table here.
+Path A (capture): **no** engagement gates on *your* posts.
 
 Optional: if user also says「同时选题/打分」, run **§ Topics** for this capture.
 
@@ -281,8 +281,12 @@ relationships before drafting.
 
 ## § Topics (Opportunity evaluation)
 
-**Role:** Evaluate **Content Opportunities** — whether a topic deserves to exist as content. Does not replace capture or runs.  
+**Role:** Evaluate **Content Opportunities** — whether a topic deserves to exist as content. Does not replace capture or runs.
 **Principle:** Topics are not titles. They are a judgment card the content owner can read in one minute. Five-dim scores are a gate in the appendix, not the reading surface.
+
+**Profile-first rule:** every Topic request starts by reading
+`wiki/pages/<profile>/README.md`, then the relevant W- judgment pages. The
+source type changes what is read next; it does not bypass the Profile Notebook.
 
 ### Layout
 
@@ -298,6 +302,7 @@ relationships before drafting.
 - Scout first: `purpose` = `discard` | `library` | `produce`; `scout_label` = `demand` | `ally` | `foil` | `craft_only`. Needs default `scout_label=demand`.
 - Opportunity dims (produce only): `context` `audience` `conflict` `insight` `evidence` (0–10) → `opp_score`. Reasons live in the readable judgment layer, not in a score-table note column.
 - `ready` requires **opp_score ≥ 7.5 and audience ≥ 6**
+- `generation_mode` may be `demand` | `demand_to_offer` | `offer_education` | `review` | `profile_thesis` | `domain_explanation` | `comparison` | `response` | `craft_only`
 - `src_likes` / `src_replies` / `src_bookmarks` (+ views if known) + `engagement_at` on **index** when source is external
 - Do **not** fold `src_*` into opp_score; among **ready** only, prefer replies/bookmarks over views
 - **Language (hard):** Readable judgment + `one_liner` + Decision Card body = profile public language from `voice.md` **Language** (else pillars “Primary public language”, else `engine.json` locale). Verbatim Needs/Capture quotes stay untranslated. Operator chat may add a short gloss in another language; the Topic file and `ready` card body do not. Wrong-language prose → fix before `ready`.
@@ -320,14 +325,15 @@ relationships before drafting.
 1. If needs exist with `status=captured`, offer **扫需求选题**.
 2. Otherwise ask which explicit input to use.
 
-0. Resolve profile **Language** (`voice.md` → pillars → `engine.json` locale).  
-0b. **Notebook hard gate (lookalike):** read matching `wiki/pages/<profile>/W-*.md` (`active`/`seed`) for the same pain/pillar.  
-   - If a page’s **We believe** covers this Need/cut **and** **Battles fought** already has `win` or `loss` for that same cut → **default `purpose=discard`** (or require user to name a **new cut** in chat before `produce`).  
-   - Do **not** write a lookalike `produce` T- unless the user explicitly overrides after seeing the W- battles.  
-   - Cite every `W-` read in Trace.  
+0. Resolve profile **Language** (`voice.md` → pillars → `engine.json` locale).
+0a. **Profile Notebook first:** read `wiki/pages/<profile>/README.md`, then relevant W- pages and their counter-evidence.
+0b. **Notebook hard gate (lookalike):** read matching `wiki/pages/<profile>/W-*.md` (`active`/`seed`) for the same pain/pillar.
+   - If a page’s **We believe** covers this Need/cut **and** **Battles fought** already has `win` or `loss` for that same cut → **default `purpose=discard`** (or require user to name a **new cut** in chat before `produce`).
+   - Do **not** write a lookalike `produce` T- unless the user explicitly overrides after seeing the W- battles.
+   - Cite every `W-` read in Trace.
 1. Hard filters (`scoring.md`); else skip.
 2. **Scout gate** — set `purpose` + `scout_label`; if `discard`, do not create T-. Needs-sourced default `scout_label=demand` (ally/foil/craft_only still allowed when honest).
-3. **Mode pick** — if proceeding toward `produce`, **ask** `generation_mode` (six modes). Recommend `demand` for Need-led input; wait for user choice. Do not write a `produce` T- before the choice. Validate required ids for that mode.
+3. **Mode pick** — if proceeding toward `produce`, **ask** `generation_mode`. Recommend `demand` for Need-led input, `offer_education` for Product-led input, and `domain_explanation` for a new field; wait for user choice. Do not write a `produce` T- before the choice. Validate required ids for that mode.
 4. If `produce` (or user forces score):
    a. Write the **decision card** first (`topics/_template-item.md` upper half), in profile Language: Verdict, Why this status, Who it’s for, Core judgment, Next step, then What problem / What they believe / What cut / Why now / What should change / Based on / Gaps / Suggested form. Keep the summary short; no enum lists, heat, or weighted arithmetic in the readable layer. Set frontmatter `generation_mode` to the chosen mode. Cite `W-` id in Trace when used.
    b. Score all 5 opportunity dims (0–10) → `opp_score`. Put **numbers only** in `## Score`. Do not repeat the card as table notes.
@@ -335,7 +341,7 @@ relationships before drafting.
 5. If `library`: optional light item with `status: library`, or capture offer only. Source needs stay `captured` (or `retired` if the user discards).
 6. Add row on `topics/_index.md` (`item` + `src_*` when external). `one_liner` = the card’s core-judgment sentence, same language.
 7. If this T- was `produce` from `N-` ids: update each `needs/_index.md` row + entry to `status=promoted` and `topic_ids` containing this T-. Skip if no T- was written (`discard`).
-8. If `produce` and a `W-` matched (or user named one): append the T- to that page’s **Battles fought** as `pending`.  
+8. If `produce` and a `W-` matched (or user named one): append the T- to that page’s **Battles fought** as `pending`.
 9. Output the **Decision Card** in chat — same shape and language as the file’s readable layer, not a score walkthrough. Optional operator gloss in another language is chat-only.
 
 **Important:** “What do they believe now?” must name the false belief. If you cannot, conflict cannot score above 5. Brief inherits the readable judgment layer, not the Score table.
@@ -377,12 +383,12 @@ On `用 T-xxx 开一单`: **ask platform(s)** if unset (multi-select OK). Create
 
 ## § Swipe / atom library
 
-- **Catalog:** `library/swipe/_index.md` / `library/atoms/_index.md` / `library/claims/_index.md` are the selection entrypoints (Approach B).  
-- **Notebook hard gate:** when a Topic links a `W-`, read that page’s **Parts that fit / Do not do** before opening library indexes; Open card must cite `W-…` or `W-: none`.  
-- **Hit-status:** `trial` | `working` | `dead` (not claim epistemology).  
-- **Hits cache:** index columns `n` `win` `loss` from **our** `published.result`.  
-- **Use history:** `published/_index.md` (columns `swipe` / `atoms`). **Do not** put an Evidence table in swipe/atom files.  
-- **New item:** template + index row under `library/`; default `trial`, n=win=loss=0.  
+- **Catalog:** `library/swipe/_index.md` / `library/atoms/_index.md` / `library/claims/_index.md` are the selection entrypoints (Approach B).
+- **Notebook hard gate:** when a Topic links a `W-`, read that page’s **Parts that fit / Do not do** before opening library indexes; Open card must cite `W-…` or `W-: none`.
+- **Hit-status:** `trial` | `working` | `dead` (not claim epistemology).
+- **Hits cache:** index columns `n` `win` `loss` from **our** `published.result`.
+- **Use history:** `published/_index.md` (columns `swipe` / `atoms`). **Do not** put an Evidence table in swipe/atom files.
+- **New item:** template + index row under `library/`; default `trial`, n=win=loss=0.
 - **From capture / run:** only via **§ Library ingest**. Never silent seed from runs.
 
 ---
@@ -391,16 +397,19 @@ On `用 T-xxx 开一单`: **ask platform(s)** if unset (multi-select OK). Create
 
 Triggers: 维护笔记 / 扫笔记 / lint 笔记 / hang on W- / create lesson.
 
-**Role:** Compiled lesson pages under `wiki/pages/<profile>/W-*.md` (one notebook per profile). Not a second inventory of needs/topics/runs. Not craft parts (`library/`). `wiki/_index.md` only maps profile → folder.
+**Role:** Profile-scoped judgment nodes under `wiki/pages/<profile>/W-*.md`, entered through `wiki/pages/<profile>/README.md`. They are the working memory of one connected graph, not a second inventory of needs/topics/runs. Not craft parts (`library/`). `wiki/_index.md` only maps profile → folder.
 
 ### Rules
 
-- **Drawers vs notebook:** indexes store files; `W-` stores lessons. Heat (Hits) never enters a `W-`.  
-- One recurring lesson → one `W-` **inside that profile’s folder**. Prefer merge over near-duplicate pages.  
-- Agent writes pages; human reads. Schema = this section + `wiki/_template.md`.  
-- Closed see-also rels: `related` | `contradicts` | `parent` | `child` | `next` — pairwise, ≤5 per page.  
-- Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.  
-- **Obsidian wikilinks required** on every hung id and see-also target. Same style as other vault indexes: `[[path]]` or, in **table cells**, `[[path\|id]]`. Prefer `[[wiki/pages/<profile>/W-…\|W-…]]`. Bare `W-…` / `N-…` text does **not** create Backlinks.  
+- **Drawers vs notebook:** indexes store files; `W-` stores lessons. Heat (Hits) never enters a `W-`.
+- One recurring lesson → one `W-` **inside that profile’s folder**. Prefer merge over near-duplicate pages.
+- Agent writes pages; human reads. Schema = this section + `wiki/_template.md`.
+- `W-` state is epistemic: `hypothesis` (inferred, not tested) | `tested` (a Run exists) | `supported` | `weakened` | `retired`. `unknown` Run results never promote a state.
+- Every W- must name evidence, counter-evidence, and a next test. A Needs/Captures-only page is still a hypothesis, not a learned lesson.
+- Profile-first read: open the profile notebook root before selecting any W- or source node.
+- Closed see-also rels: `related` | `contradicts` | `parent` | `child` | `next` — pairwise, ≤5 per page.
+- Unclear hang → `wiki/_unfiled.md` + ask. Never invent empty lessons to clear the queue.
+- **Obsidian wikilinks required** on every hung id and see-also target. Same style as other vault indexes: `[[path]]` or, in **table cells**, `[[path\|id]]`. Prefer `[[wiki/pages/<profile>/W-…\|W-…]]`. Bare `W-…` / `N-…` text does **not** create Backlinks.
 - Do **not** maintain a per-note row in `wiki/_index.md` — scan the folder. Optional `wiki/pages/_shared/` for rare cross-profile lessons.
 
 ### Lint (required when user says lint 笔记 / wiki lint)
@@ -437,7 +446,7 @@ Reply 批准 fix: … / 再观察
 
 ### When other sections must touch wiki
 
-口诀：抽屉负责收东西。作文本负责长记性。热气不进作文本。  
+口诀：抽屉负责收东西。作文本负责长记性。热气不进作文本。
 Hang only on `wiki/pages/<this-profile>/` (or `_unfiled`). Never invent a `W-` to clear a queue.
 
 | Event | Wiki? | Action |
@@ -515,11 +524,11 @@ Triggers: 存图 / 记图 / 加素材 / 找图 / catalog image / find image.
 
 ## § Keywords & handles
 
-`keywords.md` is **three-track**: `listen` (social → Hits), `search` (SEO), `ask` (GEO questions).  
+`keywords.md` is **three-track**: `listen` (social → Hits), `search` (SEO), `ask` (GEO questions).
 `handles.md` ≤8 ally/foil/competitor.
 
-**Generate:** from Needs/audience/pillars → chat candidates (max 10) → user confirm → append row with `track` + `seed_from`.  
-**Scan「扫关键词」:** `track=listen` + `active` only (unless user names other ids). Stage **§ Hits**; never Topic; never invent heat/quotes.  
+**Generate:** from Needs/audience/pillars → chat candidates (max 10) → user confirm → append row with `track` + `seed_from`.
+**Scan「扫关键词」:** `track=listen` + `active` only (unless user names other ids). Stage **§ Hits**; never Topic; never invent heat/quotes.
 **search/ask:** not default social scan. Volume/kd optional on search only.
 
 ## § Hits (research triage)
@@ -551,8 +560,8 @@ On scan: `keyword_id` + `src_*` when known. Route need → **§ Needs**. Route l
 
 ## § Needs (audience quotes)
 
-Triggers: 记需求 / 用户原话 / 评论导出 / capture audience quotes / user needs.  
-Hits → Needs **only after route confirm** (**§ Hits**).  
+Triggers: 记需求 / 用户原话 / 评论导出 / capture audience quotes / user needs.
+Hits → Needs **only after route confirm** (**§ Hits**).
 扫需求选题 → **§ Topics** (this section only writes `N-` records).
 
 Follow `easysociable-content/workflows/NEEDS.md` when this engine's copy of the workflow is the newer one; this section wins if both exist.
@@ -613,32 +622,32 @@ User wants a tracked job: "开一单", "open a run", "按完整流程", or a mul
 
 ### Model (one platform = one Run)
 
-- **One folder = one platform draft** (native rewrite).  
-- **Same Topic, different platforms** → **N runs**, shared `topic_id` — **not** one folder with many platform sections.  
-- `idea.md`: `primary_platform` = this run’s platform; `platforms` = **same single value** (column kept for index compat).  
-- `draft.md`: copy for **this platform only**.  
-- Image deck: **`pack.md`** (or `pack-<platform>.md`); pixels under **`exports/<slug>/`**.  
-- Ship → one `published/_index` row for this `run_id`.  
+- **One folder = one platform draft** (native rewrite).
+- **Same Topic, different platforms** → **N runs**, shared `topic_id` — **not** one folder with many platform sections.
+- `idea.md`: `primary_platform` = this run’s platform; `platforms` = **same single value** (column kept for index compat).
+- `draft.md`: copy for **this platform only**.
+- Image deck: **`pack.md`** (or `pack-<platform>.md`); pixels under **`exports/<slug>/`**.
+- Ship → one `published/_index` row for this `run_id`.
 - Cross-platform progress lives on the **Topic** (`run` column lists all RUN ids), not inside one run.
 
 ### Platform gate (required before folder create)
 
-1. User already named platform(s) → use them.  
+1. User already named platform(s) → use them.
 2. Else **stop and ask a required multi-select platform question**. Offer the account’s `platforms` from `accounts/_index` plus any supported platforms the user may name: `x`, `linkedin`, `instagram`, `tiktok`, `threads`, `xiaohongshu`. The user must be able to select one or more.
 3. Do not create a folder, row, brief, or draft before the platform selection is answered.
-4. **Do not** silently default to `x` when opening a run (default `x` still applies to other flows, e.g. watchlist filter).  
-5. **N platforms selected → N runs** (same topic/goal/pillar; independent platform craft, brief, draft, editor, rubric, and ship state).  
+4. **Do not** silently default to `x` when opening a run (default `x` still applies to other flows, e.g. watchlist filter).
+5. **N platforms selected → N runs** (same topic/goal/pillar; independent platform craft, brief, draft, editor, rubric, and ship state).
 6. Slug: include the platform when N>1 or always OK — e.g. `2026-08-26-angle-x`, `…-linkedin`.
 
 ### Load platform craft (required — every run, every draft stage)
 
 For **each** run, before brief / packet / draft / editor / rubric / pack:
 
-1. Resolve craft file via `platforms/README.md` (`x` → `x.md`, `instagram`/`ig` → `ig.md`, …).  
-2. **Read** that file end-to-end. Apply length, hooks, anti-slop, quality checklist.  
-3. Also load profile `audience.md` **core + this platform’s section**.  
-4. Cite the craft path in `brief.md` / `packet.md` (not hardcoded `platforms/x`).  
-5. **Do not** paste another platform’s copy unchanged. Sibling runs each re-read their own craft file.  
+1. Resolve craft file via `platforms/README.md` (`x` → `x.md`, `instagram`/`ig` → `ig.md`, …).
+2. **Read** that file end-to-end. Apply length, hooks, anti-slop, quality checklist.
+3. Also load profile `audience.md` **core + this platform’s section**.
+4. Cite the craft path in `brief.md` / `packet.md` (not hardcoded `platforms/x`).
+5. **Do not** paste another platform’s copy unchanged. Sibling runs each re-read their own craft file.
 6. If the craft file is missing → ask user / create stub; **do not draft** from memory.
 
 ### State machine (do not skip)
@@ -649,50 +658,50 @@ RUN_OPEN → BRIEF_WAIT → DRAFTED → EDIT_WAIT
   → PUBLISHED feedback
 ```
 
-Also mirror high-level status on **`runs/_index.md`**:  
-`open` → `brief` → `draft` → `scored` → `ready` → `published` | `hold` | `killed`.  
+Also mirror high-level status on **`runs/_index.md`**:
+`open` → `brief` → `draft` → `scored` → `ready` → `published` | `hold` | `killed`.
 (`partial` = **legacy** only; do not use for new multi-platform planning.)
 
 Human gates (chat only):
 
-1. **简报 OK** / Brief OK  
-2. **编辑 OK** / Editor OK  
-3. After SHIP: user posts **this** platform, then URL + result → feedback + published row  
+1. **简报 OK** / Brief OK
+2. **编辑 OK** / Editor OK
+3. After SHIP: user posts **this** platform, then URL + result → feedback + published row
 4. If images: **图 OK** after render (when skill available)
 
 ### Folder setup
 
-1. Resolve platform list (gate above). For **each** platform:  
-2. **Load** `platforms/<platform>.md` (required; see above).  
-3. Create `runs/YYYY-MM-DD-short-slug[-platform]/` from `runs/_template/`.  
-4. Fill `idea.md` (pillar, **platform**, **selection ids**, optional `topic_id`).  
-5. **Append row** on `runs/_index.md` (`status=open`).  
-6. If from **T-…**: prefill from topic; mark topic `promoted`; append all new run ids to `topics/_index` `run`.  
+1. Resolve platform list (gate above). For **each** platform:
+2. **Load** `platforms/<platform>.md` (required; see above).
+3. Create `runs/YYYY-MM-DD-short-slug[-platform]/` from `runs/_template/`.
+4. Fill `idea.md` (pillar, **platform**, **selection ids**, optional `topic_id`).
+5. **Append row** on `runs/_index.md` (`status=open`).
+6. If from **T-…**: prefill from topic; mark topic `promoted`; append all new run ids to `topics/_index` `run`.
 7. Never leave production only in chat when in run mode.
 
 ### Selection inside a run (required step; **none allowed**)
 
 Before brief body, evaluate catalogs (Approach B + **profile + this run’s platform**).
 
-0. **Notebook hard gate:** resolve linked `W-` from Topic Trace / Need hang / user.  
-   - If a `W-` exists for this lesson: **must** open `wiki/pages/<profile>/W-….md` and read **Parts that fit** / **Do not do** **before** opening any `library/*/_index.md`.  
-   - Selection may only use ids marked `fits`, or `none`. Ids marked `avoid` are **forbidden**.  
-   - If the page has no fits row: Selection = `none` + why (still valid).  
-   - If no `W-` is linked: say so on the Open card, then fall back to library indexes (legacy). Prefer hanging a `W-` next time.  
+0. **Profile-first read:** open `wiki/pages/<profile>/README.md`, then resolve linked `W-` from Topic Trace / Need hang / user. Record the root and W- paths on the Open card.
+   - If a `W-` exists for this lesson: **must** open `wiki/pages/<profile>/W-….md` and read **Parts that fit** / **Do not do** **before** opening any `library/*/_index.md`.
+   - Selection may only use ids marked `fits`, or `none`. Ids marked `avoid` are **forbidden**.
+   - If the page has no fits row: Selection = `none` + why (still valid).
+   - If no `W-` is linked: say so on the Open card, then fall back to library indexes (legacy). Prefer hanging a `W-` next time.
    - Open / Selection card **must** name `W-…` or `W-: none`.
 
 Filter every catalog row under `library/`:
 
-- `platforms` includes this run’s platform (or `*`)  
-- `profiles` is `*` **or** includes current `profile_id`  
-- Swipe/atom: drop `dead`. Claim: drop `retired`.  
+- `platforms` includes this run’s platform (or `*`)
+- `profiles` is `*` **or** includes current `profile_id`
+- Swipe/atom: drop `dead`. Claim: drop `retired`.
 
 Rank:
 
-- Swipe/atom: `working` before `trial`; then higher `win/n` (if n=0, treat as unranked trial).  
+- Swipe/atom: `working` before `trial`; then higher `win/n` (if n=0, treat as unranked trial).
 - Claim: **do not** rank by `hypothesis` vs `supported`. Rank remaining by `win/n`. `hypothesis` is valid to pick. `weakened` only if the user wants that tension.
 
-Then: swipe 0–1 → atoms by role → claim 0–1. **`none` always allowed** with why.  
+Then: swipe 0–1 → atoms by role → claim 0–1. **`none` always allowed** with why.
 Sibling runs for the same topic may pick different swipe/atoms (native rewrite).
 
 **Write the pick into `idea.md` (this is the citation).** Chat card alone does not count.
@@ -798,17 +807,17 @@ After brief OK: short `packet.md` — pillar slice + voice + audience (**core + 
 
 ### Writer → Editor
 
-- Writer **re-reads** `platforms/<platform>.md`, then fills `draft.md` (**this platform only**) + full text in chat.  
+- Writer **re-reads** `platforms/<platform>.md`, then fills `draft.md` (**this platform only**) + full text in chat.
 - Editor → `editor.md`; check against that craft file’s quality bar; REVISE until APPROVE or user override.
 
 ### Rubric gate
 
-Score `rubric.md` (6 × 0–2, max 12).  
+Score `rubric.md` (6 × 0–2, max 12).
 
-- **≥ 8 → SHIP** — 发布包 in chat; `runs/_index` → `ready`.  
+- **≥ 8 → SHIP** — 发布包 in chat; `runs/_index` → `ready`.
 - **排期 / Schedule:** If user specifies publish date/time → `runs/_index` status `scheduled` + set `scheduled` date (or in `idea.md` frontmatter `scheduled: YYYY-MM-DD`). Workbench reflects it on the Schedule calendar.
-- **< 8 → HOLD**.  
-- Carousel/slideshow platforms: after SHIP → **§ PagePack + render**.  
+- **< 8 → HOLD**.
+- Carousel/slideshow platforms: after SHIP → **§ PagePack + render**.
 - Pure X text: no multi-page pack.
 
 ### Required chat cards (run mode)
@@ -859,37 +868,37 @@ Reply 简报 OK / 改 …
 
 ### Feedback
 
-`feedback.md` + **§ Published index** on ship.  
-Update `runs/_index` → `published`.  
+`feedback.md` + **§ Published index** on ship.
+Update `runs/_index` → `published`.
 Then **§ Catalog evidence**. Never auto-`supported` / auto-`working`; never silent catalog ingest.
 
 ### § Published index (Step 6)
 
 On confirmed ship for this run:
 
-1. Row on **`published/_index.md`** (date, **platform**, url, run, pillar, swipe, atoms, claim, result, notes).  
-2. Optional stub.  
-3. `runs/_index` status → `published`.  
-4. **§ Catalog evidence** for every cited swipe / atom / claim id (skip `none`).  
-5. **Notebook:** if a `W-` is linked from the Topic/Need, update **Battles fought** (`win`/`loss`) and **Parts that fit** (`fits`/`avoid`) from this ship; revise **We believe** only when the learning is explicit.  
+1. Row on **`published/_index.md`** (date, **platform**, url, run, pillar, swipe, atoms, claim, result, notes).
+2. Optional stub.
+3. `runs/_index` status → `published`.
+4. **§ Catalog evidence** for every cited swipe / atom / claim id (skip `none`).
+5. **Notebook:** if a `W-` is linked from the Topic/Need, update **Battles fought** (`win`/`loss`) and **Parts that fit** (`fits`/`avoid`) from this ship; revise **We believe** only when the learning is explicit. `unknown` updates no judgment state. A repeated, clear result may move `hypothesis` → `tested` / `supported` / `weakened`, but never auto-promote without evidence review.
 6. Weekly 复盘: start from **published** `_index`. Same topic’s other platforms = other runs / other published rows.
 
 ### § Catalog evidence (required on ship)
 
 Hits cache lives on the **index row** (`n` `win` `loss`). This is **not** 引用. 引用 is run selection in `idea.md` (already true once the run exists). `n`/`win`/`loss` only move **on ship**.
 
-**Swipe / atom — no Evidence file.**  
+**Swipe / atom — no Evidence file.**
 The ledger is the **published row** (`swipe` / `atoms` / `result` / `notes`). Why a post flopped stays in `feedback.md` or that published `notes` cell. Do **not** add `## Evidence` to swipe/atom bodies.
 
-**Claim — Evidence table in the claim file.**  
+**Claim — Evidence table in the claim file.**
 That table answers “does the sentence still hold?” (`vs claim`), which is not `result`.
 
 For each cited id:
 
-1. `n += 1`  
-2. `win += 1` if `result=win`; `loss += 1` if `result=loss`; `flat`/`unknown` bump `n` only.  
-3. Sync file frontmatter `status` if you change index status (only after user 批准).  
-4. **Claim only:** append the run to the claim file **Evidence** table (`result` + **vs claim**).  
+1. `n += 1`
+2. `win += 1` if `result=win`; `loss += 1` if `result=loss`; `flat`/`unknown` bump `n` only.
+3. Sync file frontmatter `status` if you change index status (only after user 批准).
+4. **Claim only:** append the run to the claim file **Evidence** table (`result` + **vs claim**).
 
 Propose status change (user must 批准; never auto):
 
@@ -913,26 +922,26 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
 
 ### Preconditions
 
-0. **Hard gate** (same as § Interview). Fail → list missing files; no slideshow/template handoff unless **强制继续** / **force continue**.  
-1. Run exists; brief OK; editor OK; **rubric SHIP**.  
-2. Per-platform `page_count` / `deck_hint` follows the **arc**, not a five-family catalog.  
-3. Prefer a swipe whose beats are an argument; else name a one-line arc from the brief.  
+0. **Hard gate** (same as § Interview). Fail → list missing files; no slideshow/template handoff unless **强制继续** / **force continue**.
+1. Run exists; brief OK; editor OK; **rubric SHIP**.
+2. Per-platform `page_count` / `deck_hint` follows the **arc**, not a five-family catalog.
+3. Prefer a swipe whose beats are an argument; else name a one-line arc from the brief.
 4. **Forbidden default:** Cover → Point → Steps → Recap → CTA (those are P0 family names, not a pack recipe).
 
 ### Agent steps
 
-1. Write **`runs/<slug>/pack.md`** (from `_template/pack.md`; `pack-<platform>.md` OK):  
-   - this run is already one platform  
-   - **Arc** one-liner + recipe **before** Pages  
-   - slots, language, pillar, swipe_id, claim_id  
-   - page 1 `role` is not automatically `cover`  
-2. **Pack Card** in chat — user may `改 pack：…`.  
-3. **Materialize local assets (single-direction, at render only):** for the logo in `profiles/<id>/brand.md` and any slot images that reference a `media/` id with an **empty** `hosted_image_id`, upload once and cache the returned id back into `media/_index.md` (and `brand.md` render binding). Pass `brand.md` colors/fonts as **inline theme tokens** — no hosted Brand record is required.  
+1. Write **`runs/<slug>/pack.md`** (from `_template/pack.md`; `pack-<platform>.md` OK):
+   - this run is already one platform
+   - **Arc** one-liner + recipe **before** Pages
+   - slots, language, pillar, swipe_id, claim_id
+   - page 1 `role` is not automatically `cover`
+2. **Pack Card** in chat — user may `改 pack：…`.
+3. **Materialize local assets (single-direction, at render only):** for the logo in `profiles/<id>/brand.md` and any slot images that reference a `media/` id with an **empty** `hosted_image_id`, upload once and cache the returned id back into `media/_index.md` (and `brand.md` render binding). Pass `brand.md` colors/fonts as **inline theme tokens** — no hosted Brand record is required.
    ```bash
    easysociable images upload --file media/<file>   # → returns image id → write to hosted_image_id
    ```
-4. Hand off to **easysociable-slideshow**: it picks templates by platform + canvas + slot shape, then opens Studio. Topology lock means a wrong arc needs a **new Run**, not slot rewrite.  
-5. **Render / Download:** pixels leave the product from Studio Download (not CLI render). After the user downloads, copy files under **`exports/<slug>/`** if needed; set pack `job_id`, `export_path`, status `done`; set `runs/_index` `pack`/`export` to yes. If slideshow skill is **not** available: status `not_requested` / blocked — **do not fake images**.  
+4. Hand off to **easysociable-slideshow**: it picks templates by platform + canvas + slot shape, then opens Studio. Topology lock means a wrong arc needs a **new Run**, not slot rewrite.
+5. **Render / Download:** pixels leave the product from Studio Download (not CLI render). After the user downloads, copy files under **`exports/<slug>/`** if needed; set pack `job_id`, `export_path`, status `done`; set `runs/_index` `pack`/`export` to yes. If slideshow skill is **not** available: status `not_requested` / blocked — **do not fake images**.
 6. User **图 OK** or revise slots (same topology) / new Run (different arc).
 
 ### Pack Card
@@ -949,14 +958,14 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
 
 ### Do not
 
-- Cram multiple platforms into one run / one pack  
-- Pack for pure X text  
-- Private template AST — public slots only  
-- Invent metrics in slots  
-- Skip SHIP before quality pack  
-- Store binaries inside `runs/` (use **exports/**)  
-- Default Cover → Point → Steps → Recap → CTA  
-- Skip the Arc line and fill P0 family names as a tutorial  
+- Cram multiple platforms into one run / one pack
+- Pack for pure X text
+- Private template AST — public slots only
+- Invent metrics in slots
+- Skip SHIP before quality pack
+- Store binaries inside `runs/` (use **exports/**)
+- Default Cover → Point → Steps → Recap → CTA
+- Skip the Arc line and fill P0 family names as a tutorial
 
 ---
 
@@ -986,7 +995,7 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
 
 ### Engagement gates (path B only)
 
-At least one of: **replies ≥ 2** | bookmarks ≥ 5 | likes ≥ 10 | user override “这条可收”.  
+At least one of: **replies ≥ 2** | bookmarks ≥ 5 | likes ≥ 10 | user override “这条可收”.
 These gates are for **new ingest**, not for promoting `working` (that uses our `win`/`loss` counts).
 
 ### After user approval
@@ -999,8 +1008,8 @@ These gates are for **new ingest**, not for promoting `working` (that uses our `
 
 ### § Claims promote
 
-- Epistemic Evidence on existing claims when used (separate from hits).  
-- `supported` only if ≥3 runs support the **proposition** **and** user 批准.  
+- Epistemic Evidence on existing claims when used (separate from hits).
+- `supported` only if ≥3 runs support the **proposition** **and** user 批准.
 - A `win` that does not actually support the sentence does **not** count toward `supported`.
 
 ### 复盘 card
@@ -1018,19 +1027,19 @@ Reply 批准 … / 否决 / 再观察
 
 ### Self-check (Capture)
 
-- [ ] `inbox/_index.md` row + `inbox/entries/C-….md`  
-- [ ] `raw/` file + `raw/_index.md` only if criteria matched  
-- [ ] Capture Card + library offer when structure/link  
-- [ ] Notebook: `C-` on this profile’s `W-` **or** `_unfiled`; card names which  
+- [ ] `inbox/_index.md` row + `inbox/entries/C-….md`
+- [ ] `raw/` file + `raw/_index.md` only if criteria matched
+- [ ] Capture Card + library offer when structure/link
+- [ ] Notebook: `C-` on this profile’s `W-` **or** `_unfiled`; card names which
 
 ### Self-check (Need)
 
-- [ ] `needs/_index.md` row + `needs/entries/N-….md`; quote verbatim  
-- [ ] Notebook: `N-` on **Readers say** **or** `_unfiled`; card names which; no new `W-` invented to clear queue  
+- [ ] `needs/_index.md` row + `needs/entries/N-….md`; quote verbatim
+- [ ] Notebook: `N-` on **Readers say** **or** `_unfiled`; card names which; no new `W-` invented to clear queue
 
 ### Self-check (Topic / Opportunity)
 
-- [ ] Notebook lookalike gate applied (W- read; no silent duplicate produce)  
+- [ ] Notebook lookalike gate applied (W- read; no silent duplicate produce)
 - [ ] Decision card filled (结论 / 状态原因 / 适合谁 / 核心判断 / 下一步)
 - [ ] Readable judgment filled (问题 / 当前相信什么 / 我们的角度 / 为什么现在 / 看完后的改变 / 依据 / 缺口 / 形式)
 - [ ] False belief named in 「他们现在相信什么」 (not just a conflict score)
@@ -1040,23 +1049,23 @@ Reply 批准 … / 否决 / 再观察
 
 ### Self-check (Run)
 
-- [ ] Folder exists under `runs/` with template files filled  
-- [ ] `runs/_index.md` row created/updated  
-- [ ] Platform gate done; one run per selected platform; `primary_platform` = that platform  
+- [ ] Folder exists under `runs/` with template files filled
+- [ ] `runs/_index.md` row created/updated
+- [ ] Platform gate done; one run per selected platform; `primary_platform` = that platform
 - [ ] `platforms/<platform>.md` **read** before brief/draft/editor; cited in brief + packet
 - [ ] Brief `## Inherited` populated from Topic Opportunity (not re-derived)
 - [ ] Brief decision tree walked; quality gate scored (6 × 1–5)
 - [ ] Brief gate ≥ 24 before presenting to human (or stop rule triggered)
-- [ ] No skip of brief / editor / rubric when user asked for full run  
-- [ ] HOLD never presented as final publish pack  
-- [ ] Image pack only for this run’s platform; exports under `exports/<slug>/`  
-- [ ] Each ship → published row; this run → `published`  
-- [ ] `idea.md` has `swipe_id` / `atoms` / `claim_id` matching the Open card (not only chat)  
-- [ ] Open/Selection card cites `W-…` or `W-: none`; no `avoid` parts selected  
-- [ ] Cited swipe/atom/claim index `n`/`win`/`loss` bumped **on ship only**; status unchanged unless user 批准  
-- [ ] Swipe/atom: no Evidence section; claim Evidence table updated if claim used  
-- [ ] Selection dropped `dead`/`retired`; did not treat claim `supported` as a hit-rank  
+- [ ] No skip of brief / editor / rubric when user asked for full run
+- [ ] HOLD never presented as final publish pack
+- [ ] Image pack only for this run’s platform; exports under `exports/<slug>/`
+- [ ] Each ship → published row; this run → `published`
+- [ ] `idea.md` has `swipe_id` / `atoms` / `claim_id` matching the Open card (not only chat)
+- [ ] Open/Selection card cites `W-…` or `W-: none`; no `avoid` parts selected
+- [ ] Cited swipe/atom/claim index `n`/`win`/`loss` bumped **on ship only**; status unchanged unless user 批准
+- [ ] Swipe/atom: no Evidence section; claim Evidence table updated if claim used
+- [ ] Selection dropped `dead`/`retired`; did not treat claim `supported` as a hit-rank
 - [ ] Same topic multi-platform = sibling runs sharing `topic_id`, not one multi-section folder
 - [ ] Packet includes thesis sentence from brief
-- [ ] No invented metrics  
+- [ ] No invented metrics
 - [ ] No cross-platform paste without re-applying that platform’s craft file

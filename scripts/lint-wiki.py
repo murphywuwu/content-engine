@@ -26,6 +26,8 @@ INVERSE = {
 WID_RE = re.compile(r"W-[A-Za-z0-9_-]+")
 STATUS_RE = re.compile(r"^status:\s*(?P<status>\S+)\s*$", re.MULTILINE)
 PROFILE_RE = re.compile(r"^profile:\s*(?P<profile>\S+)\s*$", re.MULTILINE)
+STATE_RE = re.compile(r"^state:\s*(?P<state>\S+)\s*$", re.MULTILINE)
+VALID_STATES = frozenset({"hypothesis", "tested", "supported", "weakened", "retired"})
 EMPTYISH = frozenset({"", "none", "—", "-", "n/a", "na"})
 
 
@@ -41,6 +43,7 @@ class Page:
     path: Path
     profile: str
     status: str = ""
+    state: str = ""
     see_also: list[tuple[str, str]] = field(default_factory=list)
     contradictions_open: bool = False
 
@@ -110,6 +113,8 @@ def parse_page(path: Path, profile: str) -> Page:
     prof_m = PROFILE_RE.search(text)
     if prof_m and prof_m.group("profile") not in {"*", "PROFILE_ID"}:
         profile = prof_m.group("profile")
+    state_m = STATE_RE.search(text)
+    state = state_m.group("state") if state_m else ""
 
     see: list[tuple[str, str]] = []
     if "## See also" in text:
@@ -147,6 +152,7 @@ def parse_page(path: Path, profile: str) -> Page:
         path=path,
         profile=profile,
         status=status,
+        state=state,
         see_also=see,
         contradictions_open=contradictions_open,
     )
@@ -192,6 +198,13 @@ def lint_engine(engine: Path) -> list[Finding]:
         ]
         if not any(c.is_dir() for c in candidates if str(c) not in {".", ""}):
             findings.append(Finding("missing_notebook", f"{profile} path={path_hint!r}"))
+        root_candidates = [
+            engine / path_hint / "README.md" if path_hint else Path(),
+            wiki / path_hint / "README.md" if path_hint else Path(),
+            pages_dir / profile / "README.md",
+        ]
+        if not any(c.is_file() for c in root_candidates if str(c) not in {".", ""}):
+            findings.append(Finding("missing_root", profile))
 
     pages, extra = discover_pages(pages_dir)
     findings.extend(extra)
@@ -203,6 +216,10 @@ def lint_engine(engine: Path) -> list[Finding]:
         wid_only.setdefault(wid, []).append((prof, wid))
 
     for (prof, wid), page in pages.items():
+        if not page.state:
+            findings.append(Finding("missing_state", f"{prof}/{wid}"))
+        elif page.state not in VALID_STATES:
+            findings.append(Finding("invalid_state", f"{prof}/{wid}: {page.state}"))
         if page.status.lower() == "stale":
             findings.append(Finding("stale", f"{prof}/{wid}"))
         if page.contradictions_open:
@@ -255,6 +272,9 @@ def format_report(findings: list[Finding]) -> str:
         "unfiled": [],
         "contradictions": [],
         "missing_notebook": [],
+        "missing_root": [],
+        "missing_state": [],
+        "invalid_state": [],
         "misplaced": [],
         "duplicate": [],
         "profile_mismatch": [],
@@ -267,6 +287,9 @@ def format_report(findings: list[Finding]) -> str:
 
     missing = (
         buckets["missing_notebook"]
+        + buckets["missing_root"]
+        + buckets["missing_state"]
+        + buckets["invalid_state"]
         + buckets["misplaced"]
         + buckets["duplicate"]
         + buckets["profile_mismatch"]
@@ -299,6 +322,7 @@ def self_check() -> None:
 """,
             encoding="utf-8",
         )
+        (pages / "README.md").write_text("# Demo notebook\n", encoding="utf-8")
         (wiki / "_unfiled.md").write_text(
             """# Wiki unfiled
 | date | kind | id | note | suggested_W |
@@ -312,6 +336,7 @@ def self_check() -> None:
 id: W-A
 status: active
 profile: demo
+state: hypothesis
 ---
 # A
 ## Contradictions
@@ -328,6 +353,7 @@ profile: demo
 id: W-B
 status: stale
 profile: demo
+state: hypothesis
 ---
 # B
 ## Contradictions
@@ -344,6 +370,7 @@ profile: demo
 id: W-FLAT
 status: seed
 profile: demo
+state: hypothesis
 ---
 # Flat
 ## Contradictions
@@ -375,6 +402,7 @@ profile: demo
 """,
             encoding="utf-8",
         )
+        (clean / "wiki" / "pages" / "p1" / "README.md").write_text("# p1\n", encoding="utf-8")
         (clean / "wiki" / "_unfiled.md").write_text(
             """# Wiki unfiled
 | date | kind | id | note | suggested_W |

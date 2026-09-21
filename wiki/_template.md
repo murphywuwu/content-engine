@@ -5,11 +5,22 @@ status: seed
 pillar: none
 profile: PROFILE_ID
 updated: YYYY-MM-DD
+state: hypothesis
+confidence: low
 ---
 
 # Title
 
 Path: `wiki/pages/<profile>/W-SLUG.md` (never flat under `pages/`).
+
+## Judgment status
+
+- **State:** `hypothesis` | `tested` | `supported` | `weakened` | `retired`
+- **Confidence:** `low` | `medium` | `high`
+- **Evidence:** link the Needs, Captures, Products, Domain sources, and Runs that support this judgment.
+- **Counter-evidence:** link evidence that challenges it; write `none` only when none is recorded.
+- **Next test:** the next Topic or Run that could change this judgment.
+- **Last learning:** what changed after the latest non-`unknown` result; write `none` when untested.
 
 ## We believe
 
@@ -39,6 +50,8 @@ Verbatim quotes stay in `needs/entries/`. **Always** Obsidian `[[wikilinks]]`. I
 |----------|--------|--------|------|
 | [[topics/items/T-YYYYMMDD-XX\|T-YYYYMMDD-XX]] | [[runs/YYYY-MM-DD-slug\|RUN-…]] or — | pending \| win \| loss | |
 
+`unknown` means the result is not available yet; it must not promote a hypothesis.
+
 ## Parts that fit
 
 | id | kind | verdict | note |
@@ -55,11 +68,11 @@ Open a run: read this table **before** `library/*/_index.md`. `none` is still al
 
 ## Still missing
 
-- 
+-
 
 ## Do not do
 
-- 
+-
 
 ## See also
 
