@@ -1163,7 +1163,7 @@
         pillars_by_profile: {},
       };
     }
-    const TRACE_ORDER = ["raw", "capture", "hit", "need", "product", "recommendation", "topic", "swipe", "atom", "claim", "run", "published"];
+    const TRACE_ORDER = ["raw", "capture", "hit", "need", "product", "recommendation", "wiki", "topic", "swipe", "atom", "claim", "run", "published"];
     const STR = {
       zh: {
         title: "Content Engine · 观察台",
@@ -2768,6 +2768,12 @@
         root.textContent = `${notebook.profile} notebook · ${notebook.one_liner || notebook.path}`;
         root.onclick = () => openMd(notebook.root_file || `${notebook.path}/README.md`, notebook.profile);
         cards.appendChild(root);
+        const graphPath = `${notebook.path}/GRAPH.md`;
+        const graph = document.createElement("p");
+        graph.className = "note";
+        graph.textContent = "Open knowledge graph (GRAPH.md)";
+        graph.onclick = () => openMd(graphPath, "GRAPH");
+        cards.appendChild(graph);
       }
       all.forEach(w => {
         const meta = [w.profile, w.state || w.status, w.confidence, w.pillar, w.updated].filter(Boolean).join(" · ");

@@ -1556,6 +1556,99 @@ def build_graph() -> dict:
             if v:
                 n[k] = v
 
+    # Wiki judgment nodes + typed edges from notebook pages
+    pages_root = ROOT / "wiki" / "pages"
+    if pages_root.is_dir():
+        for path in sorted(pages_root.rglob("W-*.md")):
+            text = path.read_text(encoding="utf-8") if path.is_file() else ""
+            meta = frontmatter(text)
+            wid = (meta.get("id") or path.stem).strip()
+            if not wid.startswith("W-"):
+                wid = path.stem
+            try:
+                rel_pages = path.relative_to(pages_root)
+            except ValueError:
+                continue
+            profile = (meta.get("profile") or (rel_pages.parts[0] if len(rel_pages.parts) > 1 else "")).strip()
+            title = (meta.get("title") or "").strip()
+            if not title:
+                for line in text.splitlines():
+                    if line.startswith("# "):
+                        title = line[2:].strip()
+                        break
+            rel = path.relative_to(ROOT).as_posix()
+            add_node(
+                node(
+                    "wiki",
+                    wid,
+                    title or wid,
+                    rel,
+                    {
+                        "profile": profile,
+                        "status": (meta.get("status") or "").strip(),
+                        "state": (meta.get("state") or "").strip(),
+                        "confidence": (meta.get("confidence") or "").strip(),
+                        "pillar": (meta.get("pillar") or "").strip(),
+                        "updated": (meta.get("updated") or "").strip(),
+                    },
+                )
+            )
+            wiki_id = nid("wiki", wid)
+            if profile:
+                edge(nid("profile", profile), wiki_id, "owns")
+
+            def section(name: str) -> str:
+                if f"## {name}" not in text:
+                    return ""
+                body = text.split(f"## {name}", 1)[1]
+                if "\n## " in body:
+                    body = body.split("\n## ", 1)[0]
+                return body
+
+            for m in CAPTURE_RE.finditer(section("Related captures")):
+                edge(nid("capture", m.group(0)), wiki_id, "informs")
+            for m in re.finditer(r"N-\d{8}-\d{2}", section("Readers say")):
+                edge(nid("need", m.group(0)), wiki_id, "supports")
+            for m in re.finditer(r"\bP-\d{3}\b", section("Product link")):
+                edge(wiki_id, nid("product", m.group(0)), "uses")
+
+            battles = section("Battles fought")
+            for line in battles.splitlines():
+                if not line.strip().startswith("|"):
+                    continue
+                for tid in re.findall(r"T-\d{8}-\d{2}", line):
+                    edge(wiki_id, nid("topic", tid), "generates")
+                for rid in RUN_RE.findall(line):
+                    edge(wiki_id, nid("run", rid), "tests")
+
+            parts = section("Parts that fit")
+            for line in parts.splitlines():
+                if not line.strip().startswith("|"):
+                    continue
+                low = line.lower()
+                rel_name = "avoids" if "avoid" in low else "fits"
+                for sid in SWIPE_RE.findall(line):
+                    edge(wiki_id, nid("swipe", sid), rel_name)
+                for aid in ATOM_RE.findall(line):
+                    edge(wiki_id, nid("atom", aid), rel_name)
+                for cid in CLAIM_RE.findall(line):
+                    edge(wiki_id, nid("claim", cid), rel_name)
+
+            see = section("See also")
+            for line in see.splitlines():
+                if not line.strip().startswith("|"):
+                    continue
+                cells = [c.strip() for c in line.strip().strip("|").split("|")]
+                if len(cells) < 2:
+                    continue
+                rel_label = cells[0].lower().replace("\\|", "|")
+                if rel_label == "rel":
+                    continue
+                if rel_label in {"related", "contradicts", "parent", "child", "next"}:
+                    target = (WIKI_PAGE_RE.findall(cells[1].replace("\\|", "|")) or [""])[0]
+                    if target and target != wid:
+                        edge(wiki_id, nid("wiki", target), rel_label)
+
     # drop edges to missing nodes
     edges = [e for e in edges if e["from"] in nodes and e["to"] in nodes]
     seen = set()

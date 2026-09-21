@@ -7,7 +7,8 @@
 | `_index.md` | Thin map: profile → `pages/<profile>/` (not a W- catalog) |
 | `_template.md` | New lesson page shape |
 | `pages/<profile>/README.md` | Profile notebook root and graph navigation |
-| `pages/<profile>/W-*.md` | That profile’s notebook |
+| `pages/<profile>/GRAPH.md` | Typed edge ledger for this profile’s knowledge graph |
+| `pages/<profile>/W-*.md` | Judgment nodes in the graph |
 | `pages/_shared/` | Optional cross-profile lessons (rare) |
 | `_unfiled.md` | Hang queue |
 

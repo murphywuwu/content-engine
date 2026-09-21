@@ -12,6 +12,7 @@ confidence: low
 # Title
 
 Path: `wiki/pages/<profile>/W-SLUG.md` (never flat under `pages/`).
+Also maintain the profile edge ledger: `wiki/pages/<profile>/GRAPH.md`.
 
 ## Judgment status
 
