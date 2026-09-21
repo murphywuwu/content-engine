@@ -350,6 +350,103 @@ def parse_feedback_metrics(text: str) -> dict:
     return out
 
 
+def _md_section(md: str, name: str) -> str:
+    if f"## {name}" not in md:
+        return ""
+    body = md.split(f"## {name}", 1)[1]
+    if "\n## " in body:
+        body = body.split("\n## ", 1)[0]
+    return body
+
+
+def _table_rows(section_md: str) -> list[dict[str, str]]:
+    for t in extract_tables(section_md):
+        if not t["headers"]:
+            continue
+        key = {h.lower(): h for h in t["headers"]}
+        out = []
+        for row in t["rows"]:
+            out.append({h: row.get(key[h], "").strip() for h in key})
+        return out
+    return []
+
+
+def parse_pack_chain(text: str) -> dict:
+    """Page Contracts → Media → Template Selection (+ experiment) for run inspector."""
+    contracts = []
+    for row in _table_rows(_md_section(text, "Page Contracts")):
+        page = (row.get("page") or "").strip()
+        if not re.match(r"^\d+$", page):
+            continue
+        contracts.append(
+            {
+                "page": int(page),
+                "page_purpose": (row.get("page_purpose") or "").strip(),
+                "page_role": (row.get("page_role") or "").strip(),
+                "density": (row.get("density") or "").strip(),
+                "slot_summary": (row.get("slot_summary") or "").strip(),
+                "media_requirements": (row.get("media_requirements") or "").strip(),
+                "reader_action": (row.get("reader_action") or "").strip(),
+            }
+        )
+    media_rows = []
+    for row in _table_rows(_md_section(text, "Media")):
+        mid = (row.get("media_id") or "").strip()
+        if not mid or mid.lower() in {"media_id", "m-…", "m-..."}:
+            continue
+        media_rows.append(
+            {
+                "page": (row.get("page") or "").strip(),
+                "subject": (row.get("subject") or "").strip(),
+                "media_id": mid,
+                "role": (row.get("role") or "").strip(),
+                "caption": (row.get("caption") or "").strip(),
+            }
+        )
+    templates = []
+    for row in _table_rows(_md_section(text, "Template Selection")):
+        page = (row.get("page") or "").strip()
+        if not re.match(r"^\d+$", page):
+            continue
+        templates.append(
+            {
+                "page": int(page),
+                "layout_family": (row.get("layout_family") or "").strip(),
+                "template_id": (row.get("template_id") or "").strip(),
+                "evidence": (row.get("evidence") or "").strip(),
+                "reason": (row.get("reason") or "").strip(),
+                "mode": (row.get("mode") or "").strip(),
+            }
+        )
+    exp_body = _md_section(text, "Experiment")
+    comparable = ""
+    variables = ""
+    m_comp = re.search(r"\*\*comparable:\*\*\s*(.+)", exp_body, re.I)
+    if m_comp:
+        comparable = m_comp.group(1).strip()
+    m_vars = re.search(r"\*\*variables_changed:\*\*\s*(.+)", exp_body, re.I)
+    if m_vars:
+        variables = m_vars.group(1).strip()
+    meta = {}
+    meta_body = _md_section(text, "Meta")
+    for key in ("w_ids", "product_ids", "recommendation_ids", "hook_type", "topic_id", "profile", "run_id"):
+        m = re.search(rf"\*\*{key}:\*\*\s*(.+)", meta_body, re.I)
+        if m:
+            meta[key] = m.group(1).strip()
+    arc = ""
+    m_arc = re.search(r"\*\*one_liner:\*\*\s*(.+)", _md_section(text, "Arc"), re.I)
+    if m_arc:
+        arc = m_arc.group(1).strip()
+    return {
+        "arc": arc,
+        "meta": meta,
+        "contracts": contracts,
+        "media": media_rows,
+        "templates": templates,
+        "experiment": {"comparable": comparable, "variables_changed": variables},
+    }
+
+
 ENGAGEMENT_SNAP_RE = re.compile(
     r"(?:engagement\s+snapshot|snapshot\s+engagement)[^\n:]*:\s*(.+?)(?:\n|$)",
     re.I,
@@ -1451,6 +1548,10 @@ def build_graph() -> dict:
             fb_text = fb.read_text(encoding="utf-8")
             metrics = parse_feedback_metrics(fb_text)
             ship_urls = [u.rstrip(".,;") for u in HTTP_RE.findall(fb_text)]
+        pack_chain: dict = {}
+        pack_rel = stage_files.get("pack")
+        if pack_rel and (ROOT / pack_rel).exists():
+            pack_chain = parse_pack_chain(read(pack_rel))
         is_published = row["status"].lower() == "published"
         is_scheduled = (bool(scheduled_date) and not is_published) or (row["status"].lower() == "scheduled")
         add_node(
@@ -1467,6 +1568,8 @@ def build_graph() -> dict:
                     "published_date": row["date"] if is_published else "",
                     "published_url": "",
                     "published_result": "",
+                    "published_evidence_tier": "",
+                    "published_layout_family": "",
                     "status": row["status"],
                     "account": row["account"],
                     "profile": row["profile"],
@@ -1481,6 +1584,7 @@ def build_graph() -> dict:
                     "stages": stages,
                     "stage_files": stage_files,
                     "selection": selection,
+                    "pack_chain": pack_chain,
                     "supersedes": supersedes,
                     "superseded_by": superseded_by,
                     "metrics": metrics,
@@ -1500,6 +1604,10 @@ def build_graph() -> dict:
             edge(nid("run", ident), nid("atom", aid), "uses")
         for cid in field_ids(selection["claim"], "claim"):
             edge(nid("run", ident), nid("claim", cid), "uses")
+        for mrow in pack_chain.get("media") or []:
+            mid = mrow.get("media_id") or ""
+            if mid.startswith("M-") and nid("media", mid) in nodes:
+                edge(nid("run", ident), nid("media", mid), "uses_media")
         if supersedes.startswith("RUN-"):
             edges.append({"from": nid("run", ident), "to": nid("run", supersedes), "rel": "supersedes"})
 
@@ -1507,7 +1615,7 @@ def build_graph() -> dict:
         n["folder"]: n["ident"] for n in nodes.values() if n["kind"] == "run" and n.get("folder")
     }
 
-    for row in table_with(
+    pub_rows = table_with(
         read("published/_index.md"),
         "date",
         "platform",
@@ -1518,8 +1626,25 @@ def build_graph() -> dict:
         "atoms",
         "claim",
         "result",
+        "evidence_tier",
+        "layout_family",
         "notes",
-    ):
+    )
+    if not pub_rows:
+        pub_rows = table_with(
+            read("published/_index.md"),
+            "date",
+            "platform",
+            "url",
+            "run",
+            "pillar",
+            "swipe",
+            "atoms",
+            "claim",
+            "result",
+            "notes",
+        )
+    for row in pub_rows:
         if not row["url"].startswith("http"):
             continue
         run_cell = row["run"]
@@ -1530,6 +1655,8 @@ def build_graph() -> dict:
         run_node = nodes.get(nid("run", run_id)) if run_id else None
         profile = (run_node or {}).get("profile", "")
         ident = f"{row['date']}-{row['platform']}-{run_id or 'unknown'}"
+        evidence_tier = (row.get("evidence_tier") or "").strip() or "unknown"
+        layout_family = (row.get("layout_family") or "").strip()
         add_node(
             node(
                 "published",
@@ -1549,6 +1676,8 @@ def build_graph() -> dict:
                     "atoms": row["atoms"],
                     "claim": row["claim"],
                     "result": row["result"],
+                    "evidence_tier": evidence_tier,
+                    "layout_family": layout_family,
                     "notes": row["notes"],
                     "reviewable": row["result"] in ("win", "flat", "loss"),
                     "obsidian": obsidian_uri("published/_index.md"),
@@ -1562,6 +1691,8 @@ def build_graph() -> dict:
                 run_node["published_date"] = row["date"] or run_node.get("published_date", "")
                 run_node["published_url"] = row["url"]
                 run_node["published_result"] = row["result"]
+                run_node["published_evidence_tier"] = evidence_tier
+                run_node["published_layout_family"] = layout_family
                 run_node["is_published"] = True
         for sid in field_ids(row["swipe"], "swipe"):
             edge(nid("published", ident), nid("swipe", sid), "uses")
@@ -1678,6 +1809,26 @@ def build_graph() -> dict:
                 for cid in CLAIM_RE.findall(line):
                     edge(wiki_id, nid("claim", cid), rel_name)
 
+            layout_rows = []
+            for row in _table_rows(section("Layout families")):
+                fam = (row.get("layout_family") or "").strip()
+                if not fam or fam.lower() in {"layout_family", "e.g. screenshot stack"} or fam.startswith("e.g."):
+                    continue
+                layout_rows.append(
+                    {
+                        "layout_family": fam,
+                        "verdict": (row.get("verdict") or "").strip(),
+                        "platform": (row.get("platform") or "").strip(),
+                        "evidence_tier": (row.get("evidence_tier") or "").strip(),
+                        "run_id": (RUN_RE.findall(row.get("run_id") or "") or [""])[0],
+                        "note": (row.get("note") or "").strip(),
+                    }
+                )
+                rid = layout_rows[-1]["run_id"]
+                if rid and nid("run", rid) in nodes:
+                    edge(wiki_id, nid("run", rid), "layout_tested_by")
+            nodes[wiki_id]["layout_families"] = layout_rows
+
             see = section("See also")
             for line in see.splitlines():
                 if not line.strip().startswith("|"):
@@ -1692,6 +1843,14 @@ def build_graph() -> dict:
                     target = (WIKI_PAGE_RE.findall(cells[1].replace("\\|", "|")) or [""])[0]
                     if target and target != wid:
                         edge(wiki_id, nid("wiki", target), rel_label)
+
+    # Pack meta w_ids → wiki tests run (wiki nodes exist now)
+    for n in list(nodes.values()):
+        if n["kind"] != "run":
+            continue
+        w_blob = ((n.get("pack_chain") or {}).get("meta") or {}).get("w_ids") or ""
+        for wid in re.findall(r"\bW-[A-Za-z0-9-]+\b", w_blob):
+            edge(nid("wiki", wid), n["id"], "tests")
 
     # drop edges to missing nodes
     edges = [e for e in edges if e["from"] in nodes and e["to"] in nodes]
@@ -1776,7 +1935,30 @@ def _self_check() -> None:
     )
     assert m["src_views"] == "8091" and m["src_likes"] == "103", m
     assert m["src_bookmarks"] == "29" and m["src_replies"] == "20", m
+    pack = parse_pack_chain(
+        "## Meta\n\n- **w_ids:** W-demo\n- **hook_type:** contrarian\n\n"
+        "## Arc\n\n- **one_liner:** Speed moves the bottleneck\n\n"
+        "## Page Contracts\n\n"
+        "| page | page_purpose | page_role | density | slot_summary | media_requirements | reader_action |\n"
+        "|------|--------------|-----------|---------|--------------|--------------------|---------------|\n"
+        "| 1 | Open | hook | medium | title:1 body:1 | none | continue |\n\n"
+        "## Media\n\n"
+        "| page | subject | media_id | role | caption |\n"
+        "|------|---------|----------|------|---------|\n"
+        "| 1 | P-001 | M-20260921-01 | home | UI |\n\n"
+        "## Template Selection\n\n"
+        "| page | layout_family | template_id | evidence | reason | mode |\n"
+        "|------|---------------|-------------|----------|--------|------|\n"
+        "| 1 | Poster Hook | tpl-a | hypothesis | role match | explore |\n\n"
+        "## Experiment\n\n- **variables_changed:** layout\n- **comparable:** yes\n"
+    )
+    assert pack["arc"].startswith("Speed"), pack
+    assert pack["contracts"][0]["page_role"] == "hook", pack
+    assert pack["media"][0]["media_id"] == "M-20260921-01", pack
+    assert pack["templates"][0]["layout_family"] == "Poster Hook", pack
+    assert pack["experiment"]["comparable"] == "yes", pack
     print("parse_engagement_snapshot self-check ok")
+    print("parse_pack_chain self-check ok")
 
     dummy_md = (
         "| run_id | path | date | scheduled | status | account | profile | primary_platform | platforms | topic_id | pillar | one_liner | pack | export | notes |\n"

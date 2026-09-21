@@ -2108,6 +2108,12 @@
       const sel = n.selection || {};
       const todayStr = getTodayStr();
       const st = getPostStatusInfo(n, todayStr);
+      const chain = n.pack_chain || {};
+      const contracts = chain.contracts || [];
+      const media = chain.media || [];
+      const templates = chain.templates || [];
+      const exp = chain.experiment || {};
+      const meta = chain.meta || {};
 
       let schedHtml = "";
       if (st.code === "reviewed") {
@@ -2121,9 +2127,35 @@
       } else {
         schedHtml = `<p class="note">⚪ 当前状态：${esc(n.status)}（尚未设定具体排期）</p>`;
       }
+
+      let chainHtml = "";
+      if (contracts.length || templates.length || media.length || chain.arc) {
+        const contractLines = contracts.map(c =>
+          `P${c.page}: ${esc(c.page_role || "—")} · ${esc(c.density || "")} · ${esc(c.slot_summary || "")}`
+        ).join("<br>");
+        const mediaLines = media.map(m =>
+          `P${esc(m.page)}: ${esc(m.media_id)} (${esc(m.subject || "")}/${esc(m.role || "")})`
+        ).join("<br>");
+        const tplLines = templates.map(trow =>
+          `P${trow.page}: ${esc(trow.layout_family || "—")} / ${esc(trow.template_id || "—")} · ${esc(trow.mode || "")} · ${esc(trow.evidence || "")}`
+        ).join("<br>");
+        chainHtml = `<div class="note" style="margin-top:10px;line-height:1.45;">
+          <strong>选择链</strong>
+          ${meta.w_ids ? `<br>W-: ${esc(meta.w_ids)}` : ""}
+          ${n.topic_id ? `<br>Topic: ${esc(n.topic_id)}` : ""}
+          ${chain.arc ? `<br>Arc: ${esc(chain.arc)}` : ""}
+          ${contractLines ? `<br><br>Page Contracts<br>${contractLines}` : ""}
+          ${mediaLines ? `<br><br>Media<br>${mediaLines}` : ""}
+          ${tplLines ? `<br><br>Layout / Template<br>${tplLines}` : ""}
+          ${(n.published_result || n.published_evidence_tier) ? `<br><br>Published · result=${esc(n.published_result || "—")} · evidence=${esc(n.published_evidence_tier || "unknown")}${n.published_layout_family ? ` · family=${esc(n.published_layout_family)}` : ""}` : ""}
+          ${exp.comparable ? `<br>Experiment comparable=${esc(exp.comparable)}${exp.variables_changed ? ` · changed=${esc(exp.variables_changed)}` : ""}` : ""}
+        </div>`;
+      }
+
       return `${schedHtml}
         <p class="note">${t("stages_h")}：${esc(have)}</p>
         <p class="note">${t("topic_bind", { t: n.topic_id || t("none"), s: sel.swipe, c: sel.claim })}</p>
+        ${chainHtml}
         ${n.supersedes ? `<p class="note">${t("supersedes", { id: n.supersedes })}</p>` : ""}
         ${n.superseded_by ? `<p class="note">${t("superseded_by", { id: n.superseded_by })}</p>` : ""}`;
     }

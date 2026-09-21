@@ -927,7 +927,9 @@ Single win never promotes. n=1 is recorded, not celebrated.
 
 ## § PagePack + render (Step 7)
 
-Bridge to **easysociable-slideshow** (when skill exists). Vault owns pack slots; product owns templates + pixels.
+Bridge to **easysociable-slideshow** (when skill exists). Vault owns pack slots + Page Contracts; product owns templates + pixels.
+
+Viral visual order (hard): **Wiki → Topic → Page Contracts → Media → Template Selection → slots → Run**. Templates never invent the argument.
 
 ### When
 
@@ -941,19 +943,48 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
 3. Prefer a swipe whose beats are an argument; else name a one-line arc from the brief.
 4. **Forbidden default:** Cover → Point → Steps → Recap → CTA (those are P0 family names, not a pack recipe).
 
+### Page Contract (required before template retrieval)
+
+Each page in `pack.md` **Page Contracts** table must name:
+
+- `page_purpose` · `page_role` · `density` · `slot_summary` · `media_requirements` · `reader_action`
+
+Rules:
+
+- No `templateId` / `template_id` inside Page Contracts.
+- Page 1 should be `cover` or `hook` class; later pages must not use cover/hook class.
+- Validate: `python3 scripts/validate-pack.py runs/<slug>/pack.md`
+- Empty / missing contracts → stop; do not list templates yet.
+
+### Media bind (after contracts)
+
+1. Lock subject `P-*` (owned) or `R-*` (third-party review).
+2. Filter `media/_index.md` by subject → `role` → caption (§ Media).
+3. Gaps → list missing roles; do not steal another product’s images.
+4. Write **Media** table on pack (`M-*` only).
+
+### Template selection (VV hard filter → rank → auto-pick)
+
+Catalog public fields used: `platforms`, `canvasPreset`/`canvas`, `slotSummary`, `supportedRoles`, `density`, `contentFamily`, `contentArchetypes`, **`layoutFamily`**.
+
+1. **Hard filter** (must all pass): platform → canvas → slot shape → density capacity → page-position cover/hook rule → media role needs.
+2. **Rank:** contract match → fill risk → same-platform/same-role history → W- `fits`/`avoids` on Layout Family → freshness / explore quota.
+3. **Default:** Agent auto-picks one Layout Family + template per page. Show **Template Selection Card**. User confirm only when expression changes, visual direction splits, major launch, or A/B asked.
+4. Record on pack **Template Selection** table: `layout_family`, `template_id`, `evidence` (`hypothesis`|`tested`|`supported`), `reason`, `mode` (`champion`|`challenger`|`explore`).
+5. Helper: `python3 scripts/select-templates.py --self-check` (or `--contracts` + `--catalog` JSON).
+6. Explore/utilize target when history exists: ~70% champion / 20% challenger / 10% explore Layout Families. With thin data, keep `evidence=hypothesis` — never claim a “viral template”.
+
 ### Agent steps
 
 1. Write **`runs/<slug>/pack.md`** (from `_template/pack.md`; `pack-<platform>.md` OK):
-   - this run is already one platform
-   - **Arc** one-liner + recipe **before** Pages
-   - slots, language, pillar, swipe_id, claim_id
-   - page 1 `role` is not automatically `cover`
-2. **Pack Card** in chat — user may `改 pack：…`.
+   - Arc → **Page Contracts** → Media → **Template Selection** → Pages slots
+   - Meta: profile, topic, w_ids, product/recommendation ids, hook_type
+2. **Pack Card** + **Template Selection Card** in chat — user may `改 pack：…` / override a page’s family.
 3. **Materialize local assets (single-direction, at render only):** for the logo in `profiles/<id>/brand.md` and any slot images that reference a `media/` id with an **empty** `hosted_image_id`, upload once and cache the returned id back into `media/_index.md` (and `brand.md` render binding). Pass `brand.md` colors/fonts as **inline theme tokens** — no hosted Brand record is required.
    ```bash
    easysociable images upload --file media/<file>   # → returns image id → write to hosted_image_id
    ```
-4. Hand off to **easysociable-slideshow**: it picks templates by platform + canvas + slot shape, then opens Studio. Topology lock means a wrong arc needs a **new Run**, not slot rewrite.
+4. Hand off to **easysociable-slideshow** with **explicit** `pageTemplateId`s already chosen; Studio opens. Topology lock means a wrong arc needs a **new Run**, not slot rewrite. Server must not silent-replace templates.
 5. **Render / Download:** pixels leave the product from Studio Download (not CLI render). After the user downloads, copy files under **`exports/<slug>/`** if needed; set pack `job_id`, `export_path`, status `done`; set `runs/_index` `pack`/`export` to yes. If slideshow skill is **not** available: status `not_requested` / blocked — **do not fake images**.
 6. User **图 OK** or revise slots (same topology) / new Run (different arc).
 
@@ -962,12 +993,43 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
 ```text
 📑 Pack  RUN-…  platform=linkedin|tiktok|ig
 【Arc】 one-liner / recipe
-【Pages】 N
-【deck_hint】 …
-【Outline】 P1… Pn
+【Contracts】 N pages (purpose · role · density · slots)
+【Media】 M-… / gaps
+【Templates】 Layout Family / templateId per page · evidence
 【export_path】 exports/<slug>/
 【Render】 done | blocked (no skill) | failed
 ```
+
+### Template Selection Card
+
+```text
+🎴 Template Selection
+【Page 1】 Family … / tpl_… · champion|challenger|explore · hypothesis|tested|supported
+  reason: …
+【Page 2】 …
+```
+
+### Published evidence tiers (VV-009)
+
+On ship, set `published/_index` **`result`** and **`evidence_tier`**:
+
+| evidence_tier | Meaning |
+|---------------|---------|
+| `unknown` | Shipped; no usable outcome signal yet |
+| `observed` | Some metrics; not enough to compare layouts |
+| `tested` | Comparable experiment exists |
+| `supported` | Repeated comparable wins support the layout/judgment |
+| `weakened` | Comparable results undermine it |
+
+`unknown` / single sample / simultaneous topic+copy+media+template changes → **do not** upgrade W- or Layout Family to `supported`.
+
+### Layout learning on ship / 复盘 (VV-003 / VV-010)
+
+If a `W-` is linked: append **Layout families** row (`fits`|`avoid`|`trial`) from this ship only when Experiment.`comparable=yes`. Update judgment `state` only with repeated clear non-`unknown` evidence. Record Layout Family, not every templateId, as the long-lived preference.
+
+### Experiment discipline (VV-012)
+
+Pack **Experiment** must note `variables_changed` and `comparable`. Forbidden to conclude “template works” when: multi-variable swap; no platform/audience grouping; `unknown` result; n=1; wrong-product media; overflow/unreadability.
 
 ### Do not
 
@@ -979,6 +1041,10 @@ Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X te
 - Store binaries inside `runs/` (use **exports/**)
 - Default Cover → Point → Steps → Recap → CTA
 - Skip the Arc line and fill P0 family names as a tutorial
+- Retrieve templates before Page Contracts are filled
+- Put `templateId` inside Page Contracts
+- Silent-replace a chosen template
+- Promote layout/`W-` state from a single `unknown` ship
 
 ---
 

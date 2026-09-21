@@ -63,6 +63,17 @@ Verbatim quotes stay in `needs/entries/`. **Always** Obsidian `[[wikilinks]]`. I
 
 Open a run: read this table **before** `library/*/_index.md`. `none` is still allowed.
 
+## Layout families
+
+<!-- Long-lived layout preference is the Family name, not every templateId. -->
+<!-- Append a row only when a ship Experiment.comparable=yes. Single unknown never upgrades state. -->
+
+| layout_family | verdict | platform | evidence_tier | run_id | note |
+|---------------|---------|----------|---------------|--------|------|
+| e.g. Screenshot Stack | fits \| avoid \| trial | linkedin | unknown \| observed \| tested \| supported \| weakened | [[runs/…\|RUN-…]] or — | |
+
+`verdict=fits` / `avoid` feeds Template Selection ranking. `trial` = explore, not proof.
+
 ## Contradictions
 
 - none
