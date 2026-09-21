@@ -168,6 +168,57 @@
     .row[data-kind="run"] .stripe { background: #8aa87a; }
     .row[data-kind="profile"] .stripe { background: #8b6b4a; }
     .row[data-kind="account"] .stripe { background: #5c6b7a; }
+    .row[data-kind="wiki"] .stripe { background: #9c3d32; }
+    .row[data-kind="product"] .stripe { background: #7a6b9e; }
+    .wiki-graph-wrap {
+      margin: 0 0 18px; border: 1px solid var(--line); border-radius: 16px;
+      background: var(--paper); overflow: hidden; position: relative;
+      box-shadow: var(--shadow);
+    }
+    .wiki-graph-toolbar button {
+      background: var(--bg-3); border: 1px solid var(--line); color: var(--text);
+      border-radius: 999px; padding: 5px 10px; cursor: pointer; font: inherit; font-size: 12px;
+    }
+    .wiki-graph-toolbar button:hover { border-color: #b8a888; }
+    .wiki-graph-toolbar {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg-2) 70%, var(--paper));
+    }
+    .wiki-graph-toolbar .wg-stat {
+      margin-left: auto; font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px; color: var(--faint);
+    }
+    .wiki-graph-legend {
+      display: flex; flex-wrap: wrap; gap: 10px 14px; padding: 8px 12px 10px;
+      border-bottom: 1px solid rgba(180,150,100,.25); font-size: 11px; color: var(--muted);
+    }
+    .wiki-graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .wiki-graph-legend i {
+      width: 9px; height: 9px; border-radius: 50%; display: inline-block;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.08);
+    }
+    .wiki-graph-svg { display: block; width: 100%; height: min(62vh, 620px); cursor: grab; touch-action: none; }
+    .wiki-graph-svg.dragging { cursor: grabbing; }
+    .wiki-graph-svg .link { stroke: #c7b58f; stroke-opacity: .72; fill: none; }
+    .wiki-graph-svg .link-label {
+      fill: var(--faint); font-size: 9px; font-family: ui-monospace, Menlo, monospace;
+      pointer-events: none;
+    }
+    .wiki-graph-svg .node-label {
+      fill: var(--text); font-size: 11px; pointer-events: none;
+      font-family: "Iowan Old Style", "Songti SC", Georgia, serif;
+    }
+    .wiki-graph-svg .node-sub {
+      fill: var(--faint); font-size: 9px; pointer-events: none;
+      font-family: ui-monospace, Menlo, monospace;
+    }
+    .wiki-graph-svg .node { cursor: pointer; }
+    .wiki-graph-svg .node.dim { opacity: .22; }
+    .wiki-graph-svg .link.dim { opacity: .12; }
+    .wiki-graph-svg .node.sel circle { stroke: var(--accent); stroke-width: 2.5px; }
+    .wiki-pages { margin-top: 8px; }
+
     .heat {
       display: flex; flex-wrap: wrap; gap: 6px;
       margin-top: 10px; align-items: center;
@@ -1175,6 +1226,13 @@
         media_local: "仅本地",
         wiki_empty: "该 profile 的 wiki/pages/<profile>/ 下还没有 W- 笔记",
         wiki_believe: "我们现在相信",
+        wiki_graph_title: "知识图谱",
+        wiki_graph_lede: "点节点看右侧详情；拖动画布平移，滚轮缩放。",
+        wiki_mode_spine: "主干",
+        wiki_mode_full: "全邻域",
+        wiki_mode_judgments: "仅判断",
+        wiki_pages_list: "判断页列表",
+        kind_wiki: "判断",
         notes_in: "记下的", notes_lib: "零件库",
         runs_sub_calendar: "📅 日历排期",
         runs_sub_heatmap: "🟩 发布热力图",
@@ -1372,7 +1430,7 @@
         thin_warn: "数据不足：result 不是 win / flat / loss，不画趋势。",
         topic_bind: "选题绑定：{t} · swipe {s} · claim {c}",
         supersedes: "取代 {id}", superseded_by: "被取代 {id}",
-        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "需求", kind_product: "产品", kind_recommendation: "推荐对象", kind_topic: "选题", kind_swipe: "Swipe",
+        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "需求", kind_product: "产品", kind_recommendation: "推荐对象", kind_wiki: "判断", kind_topic: "选题", kind_swipe: "Swipe",
         kind_atom: "Atom", kind_claim: "Claim", kind_run: "Run", kind_published: "发布",
         kv_kind: "类型", kv_date: "日期", kv_status: "状态", kv_plat: "平台", kv_score: "分数", kv_relevance: "关联度", kv_ownership: "归属度", kv_product_relevance: "产品关联",
         kv_use: "使用", kv_src: "来源", kv_result: "结果", kv_pillar: "支柱",
@@ -1390,6 +1448,12 @@
         media_local: "Local only",
         wiki_empty: "No W- pages under wiki/pages/<profile>/ for this profile",
         wiki_believe: "We believe",
+        wiki_graph_title: "Knowledge graph",
+        wiki_graph_lede: "Click a node for the inspector. Drag to pan, scroll to zoom.",
+        wiki_mode_spine: "Spine",
+        wiki_mode_full: "Neighborhood",
+        wiki_mode_judgments: "Judgments",
+        wiki_pages_list: "Judgment pages",
         notes_in: "Captured", notes_lib: "Library",
         runs_sub_calendar: "📅 Calendar & Schedule",
         runs_sub_heatmap: "🟩 Heatmap",
@@ -1587,7 +1651,7 @@
         thin_warn: "Too thin to review: result is not win / flat / loss. No chart.",
         topic_bind: "Topic: {t} · swipe {s} · claim {c}",
         supersedes: "supersedes {id}", superseded_by: "superseded by {id}",
-        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "Need", kind_product: "Product", kind_recommendation: "Recommendation", kind_topic: "Topic", kind_swipe: "Swipe",
+        kind_raw: "Raw", kind_capture: "Capture", kind_hit: "Hit", kind_need: "Need", kind_product: "Product", kind_recommendation: "Recommendation", kind_wiki: "Judgment", kind_topic: "Topic", kind_swipe: "Swipe",
         kind_atom: "Atom", kind_claim: "Claim", kind_run: "Run", kind_published: "Shipped",
         kv_kind: "Kind", kv_date: "Date", kv_status: "Status", kv_plat: "Platform", kv_score: "Score", kv_relevance: "Relevance", kv_ownership: "Ownership", kv_product_relevance: "Product relevance",
         kv_use: "Use", kv_src: "Source", kv_result: "Result", kv_pillar: "Pillar",
@@ -1710,6 +1774,9 @@
     const KW_TRACKS = ["listen", "search", "ask"];
     const TOPIC_SOURCES = ["need", "inbox", "user", "product", "recommendation"];
     let selected = null;
+    let wikiGraphMode = "spine";
+    let wikiGraphAnim = null;
+    let wikiGraphTransform = { x: 0, y: 0, k: 1 };
     const $list = document.getElementById("list");
     const $insp = document.getElementById("insp");
     const $q = document.getElementById("q");
@@ -2189,6 +2256,17 @@
         return;
       }
       selected = id;
+      if (view === "wiki" && $list.querySelector(".wiki-graph-svg")) {
+        $list.querySelectorAll(".wiki-graph-svg .node").forEach(g => {
+          g.classList.toggle("sel", g.dataset.id === id);
+        });
+        $list.querySelectorAll(".wiki-pages .row").forEach(row => {
+          const rid = row.dataset && row.dataset.nodeId;
+          row.classList.toggle("sel", rid === id);
+        });
+        renderInsp();
+        return;
+      }
       render();
     }
 
@@ -2376,6 +2454,7 @@
     }
 
     function render() {
+      if (view !== "wiki") stopWikiGraphAnim();
       for (const b of tabs.querySelectorAll("button")) b.classList.toggle("on", b.dataset.view === view);
       if (view === "overview") renderOverview();
       if (view === "needs") renderNeeds();
@@ -2748,45 +2827,377 @@
       $list.appendChild(cards);
     }
 
-    function renderWiki() {
-      $list.innerHTML = "";
-      const q = $q.value.trim().toLowerCase();
-      const all = (GRAPH.wiki || []).filter(w => {
-        if (profileScope && w.profile && w.profile !== "*" && w.profile !== profileScope && w.profile !== "_shared") {
-          return false;
+    function wikiKindColor(kind) {
+      const map = {
+        profile: "#8b6b4a",
+        wiki: "#9c3d32",
+        need: "#5a9e8f",
+        capture: "#7d9aa8",
+        product: "#7a6b9e",
+        topic: "#9c3d32",
+        run: "#8aa87a",
+        published: "#6b8f9e",
+        swipe: "#c4a06a",
+        atom: "#a78bb0",
+        claim: "#d08a78",
+      };
+      return map[kind] || "#8a8276";
+    }
+
+    function wikiGraphKinds() {
+      if (wikiGraphMode === "judgments") return new Set(["profile", "wiki"]);
+      if (wikiGraphMode === "full") {
+        return new Set(["profile", "wiki", "need", "capture", "product", "topic", "run", "published", "swipe", "atom", "claim"]);
+      }
+      return new Set(["profile", "wiki", "need", "product", "topic", "run", "published"]);
+    }
+
+    function buildWikiSubgraph() {
+      const kinds = wikiGraphKinds();
+      const wikiNodes = (GRAPH.nodes || []).filter(n => n.kind === "wiki" && inScope(n));
+      const seed = new Set(wikiNodes.map(n => n.id));
+      if (profileScope && byId[`profile:${profileScope}`]) seed.add(`profile:${profileScope}`);
+      const keep = new Set(seed);
+      for (const e of GRAPH.edges || []) {
+        if (!seed.has(e.from) && !seed.has(e.to)) continue;
+        const a = byId[e.from], b = byId[e.to];
+        if (!a || !b) continue;
+        if (!kinds.has(a.kind) || !kinds.has(b.kind)) continue;
+        keep.add(e.from); keep.add(e.to);
+      }
+      // pull published results for included runs
+      if (kinds.has("published")) {
+        const runIds = new Set([...keep].filter(id => id.startsWith("run:")));
+        for (const e of GRAPH.edges || []) {
+          if (e.rel !== "from_run") continue;
+          if (!runIds.has(e.to)) continue;
+          const pub = byId[e.from];
+          if (pub && pub.kind === "published") keep.add(e.from);
         }
-        if (!q) return true;
-        const blob = [w.id, w.title, w.one_liner, w.status, w.pillar, w.profile].join(" ").toLowerCase();
-        return blob.includes(q);
+      }
+      const nodes = [...keep].map(id => byId[id]).filter(Boolean);
+      const nodeSet = new Set(nodes.map(n => n.id));
+      const links = (GRAPH.edges || []).filter(e => nodeSet.has(e.from) && nodeSet.has(e.to));
+      return { nodes, links };
+    }
+
+    function stopWikiGraphAnim() {
+      if (wikiGraphAnim) {
+        cancelAnimationFrame(wikiGraphAnim);
+        wikiGraphAnim = null;
+      }
+    }
+
+    function shortWikiLabel(n) {
+      if (n.kind === "wiki") return n.ident.replace(/^W-/, "");
+      if (n.kind === "need") return n.ident.replace(/^N-\d{8}-/, "N-");
+      if (n.kind === "topic") return n.ident.replace(/^T-\d{8}-/, "T-");
+      if (n.kind === "run") return n.ident.replace(/^RUN-/, "R-").slice(0, 18);
+      if (n.kind === "published") return (n.date || n.ident || "pub").slice(0, 12);
+      if (n.kind === "profile") return "profile";
+      return String(n.ident || n.label || "").slice(0, 16);
+    }
+
+    function mountWikiForceGraph(host, graph) {
+      stopWikiGraphAnim();
+      const width = Math.max(host.clientWidth || 640, 480);
+      const height = Math.min(window.innerHeight * 0.62, 620);
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "wiki-graph-svg");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute("width", "100%");
+      svg.setAttribute("height", String(height));
+      const root = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      svg.appendChild(root);
+      host.appendChild(svg);
+
+      const nodes = graph.nodes.map((n, i) => {
+        const angle = (i / Math.max(graph.nodes.length, 1)) * Math.PI * 2;
+        const ring = n.kind === "profile" ? 0 : n.kind === "wiki" ? 120 : 220;
+        return {
+          ...n,
+          x: width / 2 + Math.cos(angle) * ring,
+          y: height / 2 + Math.sin(angle) * ring,
+          vx: 0,
+          vy: 0,
+        };
       });
-      const cards = document.createElement("div");
-      cards.className = "cards";
+      const by = Object.fromEntries(nodes.map(n => [n.id, n]));
+      const links = graph.links
+        .map(e => ({ ...e, source: by[e.from], target: by[e.to] }))
+        .filter(e => e.source && e.target);
+
+      const gLinks = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const gLabels = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const gNodes = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      root.appendChild(gLinks);
+      root.appendChild(gLabels);
+      root.appendChild(gNodes);
+
+      const linkEls = links.map(e => {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("class", "link");
+        line.setAttribute("stroke-width", e.rel === "owns" || e.rel === "generates" || e.rel === "tests" ? "1.6" : "1");
+        gLinks.appendChild(line);
+        const lab = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lab.setAttribute("class", "link-label");
+        lab.textContent = e.rel || "";
+        gLabels.appendChild(lab);
+        return { e, line, lab };
+      });
+
+      const nodeEls = nodes.map(n => {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", "node" + (selected === n.id ? " sel" : ""));
+        g.dataset.id = n.id;
+        const r = n.kind === "profile" ? 16 : n.kind === "wiki" ? 13 : 8;
+        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("r", String(r));
+        c.setAttribute("fill", wikiKindColor(n.kind));
+        c.setAttribute("stroke", "#faf6ec");
+        c.setAttribute("stroke-width", "1.5");
+        const lab = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lab.setAttribute("class", "node-label");
+        lab.setAttribute("text-anchor", "middle");
+        lab.setAttribute("dy", String(r + 12));
+        lab.textContent = shortWikiLabel(n);
+        const sub = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        sub.setAttribute("class", "node-sub");
+        sub.setAttribute("text-anchor", "middle");
+        sub.setAttribute("dy", String(r + 23));
+        sub.textContent = n.kind === "wiki" ? (n.state || n.status || "") : n.kind;
+        g.appendChild(c);
+        g.appendChild(lab);
+        if (n.kind === "wiki" || n.kind === "profile") g.appendChild(sub);
+        g.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          select(n.id);
+        });
+        g.addEventListener("dblclick", (ev) => {
+          ev.stopPropagation();
+          if (n.path) openMd(n.path, n.ident);
+        });
+        // node drag
+        let dragging = false;
+        g.addEventListener("pointerdown", (ev) => {
+          if (ev.button !== 0) return;
+          dragging = true;
+          n.fx = n.x; n.fy = n.y;
+          g.setPointerCapture(ev.pointerId);
+          ev.stopPropagation();
+        });
+        g.addEventListener("pointermove", (ev) => {
+          if (!dragging) return;
+          const pt = clientToGraph(ev.clientX, ev.clientY);
+          n.fx = pt.x; n.fy = pt.y;
+          n.x = pt.x; n.y = pt.y;
+        });
+        g.addEventListener("pointerup", (ev) => {
+          if (!dragging) return;
+          dragging = false;
+          n.fx = null; n.fy = null;
+          try { g.releasePointerCapture(ev.pointerId); } catch (_) {}
+        });
+        gNodes.appendChild(g);
+        return { n, g, r };
+      });
+
+      function applyTransform() {
+        root.setAttribute("transform", `translate(${wikiGraphTransform.x},${wikiGraphTransform.y}) scale(${wikiGraphTransform.k})`);
+      }
+      applyTransform();
+
+      function clientToGraph(cx, cy) {
+        const rect = svg.getBoundingClientRect();
+        const x = (cx - rect.left - wikiGraphTransform.x) / wikiGraphTransform.k;
+        const y = (cy - rect.top - wikiGraphTransform.y) / wikiGraphTransform.k;
+        return { x, y };
+      }
+
+      // pan + zoom
+      let panning = false, pan0 = null;
+      svg.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0) return;
+        if (ev.target.closest(".node")) return;
+        panning = true;
+        svg.classList.add("dragging");
+        pan0 = { x: ev.clientX, y: ev.clientY, tx: wikiGraphTransform.x, ty: wikiGraphTransform.y };
+        svg.setPointerCapture(ev.pointerId);
+      });
+      svg.addEventListener("pointermove", (ev) => {
+        if (!panning || !pan0) return;
+        wikiGraphTransform.x = pan0.tx + (ev.clientX - pan0.x);
+        wikiGraphTransform.y = pan0.ty + (ev.clientY - pan0.y);
+        applyTransform();
+      });
+      svg.addEventListener("pointerup", (ev) => {
+        panning = false;
+        pan0 = null;
+        svg.classList.remove("dragging");
+        try { svg.releasePointerCapture(ev.pointerId); } catch (_) {}
+      });
+      svg.addEventListener("wheel", (ev) => {
+        ev.preventDefault();
+        const rect = svg.getBoundingClientRect();
+        const mx = ev.clientX - rect.left;
+        const my = ev.clientY - rect.top;
+        const prev = wikiGraphTransform.k;
+        const next = Math.min(2.8, Math.max(0.35, prev * (ev.deltaY < 0 ? 1.08 : 0.92)));
+        wikiGraphTransform.x = mx - (mx - wikiGraphTransform.x) * (next / prev);
+        wikiGraphTransform.y = my - (my - wikiGraphTransform.y) * (next / prev);
+        wikiGraphTransform.k = next;
+        applyTransform();
+      }, { passive: false });
+
+      const q = $q.value.trim().toLowerCase();
+      function tick() {
+        // repulsion
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i], b = nodes[j];
+            let dx = a.x - b.x, dy = a.y - b.y;
+            let dist2 = dx * dx + dy * dy || 0.01;
+            const dist = Math.sqrt(dist2);
+            const force = 900 / dist2;
+            dx = dx / dist * force; dy = dy / dist * force;
+            a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
+          }
+        }
+        // springs
+        for (const e of links) {
+          const a = e.source, b = e.target;
+          let dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const ideal = (a.kind === "wiki" || b.kind === "wiki") ? 110 : 90;
+          const k = 0.04;
+          const f = (dist - ideal) * k;
+          dx = dx / dist * f; dy = dy / dist * f;
+          a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
+        }
+        // center gravity
+        for (const n of nodes) {
+          n.vx += (width / 2 - n.x) * 0.005;
+          n.vy += (height / 2 - n.y) * 0.005;
+          if (n.fx != null) { n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; continue; }
+          n.vx *= 0.82; n.vy *= 0.82;
+          n.x += n.vx; n.y += n.vy;
+          n.x = Math.max(24, Math.min(width - 24, n.x));
+          n.y = Math.max(24, Math.min(height - 24, n.y));
+        }
+        for (const { e, line, lab } of linkEls) {
+          line.setAttribute("x1", e.source.x);
+          line.setAttribute("y1", e.source.y);
+          line.setAttribute("x2", e.target.x);
+          line.setAttribute("y2", e.target.y);
+          lab.setAttribute("x", (e.source.x + e.target.x) / 2);
+          lab.setAttribute("y", (e.source.y + e.target.y) / 2);
+          const hit = !q || `${e.source.ident} ${e.target.ident} ${e.rel}`.toLowerCase().includes(q)
+            || shortWikiLabel(e.source).toLowerCase().includes(q)
+            || shortWikiLabel(e.target).toLowerCase().includes(q);
+          line.classList.toggle("dim", Boolean(q) && !hit);
+          lab.classList.toggle("dim", Boolean(q) && !hit);
+          lab.style.display = wikiGraphTransform.k < 0.7 ? "none" : "";
+        }
+        for (const { n, g } of nodeEls) {
+          g.setAttribute("transform", `translate(${n.x},${n.y})`);
+          g.classList.toggle("sel", selected === n.id);
+          const blob = [n.ident, n.label, n.kind, n.state, n.status].join(" ").toLowerCase();
+          g.classList.toggle("dim", Boolean(q) && !blob.includes(q));
+        }
+        wikiGraphAnim = requestAnimationFrame(tick);
+      }
+      wikiGraphAnim = requestAnimationFrame(tick);
+    }
+
+    function renderWiki() {
+      stopWikiGraphAnim();
+      $list.innerHTML = "";
+      const graph = buildWikiSubgraph();
+      const hasWiki = graph.nodes.some(n => n.kind === "wiki");
+      $list.insertAdjacentHTML("beforeend", `<p class="lead">${esc(t("wiki_graph_title"))}</p><p class="lede">${esc(t("wiki_graph_lede"))}</p>`);
+
+      const filt = document.createElement("div");
+      filt.className = "filt";
+      filt.appendChild(chipRow(t("wiki_graph_title"), [
+        { id: "spine", label: t("wiki_mode_spine") },
+        { id: "full", label: t("wiki_mode_full") },
+        { id: "judgments", label: t("wiki_mode_judgments") },
+      ], wikiGraphMode, (id) => {
+        wikiGraphMode = id;
+        wikiGraphTransform = { x: 0, y: 0, k: 1 };
+        renderWiki();
+      }));
+      $list.appendChild(filt);
+
+      if (!hasWiki) {
+        $list.insertAdjacentHTML("beforeend", `<p class='empty'>${t("wiki_empty")}</p>`);
+        return;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.className = "wiki-graph-wrap";
+      const toolbar = document.createElement("div");
+      toolbar.className = "wiki-graph-toolbar";
       const notebook = (GRAPH.wiki_notebooks || []).find(n => n.profile === profileScope);
       if (notebook) {
-        const root = document.createElement("p");
-        root.className = "note";
-        root.textContent = `${notebook.profile} notebook · ${notebook.one_liner || notebook.path}`;
-        root.onclick = () => openMd(notebook.root_file || `${notebook.path}/README.md`, notebook.profile);
-        cards.appendChild(root);
-        const graphPath = `${notebook.path}/GRAPH.md`;
-        const graph = document.createElement("p");
-        graph.className = "note";
-        graph.textContent = "Open knowledge graph (GRAPH.md)";
-        graph.onclick = () => openMd(graphPath, "GRAPH");
-        cards.appendChild(graph);
+        const openRoot = document.createElement("button");
+        openRoot.type = "button";
+        openRoot.textContent = "README";
+        openRoot.onclick = () => openMd(notebook.root_file || `${notebook.path}/README.md`, notebook.profile);
+        toolbar.appendChild(openRoot);
+        const openGraph = document.createElement("button");
+        openGraph.type = "button";
+        openGraph.textContent = "GRAPH.md";
+        openGraph.onclick = () => openMd(`${notebook.path}/GRAPH.md`, "GRAPH");
+        toolbar.appendChild(openGraph);
       }
-      all.forEach(w => {
-        const meta = [w.profile, w.state || w.status, w.confidence, w.pillar, w.updated].filter(Boolean).join(" · ");
+      const stat = document.createElement("span");
+      stat.className = "wg-stat";
+      stat.textContent = `${graph.nodes.length} nodes · ${graph.links.length} edges`;
+      toolbar.appendChild(stat);
+      wrap.appendChild(toolbar);
+
+      const legend = document.createElement("div");
+      legend.className = "wiki-graph-legend";
+      const legendKinds = [...wikiGraphKinds()];
+      legend.innerHTML = legendKinds.map(k =>
+        `<span><i style="background:${wikiKindColor(k)}"></i>${esc(kindName(k))}</span>`
+      ).join("");
+      wrap.appendChild(legend);
+
+      const host = document.createElement("div");
+      wrap.appendChild(host);
+      $list.appendChild(wrap);
+      mountWikiForceGraph(host, graph);
+
+      // compact judgment list under the graph
+      const pages = (GRAPH.wiki || []).filter(w => {
+        if (profileScope && w.profile && w.profile !== "*" && w.profile !== profileScope && w.profile !== "_shared") return false;
+        const qq = $q.value.trim().toLowerCase();
+        if (!qq) return true;
+        return [w.id, w.title, w.one_liner, w.status, w.state, w.pillar, w.profile].join(" ").toLowerCase().includes(qq);
+      });
+      const listHead = document.createElement("p");
+      listHead.className = "note";
+      listHead.textContent = t("wiki_pages_list");
+      $list.appendChild(listHead);
+      const cards = document.createElement("div");
+      cards.className = "cards wiki-pages";
+      pages.forEach(w => {
+        const node = byId[`wiki:${w.id}`];
+        if (node) {
+          const el = rowEl(node, [w.state || w.status, w.confidence, w.pillar].filter(Boolean).join(" · "));
+          el.dataset.nodeId = node.id;
+          cards.appendChild(el);
+          return;
+        }
         const el = document.createElement("button");
         el.type = "button";
         el.className = "row";
-        el.innerHTML = `<span class="stripe"></span><div><div class="hid">${esc(w.id)}</div><div class="ttl">${esc(w.title || w.one_liner || w.id)}</div><p class="note">${esc(w.one_liner || t("wiki_believe"))}</p><p class="note">${esc(meta)}</p></div>`;
-        el.onclick = () => {
-          if (w.file) openMd(w.file, w.id);
-        };
+        el.innerHTML = `<span class="stripe"></span><div><div class="hid">${esc(w.id)}</div><div class="ttl">${esc(w.title || w.one_liner || w.id)}</div><p class="note">${esc(w.one_liner || t("wiki_believe"))}</p></div>`;
+        el.onclick = () => { if (w.file) openMd(w.file, w.id); };
         cards.appendChild(el);
       });
-      if (!all.length) cards.innerHTML = `<p class='empty'>${t("wiki_empty")}</p>`;
       $list.appendChild(cards);
     }
 
@@ -4350,7 +4761,8 @@
       const kv = Object.entries({
         [t("kv_kind")]: kindName(n.kind),
         [t("kv_date")]: n.date,
-        [t("kv_status")]: n.status,
+        [t("kv_status")]: n.kind === "wiki" ? (n.state || n.status || "") : n.status,
+        Confidence: n.kind === "wiki" ? (n.confidence || "") : "",
         [t("kv_refs")]: (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") ? String(n.refs ?? 0) : "",
         [t("kv_hits")]: (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") && n.n != null
           ? `${n.win || 0}w / ${n.loss || 0}l / n=${n.n}`
