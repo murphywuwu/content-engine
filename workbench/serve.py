@@ -104,9 +104,12 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
 
     def _send_graph(self) -> None:
         # Import on demand so --help / cold start stay light; build.py is the parser source of truth.
+        # Reload every request: serve processes outlive build.py edits.
         if str(_WB) not in sys.path:
             sys.path.insert(0, str(_WB))
+        import importlib
         import build as wb_build  # noqa: WPS433 — local sibling module
+        wb_build = importlib.reload(wb_build)
 
         try:
             graph = wb_build.build_graph()

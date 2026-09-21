@@ -63,6 +63,15 @@ Verbatim quotes stay in `needs/entries/`. **Always** Obsidian `[[wikilinks]]`. I
 
 Open a run: read this table **before** `library/*/_index.md`. `none` is still allowed.
 
+## Library candidates
+
+Cataloged library resources related to this lesson. This is a discovery map,
+not a verdict. Move an item to **Parts that fit** only after Selection, ship,
+or review; allowed statuses here are `unreviewed` and `reviewed`.
+
+| id | kind | source capture | status | note |
+|----|------|----------------|--------|------|
+
 ## Layout families
 
 <!-- Long-lived layout preference is the Family name, not every templateId. -->

@@ -479,12 +479,17 @@ Never turn a source label into a stronger claim:
 ## § Swipe / atom library
 
 - **Catalog:** `library/swipe/_index.md` / `library/atoms/_index.md` / `library/claims/_index.md` are the selection entrypoints (Approach B).
+- **Graph visibility:** approved library ingest also creates a graph resource
+  edge from the source Capture to the `S-*` / `A-*` / `C-*` item and records
+  the item as an `unreviewed` candidate for its linked W- lesson.
 - **Notebook hard gate:** when a Topic links a `W-`, read that page’s **Parts that fit / Do not do** before opening library indexes; Open card must cite `W-…` or `W-: none`.
 - **Hit-status:** `trial` | `working` | `dead` (not claim epistemology).
 - **Hits cache:** index columns `n` `win` `loss` from **our** `published.result`.
 - **Use history:** `published/_index.md` (columns `swipe` / `atoms`). **Do not** put an Evidence table in swipe/atom files.
 - **New item:** template + index row under `library/`; default `trial`, n=win=loss=0.
-- **From capture / run:** only via **§ Library ingest**. Never silent seed from runs.
+- **From capture / run:** only via **§ Library ingest**. Never silent seed from
+  runs. A capture-approved ingest is visible in the graph, but remains
+  `unreviewed` until Selection / ship / 复盘.
 
 ---
 
@@ -556,7 +561,7 @@ Hang only on `wiki/pages/<this-profile>/` (or `_unfiled`). Never invent a `W-` t
 | Hit → library (after confirm) | via Capture | Follow Capture row (hang `C-`, not `H-`). |
 | Product / recommendation create or price edit | **No** (default) | Stay in `products/` / `recommendations/`. Touch a `W-` **only if** that page’s **Product link** already cites this id **and** the cited fact changed, or the user is writing a lesson about it. |
 | Media ingest | **No** (default) | Stay in `media/`. Cite `M-` on a `W-` only if the user says this image **proves that lesson** (or it is the brand logo the lesson depends on). |
-| Library ingest (swipe/atom/claim) | **No** | Catalog only. **Parts that fit** updates on Selection / ship / 复盘 — not on 入库. |
+| Library ingest (swipe/atom/claim) | **Yes, candidate only** | Link the library item to its source Capture and relevant W- in the graph as `cataloged_from` / `candidate_for`. Do not update **Parts that fit** or W- judgment state on ingest. |
 | Topic `produce` written | **Must** (if a `W-` matches) | Append T- to **Battles** as `pending`. |
 | Before Scout | **Read** | Lookalike gate (§ Topics 0b). |
 | Before run Selection | **Read** | Parts table; Open card cites `W-…` or `W-: none`. |

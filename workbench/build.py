@@ -1809,6 +1809,18 @@ def build_graph() -> dict:
                 for cid in CLAIM_RE.findall(line):
                     edge(wiki_id, nid("claim", cid), rel_name)
 
+            # Cataloged but not yet fits/avoid — discovery edges only.
+            candidates = section("Library candidates")
+            for line in candidates.splitlines():
+                if not line.strip().startswith("|"):
+                    continue
+                for sid in SWIPE_RE.findall(line):
+                    edge(wiki_id, nid("swipe", sid), "candidates")
+                for aid in ATOM_RE.findall(line):
+                    edge(wiki_id, nid("atom", aid), "candidates")
+                for cid in CLAIM_RE.findall(line):
+                    edge(wiki_id, nid("claim", cid), "candidates")
+
             layout_rows = []
             for row in _table_rows(section("Layout families")):
                 fam = (row.get("layout_family") or "").strip()

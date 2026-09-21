@@ -2788,6 +2788,63 @@
       margin-left: auto; font-family: ui-monospace, Menlo, monospace;
       font-size: 11px; color: var(--faint);
     }
+    .wiki-graph-toolbar .wg-search {
+      position: relative; flex: 1 1 200px; min-width: 160px; max-width: 340px;
+    }
+    .wiki-graph-toolbar .wg-search::before {
+      content: ""; position: absolute; left: 11px; top: 50%; width: 11px; height: 11px;
+      margin-top: -7px; border: 1.5px solid var(--faint); border-radius: 50%;
+      pointer-events: none;
+    }
+    .wiki-graph-toolbar .wg-search::after {
+      content: ""; position: absolute; left: 20px; top: 50%; width: 5px; height: 1.5px;
+      margin-top: 3px; background: var(--faint); transform: rotate(45deg);
+      pointer-events: none;
+    }
+    .wiki-graph-toolbar .wg-search input {
+      width: 100%; background: var(--paper); border: 1px solid var(--line); color: var(--text);
+      border-radius: 8px; padding: 6px 12px 6px 30px; font: inherit; font-size: 12.5px;
+      outline: none;
+    }
+    .wiki-graph-toolbar .wg-search input:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-faint);
+    }
+    .wg-hits {
+      border-bottom: 1px solid var(--line); background: var(--bg);
+      max-height: 200px; overflow: auto; padding: 6px 0;
+    }
+    .wg-hits[hidden] { display: none; }
+    .wg-hits-head {
+      padding: 4px 14px 6px; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint);
+    }
+    .wg-hit {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+      width: 100%; text-align: left; border: 0; background: transparent;
+      padding: 7px 14px; cursor: pointer; font: inherit; color: var(--text);
+    }
+    .wg-hit:hover, .wg-hit.on { background: var(--bg-2); }
+    .wg-hit .wg-hit-kind {
+      font-size: 10px; font-weight: 700; font-family: ui-monospace, Menlo, monospace;
+      color: var(--paper); background: var(--muted); border-radius: 4px; padding: 2px 6px;
+    }
+    .wg-hit .wg-hit-main { min-width: 0; }
+    .wg-hit .wg-hit-id {
+      font-size: 12px; font-weight: 650; font-family: ui-monospace, Menlo, monospace;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .wg-hit .wg-hit-label {
+      font-size: 11.5px; color: var(--muted); white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .wg-hit .wg-hit-badge {
+      font-size: 10.5px; color: var(--warn, #b45309); white-space: nowrap;
+    }
+    .wg-hit.off .wg-hit-kind { opacity: 0.7; }
+    .wiki-graph-svg .node.hit circle {
+      stroke: var(--accent); stroke-width: 2.5px;
+      filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 55%, transparent));
+    }
     .wiki-graph-legend {
       display: flex; flex-wrap: wrap; gap: 10px 14px; padding: 8px 14px;
       border-bottom: 1px solid var(--line); font-size: 11px; color: var(--muted);
@@ -3917,7 +3974,12 @@
         wiki_empty: "该 profile 的 wiki/pages/<profile>/ 下还没有 W- 笔记",
         wiki_believe: "我们现在相信",
         wiki_graph_title: "知识图谱",
-        wiki_graph_lede: "点节点看右侧详情；拖动画布平移，滚轮缩放。",
+        wiki_graph_lede: "点节点看右侧详情；拖动画布平移，滚轮缩放。用下方搜索验证新收录 / 新 Run 是否进了地图。",
+        wiki_graph_search: "搜索节点（T- / N- / RUN- / 标题）",
+        wiki_graph_on_map: "在当前地图 · {n}",
+        wiki_graph_off_map: "有数据但未进当前地图 · {n}",
+        wiki_graph_none: "没有匹配节点。换个 ID，或先 rebuild。",
+        wiki_graph_not_linked: "未进地图",
         wiki_mode_spine: "主干",
         wiki_mode_full: "全邻域",
         wiki_mode_judgments: "仅判断",
@@ -4316,7 +4378,12 @@
         wiki_empty: "No W- notes under wiki/pages/<profile>/ yet",
         wiki_believe: "Current Beliefs",
         wiki_graph_title: "Knowledge Graph",
-        wiki_graph_lede: "Click a node for details; drag to pan, scroll to zoom.",
+        wiki_graph_lede: "Click a node for details; drag to pan, scroll to zoom. Use search to check whether a new capture or run landed on the map.",
+        wiki_graph_search: "Search nodes (T- / N- / RUN- / title)",
+        wiki_graph_on_map: "On this map · {n}",
+        wiki_graph_off_map: "In data, not on this map · {n}",
+        wiki_graph_none: "No matching nodes. Try another ID, or rebuild.",
+        wiki_graph_not_linked: "off map",
         wiki_mode_spine: "Spine",
         wiki_mode_full: "Neighborhood",
         wiki_mode_judgments: "Judgments only",
@@ -4602,6 +4669,8 @@
     let baseTab = "assets"; // assets | graph
     let wikiGraphAnim = null;
     let wikiGraphTransform = { x: 0, y: 0, k: 1 };
+    let wikiGraphQuery = "";
+    let wikiGraphApi = null; // { focusNode, applyQuery } while force graph is mounted
     const $list = document.getElementById("list");
     const $insp = document.getElementById("insp");
     const $q = document.getElementById("q");
@@ -5492,8 +5561,9 @@
         return;
       }
       selected = id;
-      if (view === "wiki" && $list.querySelector(".wiki-graph-svg")) {
-        $list.querySelectorAll(".wiki-graph-svg .node").forEach(g => {
+      const graphLive = $list.querySelector(".wiki-graph-svg");
+      if (graphLive && (view === "wiki" || (view === "base" && baseTab === "graph"))) {
+        graphLive.querySelectorAll(".node").forEach(g => {
           g.classList.toggle("sel", g.dataset.id === id);
         });
         renderInsp();
@@ -5695,13 +5765,15 @@
     }
 
     function render() {
-      if (view !== "wiki") stopWikiGraphAnim();
+      const graphViewLive = view === "wiki" || (view === "base" && baseTab === "graph");
+      if (!graphViewLive) stopWikiGraphAnim();
       document.querySelectorAll(".nav-primary .nav-tab").forEach(b => {
         const parent = VIEW_PARENT[view] || view;
         b.classList.toggle("on", b.getAttribute("data-v") === parent);
       });
       const q = ($q.value || "").trim();
       if (PRIMARY_VIEWS.includes(view) && q) {
+        stopWikiGraphAnim();
         renderSearchResults(q);
       } else if (view === "overview") {
         renderOverview();
@@ -6231,10 +6303,11 @@
 
     function wikiGraphKinds() {
       if (wikiGraphMode === "judgments") return new Set(["profile", "wiki"]);
+      // Spine includes captures + library candidates (candidates edges from W- pages).
       if (wikiGraphMode === "full") {
         return new Set(["profile", "wiki", "need", "capture", "product", "topic", "run", "published", "swipe", "atom", "claim"]);
       }
-      return new Set(["profile", "wiki", "need", "product", "topic", "run", "published"]);
+      return new Set(["profile", "wiki", "need", "capture", "product", "topic", "run", "published", "swipe", "atom", "claim"]);
     }
 
     function buildWikiSubgraph() {
@@ -6271,6 +6344,7 @@
         cancelAnimationFrame(wikiGraphAnim);
         wikiGraphAnim = null;
       }
+      wikiGraphApi = null;
     }
 
     function shortWikiLabel(n) {
@@ -6283,10 +6357,24 @@
       return String(n.ident || n.label || "").slice(0, 16);
     }
 
+    function nodeGraphBlob(n) {
+      return [
+        n.id, n.ident, n.label, n.kind, n.state, n.status, n.one_liner, n.caption,
+        n.topic_id, n.platform, n.platforms, n.profile, n.path, shortWikiLabel(n),
+      ].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function nodeMatchesGraphQuery(n, q) {
+      const qq = String(q || "").trim().toLowerCase();
+      if (!qq) return true;
+      return nodeGraphBlob(n).includes(qq);
+    }
+
     function mountWikiForceGraph(host, graph) {
       stopWikiGraphAnim();
-      const width = Math.max(host.clientWidth || 640, 480);
-      const height = Math.min(window.innerHeight * 0.62, 620);
+      wikiGraphApi = null;
+      const width = Math.max(host.clientWidth || 720, 560);
+      const height = Math.min(window.innerHeight * 0.72, 780);
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("class", "wiki-graph-svg");
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -6298,11 +6386,14 @@
 
       const nodes = graph.nodes.map((n, i) => {
         const angle = (i / Math.max(graph.nodes.length, 1)) * Math.PI * 2;
-        const ring = n.kind === "profile" ? 0 : n.kind === "wiki" ? 120 : 220;
+        const ring = n.kind === "profile" ? 0 : n.kind === "wiki" ? 180 : 320;
+        // Tiny deterministic jitter — avoids zero-distance repulsion spikes on shared rings.
+        const jx = ((i * 37) % 11) - 5;
+        const jy = ((i * 53) % 11) - 5;
         return {
           ...n,
-          x: width / 2 + Math.cos(angle) * ring,
-          y: height / 2 + Math.sin(angle) * ring,
+          x: width / 2 + Math.cos(angle) * ring + jx,
+          y: height / 2 + Math.sin(angle) * ring + jy,
           vx: 0,
           vy: 0,
         };
@@ -6376,12 +6467,14 @@
           const pt = clientToGraph(ev.clientX, ev.clientY);
           n.fx = pt.x; n.fy = pt.y;
           n.x = pt.x; n.y = pt.y;
+          wake(0.2);
         });
         g.addEventListener("pointerup", (ev) => {
           if (!dragging) return;
           dragging = false;
           n.fx = null; n.fy = null;
           try { g.releasePointerCapture(ev.pointerId); } catch (_) {}
+          wake(0.25);
         });
         gNodes.appendChild(g);
         return { n, g, r };
@@ -6397,6 +6490,18 @@
         const x = (cx - rect.left - wikiGraphTransform.x) / wikiGraphTransform.k;
         const y = (cy - rect.top - wikiGraphTransform.y) / wikiGraphTransform.k;
         return { x, y };
+      }
+
+      function focusNode(id) {
+        const n = by[id];
+        if (!n) return false;
+        const k = Math.max(wikiGraphTransform.k, 1.35);
+        wikiGraphTransform.k = k;
+        wikiGraphTransform.x = width / 2 - n.x * k;
+        wikiGraphTransform.y = height / 2 - n.y * k;
+        applyTransform();
+        select(id);
+        return true;
       }
 
       // pan + zoom
@@ -6434,41 +6539,60 @@
         applyTransform();
       }, { passive: false });
 
-      const q = $q.value.trim().toLowerCase();
-      function tick() {
-        // repulsion
+      // Force layout: visible cool-down from ring seed (soft charge, no infinite thrash).
+      let alpha = 1;
+      const alphaMin = 0.02;
+      const alphaDecay = 0.97;
+      // Stronger repulsion + longer springs so ~80 nodes don't pack into a ball.
+      const charge = Math.min(1400, Math.max(520, 48000 / Math.max(nodes.length, 1)));
+      // Simulate in a room larger than the viewport; user can pan/zoom.
+      const roomW = width * 1.55;
+      const roomH = height * 1.55;
+      const originX = (width - roomW) / 2;
+      const originY = (height - roomH) / 2;
+
+      function stepPhysics(strength) {
+        let energy = 0;
         for (let i = 0; i < nodes.length; i++) {
           for (let j = i + 1; j < nodes.length; j++) {
             const a = nodes[i], b = nodes[j];
             let dx = a.x - b.x, dy = a.y - b.y;
             let dist2 = dx * dx + dy * dy || 0.01;
             const dist = Math.sqrt(dist2);
-            const force = 900 / dist2;
+            const force = (charge * strength) / dist2;
             dx = dx / dist * force; dy = dy / dist * force;
             a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
           }
         }
-        // springs
         for (const e of links) {
           const a = e.source, b = e.target;
           let dx = b.x - a.x, dy = b.y - a.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-          const ideal = (a.kind === "wiki" || b.kind === "wiki") ? 110 : 90;
-          const k = 0.04;
-          const f = (dist - ideal) * k;
+          const ideal = (a.kind === "wiki" || b.kind === "wiki") ? 170 : 140;
+          const f = (dist - ideal) * 0.03 * strength;
           dx = dx / dist * f; dy = dy / dist * f;
           a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
         }
-        // center gravity
         for (const n of nodes) {
-          n.vx += (width / 2 - n.x) * 0.005;
-          n.vy += (height / 2 - n.y) * 0.005;
+          // Weak centering — let clusters breathe instead of collapsing to mid.
+          n.vx += (width / 2 - n.x) * 0.002 * strength;
+          n.vy += (height / 2 - n.y) * 0.002 * strength;
           if (n.fx != null) { n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; continue; }
           n.vx *= 0.82; n.vy *= 0.82;
           n.x += n.vx; n.y += n.vy;
-          n.x = Math.max(24, Math.min(width - 24, n.x));
-          n.y = Math.max(24, Math.min(height - 24, n.y));
+          // Soft walls on the larger room (hard clamp was packing everything).
+          const pad = 40;
+          if (n.x < originX + pad) n.vx += (originX + pad - n.x) * 0.05;
+          if (n.x > originX + roomW - pad) n.vx += (originX + roomW - pad - n.x) * 0.05;
+          if (n.y < originY + pad) n.vy += (originY + pad - n.y) * 0.05;
+          if (n.y > originY + roomH - pad) n.vy += (originY + roomH - pad - n.y) * 0.05;
+          energy += n.vx * n.vx + n.vy * n.vy;
         }
+        return energy;
+      }
+
+      function paint() {
+        const q = wikiGraphQuery.trim().toLowerCase();
         for (const { e, line, lab } of linkEls) {
           line.setAttribute("x1", e.source.x);
           line.setAttribute("y1", e.source.y);
@@ -6476,9 +6600,10 @@
           line.setAttribute("y2", e.target.y);
           lab.setAttribute("x", (e.source.x + e.target.x) / 2);
           lab.setAttribute("y", (e.source.y + e.target.y) / 2);
-          const hit = !q || `${e.source.ident} ${e.target.ident} ${e.rel}`.toLowerCase().includes(q)
-            || shortWikiLabel(e.source).toLowerCase().includes(q)
-            || shortWikiLabel(e.target).toLowerCase().includes(q);
+          const hit = !q
+            || nodeMatchesGraphQuery(e.source, q)
+            || nodeMatchesGraphQuery(e.target, q)
+            || String(e.rel || "").toLowerCase().includes(q);
           line.classList.toggle("dim", Boolean(q) && !hit);
           lab.classList.toggle("dim", Boolean(q) && !hit);
           lab.style.display = wikiGraphTransform.k < 0.7 ? "none" : "";
@@ -6486,12 +6611,43 @@
         for (const { n, g } of nodeEls) {
           g.setAttribute("transform", `translate(${n.x},${n.y})`);
           g.classList.toggle("sel", selected === n.id);
-          const blob = [n.ident, n.label, n.kind, n.state, n.status].join(" ").toLowerCase();
-          g.classList.toggle("dim", Boolean(q) && !blob.includes(q));
+          const hit = nodeMatchesGraphQuery(n, q);
+          g.classList.toggle("dim", Boolean(q) && !hit);
+          g.classList.toggle("hit", Boolean(q) && hit);
         }
-        wikiGraphAnim = requestAnimationFrame(tick);
       }
+
+      function wake(boost = 0.5) {
+        alpha = Math.max(alpha, boost);
+        if (!wikiGraphAnim) wikiGraphAnim = requestAnimationFrame(tick);
+      }
+
+      function tick() {
+        const energy = stepPhysics(alpha);
+        alpha *= alphaDecay;
+        paint();
+        if (alpha >= alphaMin) {
+          wikiGraphAnim = requestAnimationFrame(tick);
+        } else {
+          alpha = 0;
+          wikiGraphAnim = null;
+        }
+      }
+
+      // Start slightly zoomed out so the looser layout fits the first view.
+      if (wikiGraphTransform.k === 1 && wikiGraphTransform.x === 0 && wikiGraphTransform.y === 0) {
+        wikiGraphTransform.k = 0.78;
+        wikiGraphTransform.x = width * 0.11;
+        wikiGraphTransform.y = height * 0.11;
+        applyTransform();
+      }
+      paint();
       wikiGraphAnim = requestAnimationFrame(tick);
+      wikiGraphApi = {
+        focusNode,
+        hasNode: (id) => Boolean(by[id]),
+        nodeIds: () => nodes.map(n => n.id),
+      };
     }
 
     function renderWikiList() {
@@ -6567,11 +6723,27 @@
         openGraph.onclick = () => openMd(`${notebook.path}/GRAPH.md`, "GRAPH");
         toolbar.appendChild(openGraph);
       }
+
+      const searchWrap = document.createElement("div");
+      searchWrap.className = "wg-search";
+      const search = document.createElement("input");
+      search.type = "search";
+      search.value = wikiGraphQuery;
+      search.placeholder = t("wiki_graph_search");
+      search.setAttribute("aria-label", t("wiki_graph_search"));
+      searchWrap.appendChild(search);
+      toolbar.appendChild(searchWrap);
+
       const stat = document.createElement("span");
       stat.className = "wg-stat";
       stat.textContent = `${graph.nodes.length} nodes · ${graph.links.length} edges`;
       toolbar.appendChild(stat);
       wrap.appendChild(toolbar);
+
+      const hitsBox = document.createElement("div");
+      hitsBox.className = "wg-hits";
+      hitsBox.hidden = true;
+      wrap.appendChild(hitsBox);
 
       const legend = document.createElement("div");
       legend.className = "wiki-graph-legend";
@@ -6585,6 +6757,76 @@
       wrap.appendChild(host);
       $list.appendChild(wrap);
       mountWikiForceGraph(host, graph);
+
+      const onMapIds = new Set(graph.nodes.map(n => n.id));
+      const mapKinds = new Set(["profile", "wiki", "need", "capture", "product", "topic", "run", "published", "swipe", "atom", "claim"]);
+
+      function fillHits() {
+        const q = wikiGraphQuery.trim();
+        hitsBox.innerHTML = "";
+        if (!q) {
+          hitsBox.hidden = true;
+          return;
+        }
+        const onMap = graph.nodes.filter(n => nodeMatchesGraphQuery(n, q)).slice(0, 24);
+        const offMap = (GRAPH.nodes || [])
+          .filter(n => inScope(n) && mapKinds.has(n.kind) && !onMapIds.has(n.id) && nodeMatchesGraphQuery(n, q))
+          .slice(0, 24);
+        if (!onMap.length && !offMap.length) {
+          hitsBox.hidden = false;
+          hitsBox.innerHTML = `<p class="wg-hits-head">${esc(t("wiki_graph_none"))}</p>`;
+          return;
+        }
+        hitsBox.hidden = false;
+        const appendGroup = (label, rows, off) => {
+          if (!rows.length) return;
+          const head = document.createElement("p");
+          head.className = "wg-hits-head";
+          head.textContent = label.replace("{n}", String(rows.length));
+          hitsBox.appendChild(head);
+          rows.forEach(n => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "wg-hit" + (off ? " off" : "") + (selected === n.id ? " on" : "");
+            btn.innerHTML = `
+              <span class="wg-hit-kind" style="background:${wikiKindColor(n.kind)}">${esc(kindName(n.kind))}</span>
+              <span class="wg-hit-main">
+                <span class="wg-hit-id">${esc(n.ident || n.id)}</span>
+                <span class="wg-hit-label">${esc(n.label || n.one_liner || "")}</span>
+              </span>
+              ${off ? `<span class="wg-hit-badge">${esc(t("wiki_graph_not_linked"))}</span>` : ""}
+            `;
+            btn.onclick = () => {
+              if (off) {
+                select(n.id);
+                return;
+              }
+              if (wikiGraphApi && wikiGraphApi.focusNode(n.id)) return;
+              select(n.id);
+            };
+            hitsBox.appendChild(btn);
+          });
+        };
+        appendGroup(t("wiki_graph_on_map"), onMap, false);
+        appendGroup(t("wiki_graph_off_map"), offMap, true);
+      }
+
+      let searchTimer = null;
+      search.addEventListener("input", () => {
+        wikiGraphQuery = search.value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(fillHits, 80);
+      });
+      search.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const first = hitsBox.querySelector(".wg-hit:not(.off)") || hitsBox.querySelector(".wg-hit");
+        if (first) first.click();
+      });
+      fillHits();
+      if (wikiGraphQuery) {
+        queueMicrotask(() => search.focus());
+      }
     }
 
     function renderWiki() {
