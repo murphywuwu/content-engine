@@ -217,7 +217,6 @@
     .wiki-graph-svg .node.dim { opacity: .22; }
     .wiki-graph-svg .link.dim { opacity: .12; }
     .wiki-graph-svg .node.sel circle { stroke: var(--accent); stroke-width: 2.5px; }
-    .wiki-pages { margin-top: 8px; }
 
     .heat {
       display: flex; flex-wrap: wrap; gap: 6px;
@@ -1231,7 +1230,6 @@
         wiki_mode_spine: "主干",
         wiki_mode_full: "全邻域",
         wiki_mode_judgments: "仅判断",
-        wiki_pages_list: "判断页列表",
         kind_wiki: "判断",
         notes_in: "记下的", notes_lib: "零件库",
         runs_sub_calendar: "📅 日历排期",
@@ -1453,7 +1451,6 @@
         wiki_mode_spine: "Spine",
         wiki_mode_full: "Neighborhood",
         wiki_mode_judgments: "Judgments",
-        wiki_pages_list: "Judgment pages",
         notes_in: "Captured", notes_lib: "Library",
         runs_sub_calendar: "📅 Calendar & Schedule",
         runs_sub_heatmap: "🟩 Heatmap",
@@ -2259,10 +2256,6 @@
       if (view === "wiki" && $list.querySelector(".wiki-graph-svg")) {
         $list.querySelectorAll(".wiki-graph-svg .node").forEach(g => {
           g.classList.toggle("sel", g.dataset.id === id);
-        });
-        $list.querySelectorAll(".wiki-pages .row").forEach(row => {
-          const rid = row.dataset && row.dataset.nodeId;
-          row.classList.toggle("sel", rid === id);
         });
         renderInsp();
         return;
@@ -3169,36 +3162,6 @@
       wrap.appendChild(host);
       $list.appendChild(wrap);
       mountWikiForceGraph(host, graph);
-
-      // compact judgment list under the graph
-      const pages = (GRAPH.wiki || []).filter(w => {
-        if (profileScope && w.profile && w.profile !== "*" && w.profile !== profileScope && w.profile !== "_shared") return false;
-        const qq = $q.value.trim().toLowerCase();
-        if (!qq) return true;
-        return [w.id, w.title, w.one_liner, w.status, w.state, w.pillar, w.profile].join(" ").toLowerCase().includes(qq);
-      });
-      const listHead = document.createElement("p");
-      listHead.className = "note";
-      listHead.textContent = t("wiki_pages_list");
-      $list.appendChild(listHead);
-      const cards = document.createElement("div");
-      cards.className = "cards wiki-pages";
-      pages.forEach(w => {
-        const node = byId[`wiki:${w.id}`];
-        if (node) {
-          const el = rowEl(node, [w.state || w.status, w.confidence, w.pillar].filter(Boolean).join(" · "));
-          el.dataset.nodeId = node.id;
-          cards.appendChild(el);
-          return;
-        }
-        const el = document.createElement("button");
-        el.type = "button";
-        el.className = "row";
-        el.innerHTML = `<span class="stripe"></span><div><div class="hid">${esc(w.id)}</div><div class="ttl">${esc(w.title || w.one_liner || w.id)}</div><p class="note">${esc(w.one_liner || t("wiki_believe"))}</p></div>`;
-        el.onclick = () => { if (w.file) openMd(w.file, w.id); };
-        cards.appendChild(el);
-      });
-      $list.appendChild(cards);
     }
 
     function renderLibrary() {
