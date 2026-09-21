@@ -5,7 +5,7 @@ Topic system: **what to produce next**, after an explicit need, offer, review su
 | Path | Role |
 |------|------|
 | `_index.md` | Queue registry (one row per topic + `item` link + source engagement) |
-| `items/T-*.md` | One file per opportunity: decision summary + readable judgment, then Score/Trace/Constraints appendix |
+| `items/T-*.md` | One file per opportunity: human card first, Score/Trace/Constraints appendix |
 | `scoring.md` | Opportunity dimensions and dual gate |
 | `_template-item.md` | Template for new items |
 
@@ -18,4 +18,4 @@ explicit input → editorial judgment
   → user opens run → `status=promoted`
 ```
 
-The item file is a **decision card**. A content owner who skips YAML and the appendix must still answer: what problem we address, who it serves, what we will say, why now, what should change, and whether to open a run. Five-dim scores stay in the appendix as a gate, not as the reading surface.
+The item file is a **judgment card**. A content owner who skips YAML and the appendix must still answer: what we would say, to whom, why now, why us, and whether to open a run. Five-dim scores stay in `## Score` as a gate, not as the reading surface.

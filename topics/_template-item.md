@@ -2,13 +2,13 @@
 id: T-YYYYMMDD-XX
 date: YYYY-MM-DD
 status: scored
-account: your-handle
-profile: default
+account: murphywuwu
+profile: easysociable-builder
 platform: x
 pillar: P1
 lane: teach
 generation_mode: demand
-source_type: inbox | user | need | product | recommendation
+source_type: user | need | product | capture | recommendation | thesis | topic | run | comparison | response
 purpose: produce | library | discard
 scout_label: demand | ally | foil | craft_only
 capture_id:
@@ -30,8 +30,8 @@ recommendation_ids: none
 **Core judgment:** one sentence — what this piece actually argues  
 **Next step:** open a run / fill needs / fill evidence / re-angle / kill  
 **Product link:** none | P-… · direct | adjacent · one sentence  
-**Generation path:** demand | demand_to_offer | demand_to_review | review | offer_education | profile_thesis  
-*(Agent must ask the user to choose before `produce`; do not silent-default.)*
+**Generation path:** demand | demand_to_offer | demand_to_review | review | offer_education | profile_thesis | domain_explanation | comparison | response | craft_only  
+*(Resolve from the user's task; ask when ambiguous. Do not silent-default to demand.)*
 
 ## What problem does this solve?
 
@@ -88,6 +88,8 @@ Numbers only. Do not repeat the card above in a note column.
 ### Trace
 
 - source:
+- retrieval_reason: explicit_input | linked_node | same_problem | same_pillar | counter_evidence | platform_constraint
+- epistemic_label: fact | observation | judgment | hypothesis | counter_evidence | constraint | proposal | unknown
 - capture_id: (inbox `C-…` only)
 - need_ids:
 - product_ids:
@@ -104,3 +106,15 @@ Numbers only. Do not repeat the card above in a note column.
 ### Constraints
 
 Writer must-nots. Keep short. Empty is allowed.
+
+### Context Packet
+
+- task:
+- input_nodes:
+- judgment_nodes:
+- evidence_nodes:
+- counter_evidence:
+- product_facts:
+- platform_constraints:
+- forbidden_claims:
+- unresolved_questions:

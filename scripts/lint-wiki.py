@@ -27,7 +27,9 @@ WID_RE = re.compile(r"W-[A-Za-z0-9_-]+")
 STATUS_RE = re.compile(r"^status:\s*(?P<status>\S+)\s*$", re.MULTILINE)
 PROFILE_RE = re.compile(r"^profile:\s*(?P<profile>\S+)\s*$", re.MULTILINE)
 STATE_RE = re.compile(r"^state:\s*(?P<state>\S+)\s*$", re.MULTILINE)
+CONFIDENCE_RE = re.compile(r"^confidence:\s*(?P<confidence>\S+)\s*$", re.MULTILINE)
 VALID_STATES = frozenset({"hypothesis", "tested", "supported", "weakened", "retired"})
+VALID_CONFIDENCE = frozenset({"low", "medium", "high"})
 EMPTYISH = frozenset({"", "none", "—", "-", "n/a", "na"})
 
 
@@ -44,6 +46,8 @@ class Page:
     profile: str
     status: str = ""
     state: str = ""
+    confidence: str = ""
+    text: str = ""
     see_also: list[tuple[str, str]] = field(default_factory=list)
     contradictions_open: bool = False
 
@@ -115,6 +119,8 @@ def parse_page(path: Path, profile: str) -> Page:
         profile = prof_m.group("profile")
     state_m = STATE_RE.search(text)
     state = state_m.group("state") if state_m else ""
+    confidence_m = CONFIDENCE_RE.search(text)
+    confidence = confidence_m.group("confidence") if confidence_m else ""
 
     see: list[tuple[str, str]] = []
     if "## See also" in text:
@@ -153,9 +159,33 @@ def parse_page(path: Path, profile: str) -> Page:
         profile=profile,
         status=status,
         state=state,
+        confidence=confidence,
+        text=text,
         see_also=see,
         contradictions_open=contradictions_open,
     )
+
+
+def has_section(text: str, heading: str) -> bool:
+    return re.search(rf"^## {re.escape(heading)}\s*$", text, re.MULTILINE) is not None
+
+
+def has_judgment_field(text: str, field: str) -> bool:
+    return re.search(rf"^\s*-\s*\*\*{re.escape(field)}:\*\*", text, re.MULTILINE) is not None
+
+
+def semantic_findings(page: Page) -> list[Finding]:
+    findings: list[Finding] = []
+    for field in ("Evidence", "Counter-evidence", "Next test"):
+        if not has_judgment_field(page.text, field):
+            findings.append(Finding("missing_judgment_field", f"{page.profile}/{page.wid}: {field}"))
+    if not has_section(page.text, "We believe"):
+        findings.append(Finding("missing_judgment_section", f"{page.profile}/{page.wid}: We believe"))
+    if not page.confidence:
+        findings.append(Finding("missing_confidence", f"{page.profile}/{page.wid}"))
+    elif page.confidence not in VALID_CONFIDENCE:
+        findings.append(Finding("invalid_confidence", f"{page.profile}/{page.wid}: {page.confidence}"))
+    return findings
 
 
 def discover_pages(pages_dir: Path) -> tuple[dict[tuple[str, str], Page], list[Finding]]:
@@ -224,6 +254,7 @@ def lint_engine(engine: Path) -> list[Finding]:
             findings.append(Finding("stale", f"{prof}/{wid}"))
         if page.contradictions_open:
             findings.append(Finding("contradictions", f"{prof}/{wid}"))
+        findings.extend(semantic_findings(page))
         if len(page.see_also) > 5:
             findings.append(Finding("overflow", f"{prof}/{wid} has {len(page.see_also)} see-also"))
         # frontmatter profile should match folder (except _shared)
@@ -278,6 +309,10 @@ def format_report(findings: list[Finding]) -> str:
         "misplaced": [],
         "duplicate": [],
         "profile_mismatch": [],
+        "missing_judgment_field": [],
+        "missing_judgment_section": [],
+        "missing_confidence": [],
+        "invalid_confidence": [],
     }
     for f in findings:
         buckets.setdefault(f.kind, []).append(f.detail)
@@ -294,6 +329,12 @@ def format_report(findings: list[Finding]) -> str:
         + buckets["duplicate"]
         + buckets["profile_mismatch"]
     )
+    quality = (
+        buckets["missing_judgment_field"]
+        + buckets["missing_judgment_section"]
+        + buckets["missing_confidence"]
+        + buckets["invalid_confidence"]
+    )
     lines = [
         "🩺 Wiki lint",
         f"【Unpaired】 {join(buckets['unpaired'] + buckets.get('overflow', []))}",
@@ -301,6 +342,7 @@ def format_report(findings: list[Finding]) -> str:
         f"【Unfiled】 {join(buckets['unfiled']) if buckets['unfiled'] else '0 rows'}",
         f"【Contradictions】 {join(buckets['contradictions'])}",
         f"【Missing/orphan】 {join(missing)}",
+        f"【Judgment quality】 {join(quality)}",
         "Reply 批准 fix: … / 再观察",
     ]
     return "\n".join(lines)
@@ -390,6 +432,8 @@ state: hypothesis
         assert "missing_notebook" in kinds, findings
         assert "misplaced" in kinds, findings
         assert "unpaired" in kinds, findings
+        assert "missing_judgment_field" in kinds, findings
+        assert "missing_confidence" in kinds, findings
 
         clean = root / "clean"
         (clean / "wiki" / "pages" / "p1").mkdir(parents=True)

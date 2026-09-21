@@ -14,9 +14,9 @@ Scores whether a topic **deserves to exist as content**, not whether it can be w
 ## Pipeline (do not skip)
 
 ```text
-Needs / Products / Recommendations → editorial judgment
-  → user accepts
-inbox / url / need / user idea
+user task + explicit input
+  → parse mode and retrieval query
+  → Context Packet (profile + graph nodes + evidence + constraints)
   → 0) Hard filters
   → 1) Scout gate (purpose + label)     ← most signals die here
   → 2) Opportunity five-dim score        ← only for produce candidates
@@ -26,16 +26,23 @@ inbox / url / need / user idea
 
 Library-only signals may skip (2)–(3) — see Scout purposes below.
 
-Topic scoring runs only after an explicit input and editorial judgment. Product or recommendation fit is context, not evidence of audience demand.
+Topic scoring runs after an explicit input and a Context Packet. Inputs may be
+Needs, Products, Recommendations, Captures, user briefs, profile theses,
+existing Topics/Runs, or named comparisons/responses. Product or
+recommendation fit is context, not automatic evidence of audience demand.
 
-Need match (`need_ids` non-empty) → default `scout_label=demand`. Do not create an `N-` from a product claim or headline.
+Need match (`need_ids` non-empty) → default `scout_label=demand`. Do not create
+an `N-` from a product claim or headline. Product-led and thesis-led topics may
+use `offer_education`, `profile_thesis`, `domain_explanation`, `comparison`,
+or `response` when their required evidence is present.
 
 Product fit is a separate optional annotation:
 
 ```text
-Needs = demand evidence
+Needs = reader observations
 Products = offer facts
-Topics = editorial judgment over the evidence
+W- pages = profile judgments, hypotheses, evidence, and counter-evidence
+Topics = editorial judgment over the assembled Context Packet
 ```
 
 Use `product_ids` only when the Topic honestly connects to an active product
@@ -177,17 +184,37 @@ When scoring, write the false belief and the gap once under 「他们现在相�
 | 5–7 | Evidence exists but generic or secondhand |
 | 0–4 | No evidence beyond assertion; "experts say" with no expert named |
 
-A verbatim need quote is `observation` evidence. List the quote (or a paraphrase **and** the `N-` id) under `## Evidence.available`. Without an `N-` / `C-` / user-lived experience, evidence cannot be above 5. Mechanism / lived experience is still required to reach 8–10.
+A verbatim need quote is `observation` evidence. List the quote (or a paraphrase **and** the `N-` id) under `## Evidence.available`. For demand claims, an `N-` / `C-` / user-lived experience is required; without one, audience-demand evidence cannot be above 5. Product-led, review, comparison, and domain modes may use named product behavior, independent research, or other mode-appropriate evidence for the core angle, but cannot relabel it as audience demand.
 
 Product documentation is evidence of what the product does, not evidence that
 the audience wants it. Do not use a product entry to manufacture a Need or to
 raise the audience score.
 
+### Epistemic handling
+
+Every source in the Context Packet receives one label:
+`fact`, `observation`, `judgment`, `hypothesis`, `counter_evidence`,
+`constraint`, `proposal`, or `unknown`.
+
+- `fact` may be stated only within the source's scope.
+- `observation` keeps its original speaker and sample scope; do not generalize
+  a Need into market demand.
+- `judgment` supplies an editorial angle, not neutral fact.
+- `hypothesis` stays explicitly unverified.
+- `counter_evidence` remains visible during scoring and drafting.
+- `constraint` is a hard generation rule.
+- `proposal` is an Agent-generated candidate, not existing knowledge.
+- `unknown` means evidence is missing; never fill it with model common sense.
+
+`W-` state (`hypothesis`, `tested`, `supported`, `weakened`, `retired`) and
+`confidence` describe the lesson, not the truth of every sentence on the page.
+Record the source, label, and retrieval reason in the Topic Trace.
+
 ### Generation-mode gates
 
-Before scoring a `produce` Topic, **ask the user to choose `generation_mode`**.
-Recommend `demand` when Need-led; do not silently assume. Then enforce required
-inputs:
+Before scoring a `produce` Topic, resolve `generation_mode` from the user's
+task. Ask when ambiguous; do not silently default every Topic to `demand`.
+Then enforce required inputs:
 
 | mode | Required |
 |------|----------|
@@ -197,11 +224,16 @@ inputs:
 | `review` | `recommendation_ids` + named evidence + Profile |
 | `offer_education` | `product_ids` + product mechanism + Profile |
 | `profile_thesis` | Profile + Pillar |
+| `domain_explanation` | Profile + named domain/question |
+| `comparison` | Named subjects + comparison evidence + Profile |
+| `response` | Named claim/source + response evidence + Profile |
+| `craft_only` | Named source/structure + Profile |
 
 Do not use `review` when the only evidence is vendor marketing. Review entries
 must state limitations, research date, and commercial disclosure where
 relevant. Product-only and recommendation-only inputs do not imply demand and
-never raise audience / `ready` alone.
+never raise audience / `ready` alone. They can still produce a valid Topic in
+an education, review, comparison, or response mode when its evidence exists.
 
 When `evidence < 5`, agent should flag an **evidence gap** on the topic item and may suggest **research** before finalizing the score. Topics can be re-scored after research fills the gap.
 

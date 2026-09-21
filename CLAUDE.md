@@ -89,16 +89,16 @@ This folder is the local **Content Engine** for EasySociable.
 | 加/改 handles | Edit `profiles/<id>/handles.md`; keep **≤8** |
 | 扫关键词 / 扫 K-xx / 看 @handle | **§ Keywords** scan (**listen** default) → **§ Hits** |
 | 路由 Hit / H-xx | **§ Hits** → Needs or Capture+library / discard — **never hang `H-` on wiki** |
-| **扫需求选题** | **§ Topics** — **read matching `W-` first**, then from `needs/` where `status=captured`; max 5 `produce` |
+| **扫需求选题** | **§ Topics** — Need-led variant: read matching `W-` first, then `needs/` where `status=captured`; max 5 `produce` |
 | 扫 inbox 选题 | **§ Topics** — from captures without topic yet (max 5) |
-| 生成 topic (no source specified) | **§ Topics** — offer captured needs or ask which explicit input to use |
+| 生成 topic (no source specified) | **§ Topics** — ask for the task/input; do not assume Needs are the only source |
 | 链接直接选题 / 把 C-xxx 做成选题 | **§ Topics** — create T- (may link capture) |
 | 采访我 / 完善人设 / interview me / who am I as a creator / 建立 profile | **§ Interview** — persist after each dimension; no slideshow |
 | 设置品牌 / 改 logo / 配色 / 字体 / set brand / brand colors | Edit `profiles/<id>/brand.md` (**ask profile** if unset) |
 | 存图 / 记图 / 加素材 / catalog image / add media | **§ Media** — `media/_index.md` only; **do not** hang `M-` on wiki |
 | 找图 / find image / which image for … | **§ Media** — retrieve by tag/link from `media/_index.md` |
 | 开一单 / 用 T-xxx 开一单 | **Hard gate first**, then **§ Open a run** — **ask platform(s)** if unset; **read linked `W-` before Selection**; multi-select → **N runs** (bind `topic_id` if from T-) |
-| Quick draft | Resolve profile; selection; draft in chat |
+| Quick draft | Resolve profile; build a Context Packet; select; draft in chat |
 | 收成 swipe/atom/claim | **§ Library ingest** after approval → `library/` only; **do not** write Parts on ingest |
 | 选题后同意进 inbox | Capture that URL/C-link then optional library offer |
 | Post URL after ship | feedback + **§ Published index** + **update linked `W-` battles / parts** |
@@ -224,11 +224,12 @@ User defines, updates, prices, retires, or asks about a product or offer.
 
 ### Role
 
-Products are the **supply-side fact layer**. They are not audience needs,
-external discoveries, or content opportunities.
+Products are the **supply-side fact layer**. They are valid Topic inputs, but
+their facts do not automatically establish audience demand or outcomes.
 
 ```text
-Need (demand evidence) + Profile (identity) + optional Product (offer facts)
+User task + explicit input(s) + Profile context
+  → relevant graph nodes and evidence
   → Topic (editorial judgment)
   → Run
 ```
@@ -241,7 +242,9 @@ Need (demand evidence) + Profile (identity) + optional Product (offer facts)
 - A Topic may cite `recommendation_ids: none`; recommendations are third-party
   review subjects, not owned products.
 - `product_fit` describes relevance, not a readiness verdict. Product fit never
-  replaces `need_ids`, evidence, audience, or opportunity scoring.
+  replaces evidence, audience, or opportunity scoring. It does not require
+  `need_ids` in modes such as `offer_education`, but it cannot be relabeled as
+  demand evidence.
 - Do not turn a product promise into a Need quote. Do not turn a Need quote
   into a product capability.
 - Keep exact pricing and entitlements in the dated product entry. Do not copy
@@ -268,14 +271,23 @@ relationships before drafting.
 
 | mode | Required inputs |
 |------|-----------------|
-| `demand` | Needs + Profile |
-| `demand_to_offer` | Needs + Product + Profile |
-| `demand_to_review` | Needs + Recommendation + Profile |
-| `review` | Recommendation + Profile + evidence |
-| `offer_education` | Product + Profile + mechanism |
+| `demand` | Need + Profile |
+| `demand_to_offer` | Need + Product + Profile |
+| `demand_to_review` | Need + Recommendation + Profile |
+| `review` | Recommendation + named evidence + Profile |
+| `offer_education` | Product + mechanism + Profile |
 | `profile_thesis` | Profile + Pillar |
+| `domain_explanation` | Profile + named domain/question |
+| `comparison` | Named subjects + comparison evidence + Profile |
+| `response` | Named claim/source + response evidence + Profile |
+| `craft_only` | Named source/structure + Profile |
 
-**Mode pick (hard):** Before any `produce` Topic write (扫需求选题 / 做成选题 / 生成 topic / 把 N-|C- 做成选题), **ask the user to choose `generation_mode`**. Recommend `demand` when the input is Need-led; do **not** silently assume. Enforce that mode’s required inputs. Product or Recommendation presence never proves audience demand and never raises a Topic to `ready` by itself.
+**Mode pick (hard):** Before any `produce` Topic write, identify the user's
+input and ask for `generation_mode` when it is ambiguous. Do not silently
+assume `demand`. A Need, Product, brief, thesis, recommendation, or source may
+each be the starting input. Enforce the selected mode's required inputs.
+Product presence does not prove audience demand; Need presence does not prove
+product fit. Neither may be invented to satisfy a mode.
 
 ---
 
@@ -285,8 +297,63 @@ relationships before drafting.
 **Principle:** Topics are not titles. They are a judgment card the content owner can read in one minute. Five-dim scores are a gate in the appendix, not the reading surface.
 
 **Profile-first rule:** every Topic request starts by reading
-`wiki/pages/<profile>/README.md`, then the relevant W- judgment pages. The
-source type changes what is read next; it does not bypass the Profile Notebook.
+`wiki/pages/<profile>/README.md`, then `audience.md`, `pillars.md`, `voice.md`,
+and `boundaries.md`. Next, retrieve the relevant graph nodes for the explicit
+input. The source type determines which nodes are relevant; Needs are not a
+mandatory starting point.
+
+### Context retrieval protocol
+
+Treat the user's request as a retrieval task, not as a command to scan all
+Needs or all Wiki pages. First parse a task object: `intent`, `mode`,
+`entities`, `problem`, `audience`, `pillar`, `platform`, and `constraints`.
+Acceptable explicit inputs are a user brief/question, `N-*`, `C-*`, `P-*`,
+`R-*`, an existing `T-*`/Run, or a profile thesis.
+
+Use this retrieval order:
+
+1. Read the explicit input nodes.
+2. Follow explicit edges: W Readers say, Related captures, Product link,
+   Battles fought, See also, and Topic Trace.
+3. Add same-profile nodes matching the same problem, pillar, product, or
+   audience.
+4. Add counter-evidence and source material needed to check the judgment.
+5. Add platform, product, media, library, and disclosure constraints only when
+   required by the selected task.
+
+Keep retrieval bounded: profile context + explicit inputs + relevant one-hop
+edges + only the few two-hop nodes needed for contradiction or evidence.
+Default caps are 5 W pages and 8 Need/Capture/source nodes. Record every
+retrieved node and a `retrieval_reason` in Trace. Lexical similarity alone is
+not a relationship.
+
+Assemble a Context Packet before generating:
+`task`, `profile_context`, `input_nodes`, `judgment_nodes`, `evidence_nodes`,
+`counter_evidence`, `product_facts`, `platform_constraints`,
+`forbidden_claims`, `unresolved_questions`, and `trace`.
+
+### Epistemic labels and usage
+
+Every retrieved statement must be treated as one of:
+
+| label | Meaning | Generation rule |
+|-------|---------|-----------------|
+| `fact` | Source-verifiable fact | State only within its source scope |
+| `observation` | User quote or observed signal | Preserve scope; never generalize automatically |
+| `judgment` | Profile/Wiki editorial conclusion | Use as an angle, not as neutral fact |
+| `hypothesis` | Untested judgment | Mark as unverified; do not state as conclusion |
+| `counter_evidence` | Material challenging a judgment | Keep visible in context and review |
+| `constraint` | Boundary, limitation, or must-not | Enforce as a hard generation rule |
+| `proposal` | Agent's new inference or angle | Candidate only; requires evaluation or confirmation |
+| `unknown` | Not answered by available sources | Say evidence is missing; never fill from model common sense |
+
+Default authority: Product entries establish what a product does and does not
+do; Needs establish a particular reader observation, not market-wide demand;
+W- `We believe` is a judgment whose `state` and `confidence` must be retained;
+W- Evidence and Counter-evidence remain separate; voice/audience/boundaries
+are profile context and constraints. `supported` W- state does not turn every
+sentence on the page into an objective fact. Absence of evidence is
+`unknown`, not low-confidence fact.
 
 ### Layout
 
@@ -323,22 +390,30 @@ source type changes what is read next; it does not bypass the Profile Notebook.
 
 **Input gate:** A Topic must have an explicit input. Accept: user idea/brief, Capture `C-…`, Need `N-…`, Product `P-…`, Recommendation `R-…`, or a profile thesis. If the user only says “generate a topic” without naming a source:
 
-1. If needs exist with `status=captured`, offer **扫需求选题**.
-2. Otherwise ask which explicit input to use.
+1. Ask what task and starting input the user wants.
+2. If captured Needs exist, offer them as one possible input, not the default.
 
 0. Resolve profile **Language** (`voice.md` → pillars → `engine.json` locale).
-0a. **Profile Notebook first:** read `wiki/pages/<profile>/README.md`, then relevant W- pages and their counter-evidence.
+0a. **Context Packet first:** complete the Profile-first read and Context
+Retrieval Protocol above; cite the explicit input, relevant W- pages,
+evidence, and counter-evidence in Trace.
 0b. **Notebook hard gate (lookalike):** read matching `wiki/pages/<profile>/W-*.md` (`active`/`seed`) for the same pain/pillar.
    - If a page’s **We believe** covers this Need/cut **and** **Battles fought** already has `win` or `loss` for that same cut → **default `purpose=discard`** (or require user to name a **new cut** in chat before `produce`).
    - Do **not** write a lookalike `produce` T- unless the user explicitly overrides after seeing the W- battles.
    - Cite every `W-` read in Trace.
 1. Hard filters (`scoring.md`); else skip.
 2. **Scout gate** — set `purpose` + `scout_label`; if `discard`, do not create T-. Needs-sourced default `scout_label=demand` (ally/foil/craft_only still allowed when honest).
-3. **Mode pick** — if proceeding toward `produce`, **ask** `generation_mode`. Recommend `demand` for Need-led input, `offer_education` for Product-led input, and `domain_explanation` for a new field; wait for user choice. Do not write a `produce` T- before the choice. Validate required ids for that mode.
+3. **Mode pick** — if proceeding toward `produce`, resolve or ask for
+`generation_mode` from the user's task. Recommend `demand` for Need-led,
+`offer_education` for Product-led, and `domain_explanation` for a new field,
+but do not silently convert another input into `demand`. Wait for the choice
+when ambiguous and validate required ids for that mode.
 4. If `produce` (or user forces score):
    a. Write the **decision card** first (`topics/_template-item.md` upper half), in profile Language: Verdict, Why this status, Who it’s for, Core judgment, Next step, then What problem / What they believe / What cut / Why now / What should change / Based on / Gaps / Suggested form. Keep the summary short; no enum lists, heat, or weighted arithmetic in the readable layer. Set frontmatter `generation_mode` to the chosen mode. Cite `W-` id in Trace when used.
    b. Score all 5 opportunity dims (0–10) → `opp_score`. Put **numbers only** in `## Score`. Do not repeat the card as table notes.
-   c. Fill `## Trace` (ids, src heat, `W-` ids) and `## Constraints` (writer must-nots). Write `topics/items/T-….md`.
+   c. Fill `## Trace` (ids, retrieval reasons, epistemic labels, src heat,
+`W-` ids) and `## Constraints` (writer must-nots). Write
+`topics/items/T-….md`.
 5. If `library`: optional light item with `status: library`, or capture offer only. Source needs stay `captured` (or `retired` if the user discards).
 6. Add row on `topics/_index.md` (`item` + `src_*` when external). `one_liner` = the card’s core-judgment sentence, same language.
 7. If this T- was `produce` from `N-` ids: update each `needs/_index.md` row + entry to `status=promoted` and `topic_ids` containing this T-. Skip if no T- was written (`discard`).
@@ -375,10 +450,29 @@ On `用 T-xxx 开一单`: **ask platform(s)** if unset (multi-select OK). Create
 ### Do not (Topics)
 
 - Create a Topic from a Hit, a scan, or from heat alone
-- Silently pick `generation_mode` (always ask before `produce`)
+- Silently pick an ambiguous `generation_mode`
 - Skip Scout gate or opportunity scoring on `produce` topics
 - Skip the decision card readable layer on `produce`
 - Put `N-` in `capture_id` (needs go in `need_ids` only)
+
+### Topic and content generation
+
+Topic generation and content generation use the same Context Packet. A Topic
+answers what is worth saying; a Brief, Draft, or PagePack answers how to say
+it. Content generation inherits the confirmed Topic Packet and adds voice,
+platform craft, library, media, product disclosure, and published-history
+constraints. It may add evidence, but if new evidence changes the core
+judgment, return to the Topic for re-evaluation instead of silently changing
+the draft.
+
+Never turn a source label into a stronger claim:
+
+- Needs and Captures are observations, not automatic market demand.
+- Product entries establish product behavior, not audience desire or outcomes.
+- W- `We believe` is a judgment; retain its state, confidence, evidence, and
+  counter-evidence.
+- Agent-generated angles are proposals until evaluated or confirmed.
+- Missing evidence is `unknown`; do not fill it from general model knowledge.
 
 ---
 
@@ -432,6 +526,8 @@ Or walk pages by hand. **Report only — do not auto-fix** unless user 批准 ea
 | Open contradictions | **Contradictions** section is non-empty and not exactly `none` / `—` |
 | Missing notebook | Index profile row points at a folder that does not exist |
 | Misplaced page | `W-*.md` sits directly under `pages/` instead of `pages/<profile>/` |
+| Missing judgment field | W- page lacks `Evidence`, `Counter-evidence`, or `Next test` |
+| Invalid confidence | W- frontmatter `confidence` is missing or not `low` / `medium` / `high` |
 
 Chat card:
 
@@ -442,6 +538,7 @@ Chat card:
 【Unfiled】 n rows
 【Contradictions】 …
 【Missing/orphan】 …
+【Judgment quality】 …
 Reply 批准 fix: … / 再观察
 ```
 
