@@ -703,6 +703,331 @@ def parse_media(md: str | None = None) -> list[dict]:
     return out
 
 
+_BRAND_ROWS = {
+    "display_name": ("identity", "**Display name**"),
+    "handle": ("identity", "**Handle**"),
+    "logo": ("identity", "**Logo**"),
+    "primary": ("colors", "**primary**"),
+    "accent": ("colors", "**accent**"),
+    "background": ("colors", "**background**"),
+    "text": ("colors", "**text**"),
+    "heading_font": ("fonts", "**Heading**"),
+    "body_font": ("fonts", "**Body**"),
+}
+_HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+_LOGO_RE = re.compile(r"^M-\d{8}-\d{2}$")
+_PROFILE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,64}$")
+
+
+def _clean_brand_cell(raw: str) -> str:
+    s = raw.strip().strip("`").strip()
+    s = re.sub(r"\s*\(.*$", "", s).strip().strip("`").strip()
+    if s.lower() in {"", "(fill)", "none", "—", "-"}:
+        return ""
+    return s
+
+
+def parse_brand_file(text: str) -> dict:
+    """Token fields only. Render binding is ignored."""
+    section = ""
+    found: dict[str, str] = {}
+    for line in text.splitlines():
+        if line.startswith("## "):
+            low = line.lower()
+            if "render binding" in low:
+                break
+            if "identity" in low:
+                section = "identity"
+            elif "color" in low:
+                section = "colors"
+            elif "font" in low:
+                section = "fonts"
+            else:
+                section = ""
+            continue
+        if not section or not line.strip().startswith("|"):
+            continue
+        for key, (sec, label) in _BRAND_ROWS.items():
+            if sec == section and label.lower() in line.lower():
+                cells = [c.strip() for c in line.strip().strip("|").split("|")]
+                if len(cells) >= 2:
+                    found[key] = _clean_brand_cell(cells[1])
+                break
+    return {key: found.get(key, "") for key in _BRAND_ROWS}
+
+
+def _format_brand_value(key: str, raw: str) -> str:
+    value = str(raw or "").strip()
+    if "|" in value or "\n" in value:
+        raise ValueError(f"{key} cannot contain |")
+    if key == "logo":
+        if not value or value.lower() == "none":
+            return "`none`"
+        if not _LOGO_RE.fullmatch(value):
+            raise ValueError("logo must be none or M-YYYYMMDD-XX")
+        return f"`{value}`"
+    if key in {"primary", "accent", "background", "text"}:
+        if not value:
+            return "(fill)"
+        if not _HEX_RE.fullmatch(value):
+            raise ValueError(f"{key} must be #RRGGBB")
+        return value.upper()
+    if len(value) > 80:
+        raise ValueError(f"{key} is too long")
+    return value or "(fill)"
+
+
+def apply_brand_fields(text: str, raw_fields: dict) -> str:
+    """Replace token cells. Leave ## Render binding and all prose untouched."""
+    marker = "## Render binding"
+    if marker not in text:
+        raise ValueError("brand.md missing Render binding section")
+    head, tail = text.split(marker, 1)
+    formatted = {key: _format_brand_value(key, raw_fields.get(key, "")) for key in _BRAND_ROWS}
+    lines = head.splitlines()
+    section = ""
+    seen: set[str] = set()
+    out: list[str] = []
+    for line in lines:
+        if line.startswith("## "):
+            low = line.lower()
+            if "identity" in low:
+                section = "identity"
+            elif "color" in low:
+                section = "colors"
+            elif "font" in low:
+                section = "fonts"
+            else:
+                section = ""
+            out.append(line)
+            continue
+        if section and line.strip().startswith("|"):
+            for key, (sec, label) in _BRAND_ROWS.items():
+                if sec != section or label.lower() not in line.lower():
+                    continue
+                parts = line.split("|")
+                if len(parts) < 4:
+                    break
+                parts[2] = f" {formatted[key]} "
+                line = "|".join(parts)
+                seen.add(key)
+                break
+        out.append(line)
+    missing = [k for k in _BRAND_ROWS if k not in seen]
+    if missing:
+        raise ValueError("brand.md missing rows: " + ", ".join(missing))
+    new_head = "\n".join(out)
+    if head.endswith("\n"):
+        new_head += "\n"
+    return new_head + marker + tail
+
+
+def load_brands(profiles: list[dict]) -> list[dict]:
+    brands = []
+    for p in profiles:
+        rel = f"{p['path']}brand.md"
+        fp = ROOT / rel
+        if not fp.is_file():
+            continue
+        row = parse_brand_file(fp.read_text(encoding="utf-8"))
+        row["profile_id"] = p["id"]
+        row["path"] = rel
+        brands.append(row)
+    return brands
+
+
+_MEDIA_EXT = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+}
+
+
+def save_media_upload(
+    vault: Path,
+    data: bytes,
+    filename: str,
+    *,
+    role: str = "logo",
+    caption: str = "",
+    tags: str = "logo",
+    links: str = "brand",
+    rights: str = "own-upload",
+) -> dict:
+    """Write bytes into media/ and prepend a catalog row. Dedupes by sha256."""
+    import hashlib
+    from datetime import date
+
+    if not data:
+        raise ValueError("empty file")
+    if len(data) > 5_000_000:
+        raise ValueError("file too large (max 5MB)")
+    ext = Path(filename or "").suffix.lower()
+    if ext not in _MEDIA_EXT:
+        raise ValueError("use png, jpg, webp, or svg")
+    role = (role or "logo").strip()
+    if role not in {"logo", "home", "pricing", "settings", "compare", "proof", "other"}:
+        raise ValueError("bad role")
+    media_dir = vault.resolve() / "media"
+    media_dir.mkdir(parents=True, exist_ok=True)
+    index_path = media_dir / "_index.md"
+    if not index_path.is_file():
+        raise ValueError("media/_index.md missing")
+    digest = hashlib.sha256(data).hexdigest()
+    index_text = index_path.read_text(encoding="utf-8")
+    existing = parse_media(index_text)
+    for row in existing:
+        if row.get("sha256") == digest:
+            return {
+                "id": row["id"],
+                "file": row["file"],
+                "sha256": digest,
+                "role": row.get("role") or role,
+                "duplicate": True,
+            }
+    today = date.today().strftime("%Y%m%d")
+    nums = [int(n) for n in re.findall(rf"M-{today}-(\d{{2}})", index_text)]
+    mid = f"M-{today}-{max(nums, default=0) + 1:02d}"
+    rel_file = f"{mid}{ext}"
+    (media_dir / rel_file).write_bytes(data)
+    cap = (caption or Path(filename).stem or mid).strip().replace("|", " ")[:80]
+    tag_s = " ".join(t for t in re.split(r"\s+", tags.strip()) if t) or "logo"
+    row = (
+        f"| {mid} | {rel_file} | {digest} | {cap} | {tag_s} | {role} | "
+        f"{links.strip() or 'brand'} | {rights.strip() or 'own-upload'} | |"
+    )
+    lines = index_text.splitlines()
+    out: list[str] = []
+    inserted = False
+    for i, line in enumerate(lines):
+        out.append(line)
+        if (
+            not inserted
+            and line.strip().startswith("|")
+            and set(line.replace("|", "").strip()) <= set("-: ")
+        ):
+            # header separator — insert newest row next
+            out.append(row)
+            inserted = True
+    if not inserted:
+        raise ValueError("media index table missing")
+    index_path.write_text("\n".join(out) + ("\n" if index_text.endswith("\n") else ""), encoding="utf-8")
+    return {
+        "id": mid,
+        "file": rel_file,
+        "sha256": digest,
+        "role": role,
+        "duplicate": False,
+        "src": f"media/{rel_file}",
+    }
+
+
+_MEDIA_ID_RE = re.compile(r"^M-\d{8}-\d{2}$")
+
+
+def delete_media(vault: Path, ids: list[str]) -> dict:
+    """Remove media catalog rows and local files. Clears brand.md logo refs that pointed at them."""
+    wanted = []
+    for raw in ids or []:
+        mid = str(raw or "").strip()
+        if not _MEDIA_ID_RE.fullmatch(mid):
+            raise ValueError(f"bad media id: {mid}")
+        wanted.append(mid)
+    if not wanted:
+        raise ValueError("no media ids")
+    wanted_set = set(wanted)
+    media_dir = vault.resolve() / "media"
+    index_path = media_dir / "_index.md"
+    if not index_path.is_file():
+        raise ValueError("media/_index.md missing")
+    index_text = index_path.read_text(encoding="utf-8")
+    catalog = {m["id"]: m for m in parse_media(index_text)}
+    missing = sorted(wanted_set - set(catalog))
+    if missing:
+        raise ValueError("unknown media: " + ", ".join(missing))
+    lines = index_text.splitlines()
+    kept: list[str] = []
+    removed_files: list[str] = []
+    for line in lines:
+        if line.strip().startswith("|"):
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if cells and _MEDIA_ID_RE.fullmatch(cells[0].strip("`")) and cells[0].strip("`") in wanted_set:
+                mid = cells[0].strip("`")
+                f = catalog[mid].get("file") or ""
+                if f:
+                    removed_files.append(f)
+                continue
+        kept.append(line)
+    index_path.write_text("\n".join(kept) + ("\n" if index_text.endswith("\n") else ""), encoding="utf-8")
+    deleted = []
+    for f in removed_files:
+        name = Path(str(f)).name
+        if not name or name != str(f).replace("\\", "/").split("/")[-1]:
+            continue
+        fp = (media_dir / name).resolve()
+        try:
+            fp.relative_to(media_dir)
+        except ValueError:
+            continue
+        if fp.is_file():
+            fp.unlink()
+        deleted.append(name)
+    cleared_brands = []
+    profiles = vault.resolve() / "profiles"
+    if profiles.is_dir():
+        for brand_path in profiles.glob("*/brand.md"):
+            text = brand_path.read_text(encoding="utf-8")
+            parsed = parse_brand_file(text)
+            logo = parsed.get("logo") or ""
+            if logo not in wanted_set:
+                continue
+            fields = {**parsed, "logo": "none"}
+            brand_path.write_text(apply_brand_fields(text, fields), encoding="utf-8")
+            cleared_brands.append(brand_path.parent.name)
+    return {
+        "deleted_ids": sorted(wanted_set),
+        "deleted_files": deleted,
+        "cleared_brand_logos": cleared_brands,
+    }
+
+
+def save_brand(vault: Path, payload: dict) -> dict:
+    """Write token fields of profiles/<id>/brand.md. Does not touch render binding."""
+    pid = str((payload or {}).get("profile_id") or "").strip()
+    if not _PROFILE_RE.fullmatch(pid):
+        raise ValueError("bad profile id")
+    root = vault.resolve()
+    index = root / "profiles" / "_index.md"
+    if not index.is_file() or not re.search(rf"^\|\s*{re.escape(pid)}\s*\|", index.read_text(encoding="utf-8"), re.M):
+        raise ValueError("unknown profile")
+    path = (root / "profiles" / pid / "brand.md").resolve()
+    if root not in path.parents or not path.is_file():
+        raise ValueError("brand.md missing")
+    logo = str(payload.get("logo") or "").strip()
+    if logo and logo.lower() != "none":
+        media_path = root / "media" / "_index.md"
+        media = parse_media(media_path.read_text(encoding="utf-8")) if media_path.is_file() else []
+        row = next((m for m in media if m["id"] == logo), None)
+        if not row:
+            raise ValueError("logo is not in the media vault")
+        if row.get("role") != "logo" and "logo" not in (row.get("tags") or []):
+            raise ValueError("logo must use a media row tagged logo")
+    text = path.read_text(encoding="utf-8")
+    binding = ""
+    if "## Render binding" in text:
+        binding = text.split("## Render binding", 1)[1]
+    updated = apply_brand_fields(text, payload)
+    if "## Render binding" not in updated or updated.split("## Render binding", 1)[1] != binding:
+        raise ValueError("refusing to change render binding")
+    path.write_text(updated, encoding="utf-8")
+    saved = parse_brand_file(updated)
+    saved["profile_id"] = pid
+    saved["path"] = f"profiles/{pid}/brand.md"
+    return saved
+
+
 def build_graph() -> dict:
     nodes: dict[str, dict] = {}
     edges: list[dict] = []
@@ -1903,6 +2228,7 @@ def build_graph() -> dict:
         "vault_root": str(VAULT),
         "vault_equals_core": CORE.resolve() == VAULT.resolve(),
         "profiles": profiles,
+        "brands": load_brands(profiles),
         "accounts": accounts,
         "pillars_by_profile": pillars_by_profile,
         "pillars": flat_pillars,
@@ -1994,6 +2320,51 @@ def _self_check() -> None:
     assert mres[0]["role"] == "logo" and mres[0]["subjects"] == ["P-001"], mres
     assert mres[0]["hosted"] is True, mres
     print("parse_media self-check ok")
+    brand_src = (
+        "## Identity (rendered)\n\n"
+        "| Field | Value |\n|---|---|\n"
+        "| **Display name** | (fill) |\n"
+        "| **Handle** | (fill) |\n"
+        "| **Logo** | `none` (or a media id) |\n\n"
+        "## Colors (tokens)\n\n"
+        "| Token | Hex | Use |\n|---|---|---|\n"
+        "| **primary** | (fill) | Headlines |\n"
+        "| **accent** | (fill) | Highlights |\n"
+        "| **background** | (fill) | Page |\n"
+        "| **text** | (fill) | Body |\n\n"
+        "## Fonts\n\n"
+        "| Slot | Font |\n|---|---|\n"
+        "| **Heading** | (fill) |\n"
+        "| **Body** | (fill) |\n\n"
+        "## Render binding (cache — Agent writes)\n\n"
+        "| Field | Value |\n|---|---|\n"
+        "| **logo hosted_image_id** | img_keep |\n"
+    )
+    assert parse_brand_file(brand_src)["logo"] == "", parse_brand_file(brand_src)
+    brand_out = apply_brand_fields(
+        brand_src,
+        {
+            "display_name": "Murphy",
+            "handle": "@murphywuwu",
+            "logo": "none",
+            "primary": "#112233",
+            "accent": "",
+            "background": "#ffffff",
+            "text": "#111111",
+            "heading_font": "Inter",
+            "body_font": "",
+        },
+    )
+    assert "img_keep" in brand_out.split("## Render binding", 1)[1], brand_out
+    parsed = parse_brand_file(brand_out)
+    assert parsed["display_name"] == "Murphy" and parsed["primary"] == "#112233", parsed
+    assert parsed["accent"] == "" and parsed["logo"] == "" and parsed["heading_font"] == "Inter", parsed
+    try:
+        _format_brand_value("primary", "red")
+        raise AssertionError("hex should fail")
+    except ValueError:
+        pass
+    print("brand token self-check ok")
     core, vault = load_roots(_WB)
     assert core == _WB.parent
     assert vault == core or (core / "engine.json").exists()

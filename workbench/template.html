@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Content Engine · 观察台</title>
+  <title>EasySociable · Observatory</title>
   <style>
 :root {
       /* Modern Studio Minimalist Light Theme */
@@ -143,23 +143,36 @@
       align-items: center;
       gap: 9px;
       user-select: none;
+      text-decoration: none;
+      color: inherit;
+      border-radius: 10px;
+      padding: 4px 6px 4px 4px;
+      margin: -4px -6px -4px -4px;
+      transition: background .15s ease;
     }
+    .brand-cluster:hover {
+      background: color-mix(in srgb, var(--bg-2) 80%, transparent);
+    }
+    .brand-cluster:hover .brand-title { color: var(--accent); }
     .brand-mark {
-      width: 24px;
-      height: 24px;
-      border-radius: 7px;
-      background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
-      box-shadow: 0 2px 8px rgba(37,99,235,0.28);
-      position: relative;
+      width: 28px;
+      height: 28px;
       flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: #0c0b0a;
+      color: #ede6d6;
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
     }
-    .brand-mark::after {
-      content: "";
-      position: absolute;
-      inset: 6px;
-      border-right: 2px solid #fff;
-      border-bottom: 2px solid #fff;
-      transform: rotate(45deg);
+    .brand-mark svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    [data-theme="dark"] .brand-mark {
+      background: #ede6d6;
+      color: #0c0b0a;
     }
     .brand-info {
       display: flex;
@@ -171,6 +184,7 @@
       font-weight: 750;
       color: var(--text);
       letter-spacing: -0.02em;
+      transition: color .15s ease;
     }
     .brand-badge {
       font-size: 10px;
@@ -968,7 +982,7 @@
       font-weight: 700;
       color: var(--accent);
     }
-    .next-list, .learn-list {
+    .next-list {
       display: grid;
       gap: 8px;
       margin: 0 0 22px;
@@ -1756,6 +1770,171 @@
     .outcome-pill.good { background: var(--ok-bg); color: var(--ok); }
     .outcome-pill.warn { background: var(--warn-bg); color: var(--warn); }
     .outcome-pill.bad { background: var(--gap-bg); color: var(--gap); }
+
+    /* Learn / published cards */
+    .learn-summary {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin: 0 0 14px;
+    }
+    .learn-summary-chip {
+      display: inline-flex; align-items: baseline; gap: 6px;
+      padding: 7px 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: var(--paper);
+      box-shadow: var(--shadow-sm); font-size: 12px; color: var(--muted);
+    }
+    .learn-summary-chip b {
+      font-size: 15px; font-weight: 750; color: var(--text); letter-spacing: -0.02em;
+    }
+    .learn-summary-chip.tone-warn {
+      background: color-mix(in srgb, var(--warn-bg) 70%, var(--paper));
+      border-color: color-mix(in srgb, var(--warn) 22%, var(--line));
+    }
+    .learn-summary-chip.tone-warn b { color: #9a3412; }
+    .learn-summary-chip.tone-ok {
+      background: color-mix(in srgb, var(--ok-bg) 65%, var(--paper));
+      border-color: color-mix(in srgb, var(--ok) 22%, var(--line));
+    }
+    .learn-summary-chip.tone-ok b { color: #166534; }
+    .learn-list {
+      display: grid;
+      gap: 12px;
+      margin: 0 0 22px;
+    }
+    .learn-card {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--paper) 88%, #fff) 0%, var(--paper) 42%),
+        var(--paper);
+      border-radius: 16px;
+      padding: 14px 16px 14px 18px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+      overflow: hidden;
+    }
+    .learn-card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 12px; bottom: 12px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--line-strong);
+    }
+    .learn-card.tone-review::before { background: #d97706; }
+    .learn-card.tone-win::before { background: #059669; }
+    .learn-card.tone-flat::before { background: #64748b; }
+    .learn-card.tone-loss::before { background: var(--gap); }
+    .learn-card.tone-review {
+      background: linear-gradient(180deg, #fffbf3 0%, var(--paper) 55%);
+      border-color: color-mix(in srgb, #d97706 28%, var(--line));
+    }
+    .learn-card:hover, .learn-card.sel {
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+    .learn-card-top {
+      display: flex; flex-wrap: wrap; gap: 8px 10px;
+      align-items: center; justify-content: space-between;
+    }
+    .learn-card-meta {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      min-width: 0;
+    }
+    .learn-chip {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 650;
+      padding: 3px 8px; border-radius: 999px;
+      background: var(--bg-2); border: 1px solid var(--line); color: var(--muted);
+      font-family: ui-monospace, Menlo, monospace;
+    }
+    .learn-chip.plat {
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--accent-dim); background: var(--accent-subtle); border-color: transparent;
+    }
+    .learn-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11.5px; font-weight: 750; letter-spacing: 0.01em;
+      padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+    }
+    .learn-badge .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0;
+    }
+    .learn-badge.review {
+      background: #fff4e5; color: #9a3412; border: 1px solid #f0c48a;
+    }
+    .learn-badge.win {
+      background: #e8f5ec; color: #166534; border: 1px solid #a7d4b5;
+    }
+    .learn-badge.flat {
+      background: var(--bg-2); color: var(--muted); border: 1px solid var(--line);
+    }
+    .learn-badge.loss {
+      background: var(--gap-bg); color: var(--gap); border: 1px solid color-mix(in srgb, var(--gap) 25%, transparent);
+    }
+    .learn-card-title {
+      margin: 0;
+      font-size: 16px; font-weight: 700; letter-spacing: -0.02em;
+      line-height: 1.35; color: var(--text);
+    }
+    .learn-card-note {
+      margin: 6px 0 0;
+      font-size: 13px; line-height: 1.5; color: var(--muted);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .learn-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .learn-metric {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--bg-2) 55%, var(--paper));
+      padding: 10px 12px;
+      min-width: 0;
+    }
+    .learn-metric-k {
+      display: block;
+      margin: 0 0 4px;
+      font-size: 10.5px; font-weight: 750;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint);
+    }
+    .learn-metric-v {
+      display: block;
+      font-size: 14px; font-weight: 750; letter-spacing: -0.01em; color: var(--text);
+      line-height: 1.3;
+    }
+    .learn-metric-v.good { color: #166534; }
+    .learn-metric-v.warn { color: #9a3412; }
+    .learn-metric-v.bad { color: var(--gap); }
+    .learn-metric-h {
+      display: block; margin-top: 3px;
+      font-size: 11.5px; color: var(--muted); line-height: 1.35;
+    }
+    .learn-card-foot {
+      display: flex; flex-wrap: wrap; gap: 8px 10px;
+      align-items: center; justify-content: space-between;
+      padding-top: 2px;
+    }
+    .learn-card-tags {
+      display: flex; flex-wrap: wrap; gap: 5px; min-width: 0;
+    }
+    .learn-card-tags .pill {
+      font-size: 11px; padding: 2px 7px;
+    }
+    .learn-card-link {
+      font-size: 12px; font-weight: 700; color: var(--accent);
+      text-decoration: none; white-space: nowrap;
+    }
+    .learn-card-link:hover { text-decoration: underline; }
+    @media (max-width: 640px) {
+      .learn-metrics { grid-template-columns: 1fr; }
+      .learn-card { padding: 13px 14px 13px 16px; }
+    }
     .desk-empty {
       border: 1px dashed var(--line-strong);
       border-radius: 16px;
@@ -2949,7 +3128,70 @@
     }
     .mediacard:hover { border-color: var(--line-strong); transform: translateY(-1.5px); box-shadow: var(--shadow); }
     .mediacard.sel { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
+    .mediacard .thumb {
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      background: var(--bg-3);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+    .mediacard .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .mediacard .thumb-missing {
+      color: var(--faint);
+      font-size: 22px;
+      font-weight: 700;
+    }
     .mediameta { padding: 10px 12px; display: grid; gap: 5px; font-size: 12px; }
+    .insp-media-preview {
+      margin: 0 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg-3);
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+    }
+    .insp-media-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .media-page-head { margin: 0 0 14px; }
+    .media-page-head .lib-page-lede { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .media-page-status { margin: 8px 0 0; font-size: 12px; color: var(--muted); min-height: 1.2em; }
+    .mediagrid.is-drop { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: 12px; background: var(--accent-faint, rgba(90,140,255,.08)); }
+    .mediacard { position: relative; }
+    .mediacard .media-del {
+      position: absolute; top: 8px; right: 8px; z-index: 2;
+      width: 28px; height: 28px; border: 0; border-radius: 999px;
+      background: rgba(20,18,16,.72); color: #fff; font-size: 16px; line-height: 1;
+      cursor: pointer; opacity: 0; transition: opacity .15s ease;
+      display: grid; place-items: center;
+    }
+    .mediacard:hover .media-del, .mediacard:focus-within .media-del { opacity: 1; }
+    .mediacard .media-del:hover { background: #b42318; }
+    .media-add {
+      border: 1.5px dashed var(--line-strong);
+      background: var(--bg-2);
+      min-height: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; color: var(--muted);
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+    .media-add:hover, .media-add.is-drop {
+      border-color: var(--accent); color: var(--text); background: var(--paper);
+    }
+    .media-add .media-add-plus { font-size: 36px; font-weight: 300; line-height: 1; color: var(--text); }
+    .media-add .media-add-label { font-size: 13px; font-weight: 650; }
+    .media-add .media-add-hint { font-size: 11px; color: var(--faint); text-align: center; padding: 0 12px; }
     .prof-stats {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin: 0 0 16px;
     }
@@ -3610,6 +3852,82 @@
     .nav-tab-text { white-space: nowrap; }
     .go { display: inline-flex; align-items: center; gap: 4px; }
     .btn-copy-ident { cursor: pointer; }
+    .shell.brand-stage { grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); }
+    .brand-wrap { max-width: 520px; }
+    .brand-note { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 16px; }
+    .brand-group { margin: 0 0 18px; }
+    .brand-group h2 { font-size: 13px; margin: 0 0 8px; letter-spacing: .02em; }
+    .brand-form { display: flex; flex-direction: column; gap: 10px; }
+    .brand-form label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); }
+    .brand-form input, .brand-form select {
+      font: inherit; font-size: 14px; color: var(--text); background: var(--paper);
+      border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+    }
+    .brand-color { display: flex; gap: 8px; align-items: center; }
+    .brand-color input[type="color"] {
+      width: 44px; height: 36px; padding: 0; border: 1px solid var(--line); border-radius: 8px;
+      background: transparent; cursor: pointer; flex: none;
+    }
+    .brand-color input[type="text"] { flex: 1; font-variant-numeric: tabular-nums; }
+    .brand-actions { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+    .brand-actions button {
+      font: inherit; font-size: 14px; font-weight: 650; border: 0; border-radius: 8px;
+      padding: 8px 14px; background: var(--ink); color: var(--paper); cursor: pointer;
+    }
+    .brand-actions button:disabled { opacity: .5; cursor: default; }
+    .brand-status { font-size: 13px; color: var(--muted); }
+    .brand-help { font-size: 12px; color: var(--muted); line-height: 1.4; margin: 0; }
+    .brand-logo-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .brand-logo-row select { flex: 1; min-width: 160px; }
+    .brand-logo-row button {
+      font: inherit; font-size: 13px; font-weight: 650; border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 12px; background: var(--paper); color: var(--text); cursor: pointer;
+    }
+    .brand-logo-row button:disabled { opacity: .5; cursor: default; }
+    .brand-stage-panel { display: flex; flex-direction: column; gap: 14px; }
+    .brand-frame {
+      width: 100%; position: relative; overflow: hidden; border-radius: 12px;
+      border: 1px solid var(--line);
+      /* Match page canvas so letterboxing never flashes a different color. */
+      background: var(--brand-frame-canvas, #000000);
+    }
+    .brand-frame > #brandPage {
+      position: absolute !important;
+      left: 0; top: 0;
+      transform-origin: top left;
+      width: 1080px;
+      height: 1440px;
+    }
+    /* Brand tokens override inline theme faces (same idea as Authoring theme scope). */
+    #brandPage[data-authoring-theme] [data-type="title"] {
+      font-family: var(--es-font-heading, "Libre Baskerville", serif) !important;
+      color: var(--es-color-text, #1A1917) !important;
+    }
+    #brandPage[data-authoring-theme] [data-type="text"],
+    #brandPage[data-authoring-theme] [data-type="caption"],
+    #brandPage[data-authoring-theme] [data-type="cta"] {
+      font-family: var(--es-font-body, Inter, sans-serif) !important;
+    }
+    #brandPage[data-authoring-theme],
+    #brandPage[data-authoring-theme] [data-type="background"] {
+      background-color: var(--es-color-canvas, #000000) !important;
+    }
+    .font-pick { position: relative; }
+    .font-pick-btn, .font-pick-item {
+      width: 100%; text-align: left; font-size: 22px; line-height: 1.2;
+      background: var(--paper); color: var(--text);
+      border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; cursor: pointer;
+    }
+    .font-pick-menu {
+      position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px);
+      max-height: 280px; overflow: auto; background: var(--paper);
+      border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+    }
+    .font-pick-menu[hidden] { display: none; }
+    .font-pick-item { border: 0; border-radius: 0; border-bottom: 1px solid var(--line); }
+    .font-pick-item.on { background: var(--accent-subtle); }
+
 </style>
 </head>
 <body>
@@ -3625,13 +3943,23 @@
       <!-- Deck 1: Brand & Global Tools -->
       <div class="topbar-deck-primary">
         <div class="deck-left">
-          <div class="brand-cluster">
-            <div class="brand-mark" aria-hidden="true"></div>
-            <div class="brand-info">
-              <span class="brand-title">Content Engine</span>
+          <a class="brand-cluster" href="https://easysociable.com" target="_blank" rel="noopener noreferrer" title="EasySociable">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="currentColor">
+                <g transform="rotate(-20 16 27)">
+                  <rect x="10" y="7" width="12" height="18.5" rx="2.3" opacity="0.4" />
+                </g>
+                <g transform="rotate(20 16 27)">
+                  <rect x="10" y="7" width="12" height="18.5" rx="2.3" opacity="0.4" />
+                </g>
+                <rect x="10" y="5.2" width="12" height="21" rx="2.3" />
+              </svg>
+            </span>
+            <span class="brand-info">
+              <span class="brand-title">EasySociable</span>
               <span class="brand-badge" id="brandBadge">只读镜子</span>
-            </div>
-          </div>
+            </span>
+          </a>
           <div class="profile-cluster">
             <select id="profileSel" aria-label="IP Profile" title="切换当前聚焦的 IP Profile"></select>
           </div>
@@ -3678,6 +4006,13 @@
             <button type="button" class="nav-tab" data-v="base">
               <span class="nav-tab-text" id="lbl-base">底座</span>
               <span class="nav-tab-badge" id="badge-base">0</span>
+            </button>
+            <button type="button" class="nav-tab" data-v="brand">
+              <span class="nav-tab-text" id="lbl-brand">品牌</span>
+            </button>
+            <button type="button" class="nav-tab" data-v="media">
+              <span class="nav-tab-text" id="lbl-media">图库</span>
+              <span class="nav-tab-badge" id="badge-media">0</span>
             </button>
           </div>
           <div class="nav-more-wrap">
@@ -3739,7 +4074,7 @@
     const TRACE_ORDER = ["raw", "capture", "hit", "need", "product", "recommendation", "media", "wiki", "topic", "swipe", "atom", "claim", "run", "published"];
     const STR = {
       zh: {
-        title: "Content Engine · 现在",
+        title: "EasySociable · 现在",
         brand: "观察台",
         brand_badge: "只读镜子",
 
@@ -3777,6 +4112,42 @@
         hub_learn_title: "学习",
         hub_learn_desc: "记录发布结果，区分未知、观察和重复证据。一次偶然不能升级成“已验证”。",
         hub_base_title: "底座",
+        brand_title: "品牌",
+        brand_desc: "左边改，右边立刻看到。这里只决定看起来的样子，不改正文怎么写。",
+        brand_group_who: "名字",
+        brand_group_colors: "四个颜色",
+        brand_group_type: "字体",
+        brand_looks: "看起来会是这样",
+        brand_unset: "未设置",
+        brand_sample: "这一行是正文。标题用主色，按钮用强调色。",
+        brand_sample_btn: "按钮",
+        brand_logo_slot: "Logo",
+        brand_font_unset: "未选字体",
+        brand_font_error: "字体目录暂时取不到，仍可手写字体名。",
+        brand_profile: "Profile",
+        brand_display: "显示名",
+        brand_handle: "账号 Handle",
+        brand_handle_help: "社交账号对外标识，例如 @murphywuwu。出图/署名时用；不是登录密码。",
+        brand_logo: "Logo",
+        brand_logo_none: "不用 logo",
+        brand_logo_empty: "图库里还没有 logo。可点下方按钮上传本地图片。",
+        brand_logo_upload: "上传本地图片",
+        brand_logo_uploading: "上传中…",
+        brand_logo_uploaded: "已写入图库并选中",
+        brand_primary: "主色",
+        brand_accent: "强调色",
+        brand_background: "背景",
+        brand_text: "文字",
+        brand_heading: "标题字体",
+        brand_body: "正文字体",
+        brand_save: "写入 brand.md",
+        brand_saved: "已写入。渲染缓存没动。",
+        brand_need_serve: "用 workbench/serve.py 打开后才能写入。",
+        brand_preview_title: "显示名",
+        brand_preview_handle: "@handle",
+        brand_preview_tagline: "Create branded pages that match your system",
+        brand_side_title: "只写像素",
+        brand_side_body: "这一页只改 brand.md 的 token。配色和字体在出图时带上。Render binding 仍只在渲染时写。voice、受众、支柱不在这里改。",
         hub_base_desc: "长期可复用的听众证据、判断、写法和产品事实。",
         hub_base_tab_assets: "资产库",
         hub_base_tab_graph: "图谱",
@@ -3784,8 +4155,8 @@
         hub_base_group_audience_why: "他们卡在什么地方：调研样本要分流，原话才是选题依据。",
         hub_base_group_belief: "我信什么",
         hub_base_group_belief_why: "长期判断和待挂上的灵感——选题前先对一下这里。",
-        hub_base_group_craft: "怎么说、用什么图",
-        hub_base_group_craft_why: "可复用的写法零件和图库，生产时来取，不要塞进某一单。",
+        hub_base_group_craft: "怎么说",
+        hub_base_group_craft_why: "可复用的写法零件，生产时来取，不要塞进某一单。图库已升到一级「图库」。",
         hub_base_group_offer: "说的是什么货",
         hub_base_group_offer_why: "自有产品和第三方评测对象分开存，避免混用事实。",
         hub_base_open: "打开",
@@ -3827,6 +4198,7 @@
         card_recs_desc: "第三方评测对象，不要和自有产品混用。",
         card_runs_title: "内容生产单",
         card_runs_desc: "一个平台一份 Run：从 brief 到视觉包。",
+        media_nav: "图库",
         card_media_title: "图库",
         card_media_desc: "按产品主体与角色取图，不要塞进 runs。",
         card_library_title: "表达零件",
@@ -3906,12 +4278,33 @@
         lane_ready: "等发布",
         lane_empty: "这一栏还是空的。",
         content_lede: "选题和稿子是同一条流水线：从「值不值得说」到「做成一条」。",
-        shipped_lede: "发出去之后发生了什么。一次偶然不算验证。",
-        outcome_unknown: "还不知道",
-        outcome_observed: "有点感觉",
-        outcome_tested: "值得再试",
-        outcome_supported: "真的有效",
-        outcome_weakened: "可能无效",
+        shipped_lede: "发出去之后发生了什么。结果看反应，证据看能否升级判断——一次偶然不算验证。",
+        outcome_unknown: "尚无结果",
+        outcome_observed: "已有观察",
+        outcome_tested: "可比实验",
+        outcome_supported: "重复支持",
+        outcome_weakened: "证据削弱",
+        learn_result: "发布结果",
+        learn_evidence: "证据强度",
+        learn_result_hint_unknown: "还没回填 win / flat / loss",
+        learn_result_hint_win: "帖子有正向信号",
+        learn_result_hint_flat: "反应一般，未拉开差距",
+        learn_result_hint_loss: "信号偏负或不成立",
+        learn_evidence_hint_unknown: "还不能用来升级 W- / Layout",
+        learn_evidence_hint_observed: "有观察，尚不可比",
+        learn_evidence_hint_tested: "做过可比对照",
+        learn_evidence_hint_supported: "可升级长期判断",
+        learn_evidence_hint_weakened: "应下调既有判断",
+        learn_needs_review: "待复盘",
+        learn_has_result: "已记结果",
+        learn_open_post: "打开帖子 →",
+        learn_summary_total: "已发布",
+        learn_summary_review: "待复盘",
+        learn_summary_known: "已有结果",
+        result_unknown: "未知",
+        result_win: "有效",
+        result_flat: "平淡",
+        result_loss: "无效",
         say_interview: "interview me",
         say_needs: "record these audience needs: （把用户原话贴在这里）",
         say_topics: "scan needs for topics",
@@ -3971,6 +4364,16 @@
         media_subject: "主体",
         media_role: "角色",
         media_f_tag: "标签",
+        media_page_lede: "点「添加」或把图片拖进网格。悬停某张图可删除。",
+        media_add: "添加图片",
+        media_add_hint: "点击或拖入 · 可一次多张",
+        media_delete_one: "删除",
+        media_delete_confirm_one: "删除这张图片？本地文件和图库索引会一起删掉。",
+        media_need_serve: "用 workbench/serve.py 打开后才能上传/删除。",
+        media_uploading: "上传中…",
+        media_deleting: "删除中…",
+        media_upload_done: "已添加 {n} 张",
+        media_delete_done: "已删除",
         wiki_empty: "该 profile 的 wiki/pages/<profile>/ 下还没有 W- 笔记",
         wiki_believe: "我们现在相信",
         wiki_graph_title: "知识图谱",
@@ -4143,7 +4546,7 @@
         lib_claim_ev: "论据来自以下内容：",
       },
       en: {
-        title: "Content Engine · Now",
+        title: "EasySociable · Now",
         brand: "Studio",
         brand_badge: "Read-only mirror",
 
@@ -4181,6 +4584,42 @@
         hub_learn_title: "Learn",
         hub_learn_desc: "Record outcomes and separate unknown, observed, and repeated evidence. One lucky post is not proof.",
         hub_base_title: "Base",
+        brand_title: "Brand",
+        brand_desc: "Edit on the left. The card on the right updates immediately. This page is looks only, not wording.",
+        brand_group_who: "Name",
+        brand_group_colors: "Four colors",
+        brand_group_type: "Type",
+        brand_looks: "This is how it looks",
+        brand_unset: "Not set",
+        brand_sample: "This line is body text. The title uses primary. The button uses accent.",
+        brand_sample_btn: "Button",
+        brand_logo_slot: "Logo",
+        brand_font_unset: "No font",
+        brand_font_error: "Font catalog is unavailable. You can still type a font name.",
+        brand_profile: "Profile",
+        brand_display: "Display name",
+        brand_handle: "Handle",
+        brand_handle_help: "Public social handle, e.g. @murphywuwu. Used when signing posts — not a login credential.",
+        brand_logo: "Logo",
+        brand_logo_none: "No logo",
+        brand_logo_empty: "No logo in the media vault yet. Upload a local image below.",
+        brand_logo_upload: "Upload local image",
+        brand_logo_uploading: "Uploading…",
+        brand_logo_uploaded: "Saved to media vault and selected",
+        brand_primary: "Primary",
+        brand_accent: "Accent",
+        brand_background: "Background",
+        brand_text: "Text",
+        brand_heading: "Heading font",
+        brand_body: "Body font",
+        brand_save: "Write brand.md",
+        brand_saved: "Saved. Render cache was not touched.",
+        brand_need_serve: "Open this page through workbench/serve.py to save.",
+        brand_preview_title: "Display name",
+        brand_preview_handle: "@handle",
+        brand_preview_tagline: "Create branded pages that match your system",
+        brand_side_title: "Pixels only",
+        brand_side_body: "This page writes brand.md tokens only. Colors and fonts are applied at render. Render binding stays untouched. Voice, audience, and pillars are not edited here.",
         hub_base_desc: "Long-lived audience evidence, judgments, craft, and product facts.",
         hub_base_tab_assets: "Asset library",
         hub_base_tab_graph: "Graph",
@@ -4188,8 +4627,8 @@
         hub_base_group_audience_why: "Where they get stuck: triage research samples; verbatim quotes ground topics.",
         hub_base_group_belief: "What I believe",
         hub_base_group_belief_why: "Long-lived judgments and captures waiting to be hung — check here before inventing topics.",
-        hub_base_group_craft: "How to say it & what to show",
-        hub_base_group_craft_why: "Reusable craft parts and media. Retrieve when producing; never bury them in one run.",
+        hub_base_group_craft: "How to say it",
+        hub_base_group_craft_why: "Reusable verbal craft. Retrieve when producing; never bury in one run. Media lives in the Media tab.",
         hub_base_group_offer: "What the offer is",
         hub_base_group_offer_why: "Keep owned products and third-party review subjects separate so facts do not mix.",
         hub_base_open: "Open",
@@ -4231,6 +4670,7 @@
         card_recs_desc: "Third-party review subjects — keep separate from owned products.",
         card_runs_title: "Production runs",
         card_runs_desc: "One platform per run, from brief to visual pack.",
+        media_nav: "Media",
         card_media_title: "Media vault",
         card_media_desc: "Retrieve by subject and role. Never copy binaries into runs.",
         card_library_title: "Expression parts",
@@ -4310,12 +4750,33 @@
         lane_ready: "Ready to publish",
         lane_empty: "Nothing here yet.",
         content_lede: "Topics and drafts are one pipeline: from judgment to a finished piece.",
-        shipped_lede: "What happened after publishing. One lucky post is not proof.",
-        outcome_unknown: "Still unknown",
-        outcome_observed: "Some signal",
-        outcome_tested: "Worth retrying",
-        outcome_supported: "Actually works",
-        outcome_weakened: "May not work",
+        shipped_lede: "What happened after publishing. Result is the post signal; evidence is whether a judgment can upgrade — one lucky post is not proof.",
+        outcome_unknown: "No evidence yet",
+        outcome_observed: "Observed",
+        outcome_tested: "Tested",
+        outcome_supported: "Supported",
+        outcome_weakened: "Weakened",
+        learn_result: "Post result",
+        learn_evidence: "Evidence strength",
+        learn_result_hint_unknown: "win / flat / loss not filled yet",
+        learn_result_hint_win: "Positive signal on the post",
+        learn_result_hint_flat: "Muted response — no clear edge",
+        learn_result_hint_loss: "Negative or failed signal",
+        learn_evidence_hint_unknown: "Not enough to upgrade a W- / Layout",
+        learn_evidence_hint_observed: "Seen once — not comparable yet",
+        learn_evidence_hint_tested: "Comparable check ran",
+        learn_evidence_hint_supported: "Safe to upgrade a long-lived judgment",
+        learn_evidence_hint_weakened: "Dial an existing judgment down",
+        learn_needs_review: "Needs review",
+        learn_has_result: "Result logged",
+        learn_open_post: "Open post →",
+        learn_summary_total: "Published",
+        learn_summary_review: "Needs review",
+        learn_summary_known: "Has result",
+        result_unknown: "Unknown",
+        result_win: "Win",
+        result_flat: "Flat",
+        result_loss: "Loss",
         say_interview: "interview me",
         say_needs: "record these audience needs: (paste verbatim quotes here)",
         say_topics: "scan needs for topics",
@@ -4375,6 +4836,16 @@
         media_subject: "Subject",
         media_role: "Role",
         media_f_tag: "Tags",
+        media_page_lede: "Click Add or drop images onto the grid. Hover a card to delete it.",
+        media_add: "Add images",
+        media_add_hint: "Click or drop · multiple files ok",
+        media_delete_one: "Delete",
+        media_delete_confirm_one: "Delete this image? The file and catalog row will be removed.",
+        media_need_serve: "Open via workbench/serve.py to upload or delete.",
+        media_uploading: "Uploading…",
+        media_deleting: "Deleting…",
+        media_upload_done: "Added {n}",
+        media_delete_done: "Deleted",
         wiki_empty: "No W- notes under wiki/pages/<profile>/ yet",
         wiki_believe: "Current Beliefs",
         wiki_graph_title: "Knowledge Graph",
@@ -4667,6 +5138,14 @@
     let wikiGraphMode = "spine";
     let wikiSurface = "list";
     let baseTab = "assets"; // assets | graph
+    let brandDirty = false;
+    let brandDraft = null; // unsaved form values; kept across tab switches
+    let brandProfileId = "";
+    let brandFonts = [];
+    let brandFontsError = "";
+    let brandFontsTried = false;
+    let brandFontOffBound = false;
+    let brandPreviewHtml = "";
     let wikiGraphAnim = null;
     let wikiGraphTransform = { x: 0, y: 0, k: 1 };
     let wikiGraphQuery = "";
@@ -5247,6 +5726,8 @@
       content: "content",
       shipped: "shipped",
       base: "base",
+      brand: "brand",
+      media: "media",
       // legacy aliases → new parents
       foundation: "select",
       discover: "select",
@@ -5259,12 +5740,11 @@
       wiki: "base",
       notes: "base",
       library: "base",
-      media: "base",
       products: "base",
       recommendations: "base",
     };
     // views whose page is a stage/overview shell (search overrides them)
-    const PRIMARY_VIEWS = ["overview", "select", "content", "shipped", "base"];
+    const PRIMARY_VIEWS = ["overview", "select", "content", "shipped", "base", "brand", "media"];
     // every object page, in workflow order, for the "全部页面" menu
     const MORE_VIEWS = [
       { view: "topics", label: "card_topics_title" },
@@ -5275,7 +5755,6 @@
       { view: "wiki", label: "card_wiki_title" },
       { view: "notes", label: "card_notes_title" },
       { view: "library", label: "card_library_title" },
-      { view: "media", label: "card_media_title" },
       { view: "products", label: "card_products_title" },
       { view: "recommendations", label: "card_recs_title" },
     ];
@@ -5365,6 +5844,8 @@
         content: "hub_produce_title",
         shipped: "hub_learn_title",
         base: "hub_base_title",
+        brand: "brand_title",
+        media: "media_nav",
         find: "find",
         more: "nav_more",
       };
@@ -5392,12 +5873,13 @@
       const baseN = nodesOf("wiki").length
         + nodesOf("need").length
         + nodesOf("hit").length
-        + GRAPH.nodes.filter(n => n.lib && inScope(n)).length
-        + (GRAPH.media || []).length;
+        + GRAPH.nodes.filter(n => n.lib && inScope(n)).length;
+      const mediaN = (GRAPH.media || []).length;
       updateBadge("badge-select", ideasN);
       updateBadge("badge-content", activeN);
       updateBadge("badge-shipped", pubN);
       updateBadge("badge-base", baseN + triageN);
+      updateBadge("badge-media", mediaN);
     }
     document.getElementById("langBtn").onclick = () => {
       lang = lang === "zh" ? "en" : "zh";
@@ -5764,6 +6246,423 @@
       return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
     }
 
+    function brandRows() { return GRAPH.brands || []; }
+    function logoMedia() {
+      return (GRAPH.media || []).filter(m => m.role === "logo" || (m.tags || []).includes("logo"));
+    }
+    function defaultBrandProfile() {
+      if (brandProfileId && profileList().some(p => p.id === brandProfileId)) return brandProfileId;
+      if (profileScope && profileList().some(p => p.id === profileScope)) return profileScope;
+      const active = (GRAPH.accounts || []).find(a => a.status === "active" && a.profile_id);
+      if (active && profileList().some(p => p.id === active.profile_id)) return active.profile_id;
+      return (profileList()[0] || {}).id || "";
+    }
+    function brandFor(id) {
+      return brandRows().find(b => b.profile_id === id) || {
+        profile_id: id, display_name: "", handle: "", logo: "",
+        primary: "", accent: "", background: "", text: "", heading_font: "", body_font: "",
+      };
+    }
+    function brandHex(id) {
+      const el = document.getElementById(id);
+      const v = (el && el.value || "").trim();
+      return /^#[0-9A-Fa-f]{6}$/.test(v) ? v : "";
+    }
+    function syncBrandPicker(textId) {
+      const hex = brandHex(textId);
+      const pick = document.getElementById(textId + "Pick");
+      if (pick && hex) pick.value = hex;
+    }
+    function fontFormat(url) {
+      const ext = String(url || "").split(".").pop().toLowerCase().split("?")[0];
+      return { woff2: "woff2", woff: "woff", ttf: "truetype", otf: "opentype" }[ext] || "woff2";
+    }
+    function cssFontFamily(name) {
+      const family = String(name || "").replace(/['\\]/g, "");
+      return family ? `'${family}', sans-serif` : "Inter, sans-serif";
+    }
+    function applyBrandFontFaces() {
+      let style = document.getElementById("brandFontFaces");
+      if (!style) {
+        style = document.createElement("style");
+        style.id = "brandFontFaces";
+        document.head.appendChild(style);
+      }
+      if (style.dataset.n === String(brandFonts.length) && style.textContent) return;
+      style.dataset.n = String(brandFonts.length);
+      style.textContent = brandFonts.map(f => {
+        const src = graphApiUrl("api/font-file?url=" + encodeURIComponent(f.url));
+        const family = String(f.name).replace(/['\\]/g, "");
+        return `@font-face{font-family:'${family}';src:url('${src}') format('${fontFormat(f.url)}');font-display:swap;}`;
+      }).join("\n");
+    }
+    function ensureBrandGoogleFonts() {
+      if (document.getElementById("brandGoogleFonts")) return;
+      const link = document.createElement("link");
+      link.id = "brandGoogleFonts";
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@500;700&family=Libre+Baskerville:wght@700&display=swap";
+      document.head.appendChild(link);
+    }
+    function scaleBrandPage() {
+      const frame = document.getElementById("brandFrame");
+      const page = document.getElementById("brandPage");
+      if (!frame || !page) return;
+      const scale = frame.clientWidth / 1080;
+      page.style.transform = `scale(${scale})`;
+      frame.style.height = `${Math.round(1440 * scale)}px`;
+    }
+    async function ensureBrandPreviewHtml() {
+      // Bust cache when the static preview assets change (query is ignored by file server).
+      const res = await fetch(new URL("brand-preview-page.html?v=easysociable-2", location.href), { cache: "no-store" });
+      if (!res.ok) throw new Error(`preview page ${res.status}`);
+      brandPreviewHtml = await res.text();
+      return brandPreviewHtml;
+    }
+    async function mountBrandPreview() {
+      const frame = document.getElementById("brandFrame");
+      if (!frame) return;
+      try {
+        const html = await ensureBrandPreviewHtml();
+        if (view !== "brand" || !document.getElementById("brandFrame")) return;
+        frame.innerHTML = html;
+        paintBrandPreview();
+      } catch (err) {
+        frame.innerHTML = `<div class="empty"><strong>Preview</strong>${esc(String(err.message || err))}</div>`;
+      }
+    }
+    function paintBrandPreview() {
+      const page = document.getElementById("brandPage");
+      if (!page) return;
+      const form = document.getElementById("brandForm");
+      const fallback = brandFormValues(defaultBrandProfile());
+      const validHex = (v) => /^#[0-9A-Fa-f]{6}$/.test(String(v || "").trim()) ? String(v).trim() : "";
+      const bg = (form && brandHex("brandBg")) || validHex(fallback.background) || "#000000";
+      const fg = (form && brandHex("brandFg")) || validHex(fallback.text) || "#1678DA";
+      const accent = (form && brandHex("brandAccent")) || validHex(fallback.accent) || "#FFFFFF";
+      const headFont = (form && document.getElementById("brandHeadFont")?.value.trim()) || fallback.heading_font || "Libre Baskerville";
+      const bodyFont = (form && document.getElementById("brandBodyFont")?.value.trim()) || fallback.body_font || "Inter";
+      ensureBrandGoogleFonts();
+      applyBrandFontFaces();
+      page.style.setProperty("--es-color-canvas", bg);
+      page.style.setProperty("--es-color-text", fg);
+      page.style.setProperty("--es-color-accent", accent);
+      page.style.setProperty("--es-color-muted", "#8B8680");
+      page.style.setProperty("--es-font-heading", cssFontFamily(headFont));
+      page.style.setProperty("--es-font-body", cssFontFamily(bodyFont));
+      // Paint canvas on page, background layer, and outer frame so init never flashes cream letterboxing.
+      page.style.backgroundColor = bg;
+      const bgLayer = page.querySelector('[data-type="background"]');
+      if (bgLayer) bgLayer.style.backgroundColor = bg;
+      const frame = document.getElementById("brandFrame");
+      if (frame) frame.style.setProperty("--brand-frame-canvas", bg);
+      // Display name only drives the bottom signature line — keep the product title fixed.
+      const displayName = (form && document.getElementById("brandName")?.value.trim()) || fallback.display_name || "EasySociable";
+      const handleRaw = (form && document.getElementById("brandHandle")?.value.trim()) || fallback.handle || "";
+      const handle = handleRaw ? (handleRaw.startsWith("@") ? handleRaw : `@${handleRaw}`) : "";
+      const nameLine = page.querySelector('[data-variable="text_4"]');
+      if (nameLine) {
+        const strong = nameLine.querySelector("strong");
+        if (strong) strong.textContent = displayName;
+        else nameLine.textContent = displayName;
+      }
+      const handleLine = page.querySelector('[data-variable="text_5"]');
+      if (handleLine) {
+        const strong = handleLine.querySelector("strong");
+        const line = handle || t("brand_preview_tagline");
+        if (strong) strong.textContent = line;
+        else handleLine.textContent = line;
+      }
+      const logoImg = page.querySelector('[data-variable="image_1"]');
+      const logoId = (form && document.getElementById("brandLogo")?.value) || fallback.logo || "";
+      const media = logoMedia().find(m => m.id === logoId);
+      if (logoImg) {
+        if (media && media.src) logoImg.src = vaultFetchUrl(media.src);
+        else logoImg.src = new URL("brand-preview-logo.png", location.href).href;
+        logoImg.alt = displayName + " logo";
+      }
+      document.querySelectorAll(".font-pick").forEach(pick => {
+        const hidden = pick.querySelector("input[type=hidden]");
+        const sample = pick.querySelector(".font-pick-btn .font-sample");
+        if (hidden && sample) sample.style.fontFamily = cssFontFamily(hidden.value || "Inter");
+      });
+      if (form) ["brandPrimary", "brandAccent", "brandBg", "brandFg"].forEach(syncBrandPicker);
+      scaleBrandPage();
+    }
+    const FONT_SAMPLE = "Ag Aa";
+    function fontChoices(current) {
+      const names = brandFonts.map(f => f.name);
+      if (current && !names.includes(current)) names.unshift(current);
+      return names;
+    }
+    function fontControl(id, current) {
+      if (!brandFonts.length) {
+        return `<input id="${id}" value="${esc(current)}" maxlength="80">`;
+      }
+      const chosen = current || "";
+      const items = fontChoices(chosen).map(name => `
+        <button type="button" class="font-pick-item ${name === chosen ? "on" : ""}" data-font="${esc(name)}">
+          <span class="font-sample" style="font-family:${cssFontFamily(name)}">${FONT_SAMPLE}</span>
+        </button>`).join("");
+      return `
+        <div class="font-pick">
+          <input type="hidden" id="${id}" value="${esc(chosen)}">
+          <button type="button" class="font-pick-btn" aria-haspopup="listbox">
+            <span class="font-sample" style="font-family:${cssFontFamily(chosen || "Inter")}">${FONT_SAMPLE}</span>
+          </button>
+          <div class="font-pick-menu" hidden>${items}</div>
+        </div>`;
+    }
+    function bindFontPicks(root) {
+      root.querySelectorAll(".font-pick").forEach(pick => {
+        const btn = pick.querySelector(".font-pick-btn");
+        const menu = pick.querySelector(".font-pick-menu");
+        const hidden = pick.querySelector("input[type=hidden]");
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const open = menu.hidden;
+          document.querySelectorAll(".font-pick-menu").forEach(m => { m.hidden = true; });
+          if (!open) return;
+          const r = btn.getBoundingClientRect();
+          menu.style.position = "fixed";
+          menu.style.left = `${r.left}px`;
+          menu.style.top = `${r.bottom + 4}px`;
+          menu.style.width = `${r.width}px`;
+          menu.hidden = false;
+        };
+        menu.querySelectorAll(".font-pick-item").forEach(item => {
+          item.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            hidden.value = item.getAttribute("data-font") || "";
+            menu.querySelectorAll(".font-pick-item").forEach(n => n.classList.toggle("on", n === item));
+            menu.hidden = true;
+            brandDirty = true;
+            captureBrandDraft();
+            paintBrandPreview();
+          };
+        });
+      });
+    }
+    async function ensureBrandFonts() {
+      if (brandFonts.length || brandFontsTried) return;
+      brandFontsTried = true;
+      try {
+        const res = await fetch(graphApiUrl("api/fonts"), { cache: "no-store" });
+        const data = await res.json();
+        brandFonts = Array.isArray(data.fonts) ? data.fonts : [];
+        brandFontsError = brandFonts.length ? "" : (data.error || t("brand_font_error"));
+      } catch (err) {
+        brandFontsError = String(err.message || err);
+      }
+    }
+    function brandColorField(id, key, val) {
+      const hex = /^#[0-9A-Fa-f]{6}$/.test(val || "") ? val : "#112233";
+      return `<label>${esc(t(key))}<span class="brand-color"><input type="color" id="${id}Pick" value="${esc(hex)}" aria-label="${esc(t(key))}"><input type="text" id="${id}" value="${esc(val)}" placeholder="#112233" maxlength="7" spellcheck="false"></span></label>`;
+    }
+    function readBrandFormValues() {
+      const form = document.getElementById("brandForm");
+      if (!form) return null;
+      return {
+        profile_id: document.getElementById("brandProfile")?.value || brandProfileId,
+        display_name: document.getElementById("brandName")?.value || "",
+        handle: document.getElementById("brandHandle")?.value || "",
+        logo: document.getElementById("brandLogo")?.value || "",
+        primary: document.getElementById("brandPrimary")?.value || "",
+        accent: document.getElementById("brandAccent")?.value || "",
+        background: document.getElementById("brandBg")?.value || "",
+        text: document.getElementById("brandFg")?.value || "",
+        heading_font: document.getElementById("brandHeadFont")?.value || "",
+        body_font: document.getElementById("brandBodyFont")?.value || "",
+      };
+    }
+    function captureBrandDraft() {
+      const vals = readBrandFormValues();
+      if (!vals) return;
+      brandDraft = vals;
+      brandProfileId = vals.profile_id || brandProfileId;
+    }
+    function brandFormValues(pid) {
+      const file = brandFor(pid);
+      if (brandDirty && brandDraft && brandDraft.profile_id === pid) {
+        return { ...file, ...brandDraft, profile_id: pid };
+      }
+      return file;
+    }
+    async function renderBrand() {
+      await ensureBrandFonts();
+      if (view !== "brand") return;
+      const pid = defaultBrandProfile();
+      brandProfileId = pid;
+      const b = brandFormValues(pid);
+      const logos = logoMedia();
+      const logoOpts = [`<option value="">${esc(t("brand_logo_none"))}</option>`]
+        .concat(logos.map(m => `<option value="${esc(m.id)}" ${m.id === b.logo ? "selected" : ""}>${esc(m.id)} · ${esc(m.caption || m.file || "")}</option>`))
+        .join("");
+      const profiles = profileList().map(p =>
+        `<option value="${esc(p.id)}" ${p.id === pid ? "selected" : ""}>${esc(p.id)}</option>`
+      ).join("");
+      setInspectorCollapsed(false);
+      $list.innerHTML = `
+        <div class="brand-wrap">
+          <p class="hub-kicker">${esc(t("brand_title"))}</p>
+          <h1 class="hub-title">${esc(t("brand_title"))}</h1>
+          <p class="brand-note">${esc(t("brand_desc"))}</p>
+          <form class="brand-form" id="brandForm">
+            <div class="brand-group">
+              <h2>${esc(t("brand_group_who"))}</h2>
+              <label>${esc(t("brand_profile"))}<select id="brandProfile">${profiles}</select></label>
+              <label>${esc(t("brand_display"))}<input id="brandName" value="${esc(b.display_name)}" maxlength="80"></label>
+              <label>${esc(t("brand_handle"))}<input id="brandHandle" value="${esc(b.handle)}" maxlength="80" placeholder="@murphywuwu"></label>
+              <p class="brand-help">${esc(t("brand_handle_help"))}</p>
+              <label>${esc(t("brand_logo"))}
+                <span class="brand-logo-row">
+                  <select id="brandLogo">${logoOpts}</select>
+                  <button type="button" id="brandLogoUpload">${esc(t("brand_logo_upload"))}</button>
+                  <input type="file" id="brandLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+                </span>
+              </label>
+              ${logos.length ? "" : `<p class="brand-note">${esc(t("brand_logo_empty"))}</p>`}
+              <p class="brand-help" id="brandLogoStatus"></p>
+            </div>
+            <div class="brand-group">
+              <h2>${esc(t("brand_group_colors"))}</h2>
+              ${brandColorField("brandPrimary", "brand_primary", b.primary)}
+              ${brandColorField("brandAccent", "brand_accent", b.accent)}
+              ${brandColorField("brandBg", "brand_background", b.background)}
+              ${brandColorField("brandFg", "brand_text", b.text)}
+            </div>
+            <div class="brand-group">
+              <h2>${esc(t("brand_group_type"))}</h2>
+              <label>${esc(t("brand_heading"))}${fontControl("brandHeadFont", b.heading_font)}</label>
+              <label>${esc(t("brand_body"))}${fontControl("brandBodyFont", b.body_font)}</label>
+              ${brandFontsError ? `<p class="brand-note">${esc(brandFontsError)}</p>` : ""}
+            </div>
+          </form>
+          <div class="brand-actions">
+            <button type="button" id="brandSave">${esc(t("brand_save"))}</button>
+            <span class="brand-status" id="brandStatus"></span>
+          </div>
+        </div>`;
+      const form = document.getElementById("brandForm");
+      const onBrandEdit = (e) => {
+        brandDirty = true;
+        const pick = e.target;
+        if (pick && pick.type === "color" && pick.id.endsWith("Pick")) {
+          const text = document.getElementById(pick.id.slice(0, -4));
+          if (text) text.value = pick.value.toUpperCase();
+        }
+        captureBrandDraft();
+        paintBrandPreview();
+      };
+      form.addEventListener("input", onBrandEdit);
+      form.addEventListener("change", onBrandEdit);
+      document.getElementById("brandProfile").onchange = () => {
+        brandDirty = false;
+        brandDraft = null;
+        brandProfileId = document.getElementById("brandProfile").value;
+        renderBrand();
+      };
+      document.getElementById("brandLogo").value = b.logo || "";
+      bindFontPicks(form);
+      bindBrandLogoUpload();
+      if (!brandFontOffBound) {
+        brandFontOffBound = true;
+        document.addEventListener("click", () => {
+          document.querySelectorAll(".font-pick-menu").forEach(m => { m.hidden = true; });
+        });
+      }
+      document.getElementById("brandSave").onclick = saveBrand;
+      paintBrandPreview();
+    }
+    function bindBrandLogoUpload() {
+      const btn = document.getElementById("brandLogoUpload");
+      const fileInput = document.getElementById("brandLogoFile");
+      const status = document.getElementById("brandLogoStatus");
+      if (!btn || !fileInput) return;
+      btn.onclick = () => {
+        if (!isHttpServe()) {
+          if (status) status.textContent = t("brand_need_serve");
+          return;
+        }
+        fileInput.click();
+      };
+      fileInput.onchange = async () => {
+        const file = fileInput.files && fileInput.files[0];
+        fileInput.value = "";
+        if (!file) return;
+        btn.disabled = true;
+        if (status) status.textContent = t("brand_logo_uploading");
+        try {
+          const body = new FormData();
+          body.append("file", file, file.name);
+          body.append("role", "logo");
+          body.append("tags", "logo");
+          body.append("links", "brand");
+          body.append("rights", "own-upload");
+          body.append("caption", file.name.replace(/\.[^.]+$/, "") || "logo");
+          const res = await fetch(graphApiUrl("api/media-upload"), { method: "POST", body });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || `upload ${res.status}`);
+          const id = data.media && data.media.id;
+          if (!id) throw new Error("upload missing id");
+          brandDirty = true;
+          captureBrandDraft();
+          if (brandDraft) brandDraft.logo = id;
+          await loadLiveGraph();
+          applyChrome();
+          await renderBrand();
+          const again = document.getElementById("brandLogoStatus");
+          if (again) again.textContent = t("brand_logo_uploaded") + ` · ${id}`;
+        } catch (err) {
+          if (status) status.textContent = String(err.message || err);
+          btn.disabled = false;
+        }
+      };
+    }
+    async function saveBrand() {
+      const status = document.getElementById("brandStatus");
+      if (!isHttpServe()) {
+        status.textContent = t("brand_need_serve");
+        return;
+      }
+      const btn = document.getElementById("brandSave");
+      btn.disabled = true;
+      status.textContent = "";
+      const body = {
+        profile_id: document.getElementById("brandProfile").value,
+        display_name: document.getElementById("brandName").value,
+        handle: document.getElementById("brandHandle").value,
+        logo: document.getElementById("brandLogo").value,
+        primary: document.getElementById("brandPrimary").value,
+        accent: document.getElementById("brandAccent").value,
+        background: document.getElementById("brandBg").value,
+        text: document.getElementById("brandFg").value,
+        heading_font: document.getElementById("brandHeadFont").value,
+        body_font: document.getElementById("brandBodyFont").value,
+      };
+      try {
+        const res = await fetch(graphApiUrl("api/brand"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `save ${res.status}`);
+        brandDirty = false;
+        brandDraft = null;
+        await loadLiveGraph();
+        applyChrome();
+        render();
+        const again = document.getElementById("brandStatus");
+        if (again) again.textContent = t("brand_saved");
+      } catch (err) {
+        status.textContent = String(err.message || err);
+        btn.disabled = false;
+      }
+    }
+
     function render() {
       const graphViewLive = view === "wiki" || (view === "base" && baseTab === "graph");
       if (!graphViewLive) stopWikiGraphAnim();
@@ -5772,6 +6671,9 @@
         b.classList.toggle("on", b.getAttribute("data-v") === parent);
       });
       const q = ($q.value || "").trim();
+      if (shellEl) shellEl.classList.toggle("brand-stage", view === "brand" && !q);
+      // Leaving Brand destroys #brandForm; snapshot unsaved edits before another view replaces the list.
+      if (view !== "brand" && brandDirty && document.getElementById("brandForm")) captureBrandDraft();
       if (PRIMARY_VIEWS.includes(view) && q) {
         stopWikiGraphAnim();
         renderSearchResults(q);
@@ -5781,6 +6683,11 @@
         renderTopics();
       } else if (view === "base") {
         renderBaseHub();
+      } else if (view === "brand") {
+        // Skip remount only while still editing Brand in place (e.g. live graph refresh).
+        // After Base/other tabs, #brandForm is gone — must remount even if dirty.
+        if (!brandDirty || !document.getElementById("brandForm")) renderBrand();
+        else paintBrandPreview();
       } else if (view === "content") {
         renderContent();
       } else if (view === "shipped") {
@@ -5807,6 +6714,7 @@
         renderPub();
       }
       renderInsp();
+      if (view === "brand" && !q && document.getElementById("brandForm")) paintBrandPreview();
     }
 
     function insertSelectBack() {
@@ -6966,6 +7874,14 @@
 
     function renderMedia() {
       $list.innerHTML = "";
+      $list.insertAdjacentHTML("beforeend", `
+        <div class="media-page-head">
+          <p class="hub-kicker">${esc(t("media_nav"))}</p>
+          <h1 class="hub-title">${esc(t("card_media_title"))}</h1>
+          <p class="lib-page-lede">${esc(t("media_page_lede"))}</p>
+          <p class="media-page-status" id="mediaPageStatus"></p>
+        </div>
+      `);
       const q = $q.value.trim().toLowerCase();
       const catalog = (GRAPH.media || []).map(m => {
         const node = byId[`media:${m.id}`];
@@ -6982,6 +7898,11 @@
       if (mediaSubject && !subjects.includes(mediaSubject)) mediaSubject = "";
       if (mediaRole && !roles.includes(mediaRole)) mediaRole = "";
       if (mediaTag && !tags.includes(mediaTag)) mediaTag = "";
+      const items = all.filter(m =>
+        (!mediaSubject || (m.subjects || []).includes(mediaSubject))
+        && (!mediaRole || m.role === mediaRole)
+        && (!mediaTag || (m.tags || []).includes(mediaTag))
+      );
       const filt = document.createElement("div");
       filt.className = "filt";
       if (subjects.length) {
@@ -7000,38 +7921,156 @@
         }));
       }
       if (filt.childNodes.length) $list.appendChild(filt);
-      const items = all.filter(m =>
-        (!mediaSubject || (m.subjects || []).includes(mediaSubject))
-        && (!mediaRole || m.role === mediaRole)
-        && (!mediaTag || (m.tags || []).includes(mediaTag))
-      );
+
       const grid = document.createElement("div");
       grid.className = "mediagrid";
+      grid.appendChild(mediaAddTile());
       items.forEach(m => grid.appendChild(mediaCard(m)));
-      if (!items.length) grid.innerHTML = `<p class='empty'>${t("media_empty")}</p>`;
+      bindMediaGridDrop(grid);
       $list.appendChild(grid);
+    }
+
+    function mediaStatusEl() {
+      return document.getElementById("mediaPageStatus");
+    }
+
+    function mediaAddTile() {
+      const card = document.createElement("div");
+      card.className = "mediacard media-add";
+      card.innerHTML = `
+        <div class="media-add-plus">+</div>
+        <div class="media-add-label">${esc(t("media_add"))}</div>
+        <div class="media-add-hint">${esc(t("media_add_hint"))}</div>
+        <input type="file" id="mediaUploadFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" multiple hidden>
+      `;
+      const fileInput = card.querySelector("#mediaUploadFile");
+      card.onclick = () => {
+        if (!isHttpServe()) {
+          const st = mediaStatusEl();
+          if (st) st.textContent = t("media_need_serve");
+          return;
+        }
+        fileInput.click();
+      };
+      fileInput.onclick = (e) => e.stopPropagation();
+      fileInput.onchange = async (e) => {
+        const files = [...(e.target.files || [])];
+        e.target.value = "";
+        if (!files.length) return;
+        await uploadMediaFiles(files, { statusEl: mediaStatusEl() });
+      };
+      return card;
+    }
+
+    function bindMediaGridDrop(grid) {
+      const setDrop = (on) => {
+        grid.classList.toggle("is-drop", on);
+        grid.querySelector(".media-add")?.classList.toggle("is-drop", on);
+      };
+      grid.addEventListener("dragenter", (e) => {
+        if (![...e.dataTransfer.types].includes("Files")) return;
+        e.preventDefault();
+        setDrop(true);
+      });
+      grid.addEventListener("dragover", (e) => {
+        if (![...e.dataTransfer.types].includes("Files")) return;
+        e.preventDefault();
+        setDrop(true);
+      });
+      grid.addEventListener("dragleave", (e) => {
+        if (!grid.contains(e.relatedTarget)) setDrop(false);
+      });
+      grid.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        setDrop(false);
+        const files = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type) || /\.(png|jpe?g|webp|svg)$/i.test(f.name));
+        if (!files.length) return;
+        await uploadMediaFiles(files, { statusEl: mediaStatusEl() });
+      });
+    }
+
+    async function uploadMediaFiles(files, { role = "other", tags = "photo", links = "", statusEl = null } = {}) {
+      if (!isHttpServe()) {
+        if (statusEl) statusEl.textContent = t("media_need_serve");
+        return;
+      }
+      if (statusEl) statusEl.textContent = t("media_uploading");
+      const body = new FormData();
+      files.forEach(f => body.append("file", f, f.name));
+      body.append("role", role);
+      body.append("tags", tags);
+      body.append("links", links);
+      body.append("rights", "own-upload");
+      try {
+        const res = await fetch(graphApiUrl("api/media-upload"), { method: "POST", body });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `upload ${res.status}`);
+        const n = (data.items || (data.media ? [data.media] : [])).length;
+        await loadLiveGraph();
+        applyChrome();
+        render();
+        const again = mediaStatusEl();
+        if (again) again.textContent = fillTemplate("media_upload_done", { n }) + (data.errors?.length ? ` · ${data.errors.length} failed` : "");
+      } catch (err) {
+        if (statusEl) statusEl.textContent = String(err.message || err);
+      }
+    }
+
+    async function deleteOneMedia(id) {
+      if (!id) return;
+      if (!isHttpServe()) {
+        const st = mediaStatusEl();
+        if (st) st.textContent = t("media_need_serve");
+        return;
+      }
+      if (!confirm(t("media_delete_confirm_one"))) return;
+      const st = mediaStatusEl();
+      if (st) st.textContent = t("media_deleting");
+      try {
+        const res = await fetch(graphApiUrl("api/media-delete"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: [id] }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `delete ${res.status}`);
+        if (selected === `media:${id}`) selected = null;
+        await loadLiveGraph();
+        applyChrome();
+        render();
+        const again = mediaStatusEl();
+        if (again) again.textContent = t("media_delete_done");
+      } catch (err) {
+        if (st) st.textContent = String(err.message || err);
+      }
     }
 
     function mediaCard(m) {
       const card = document.createElement("div");
       card.className = "mediacard" + (selected === `media:${m.id}` ? " sel" : "");
-      const tagPills = (m.tags || []).map(tg => `<span class="pill">${esc(tg)}</span>`).join("");
       const rolePill = m.role ? `<span class="pill">${esc(m.role)}</span>` : "";
       const hosted = m.hosted
         ? `<span class="pill ok" title="${esc(m.hosted_image_id)}">${t("media_hosted")}</span>`
         : `<span class="pill">${t("media_local")}</span>`;
       const links = (m.subjects || m.links || []).map(l => `<span class="pill">${esc(l)}</span>`).join("");
-      const src = m.src ? "/" + m.src.replace(/^\/+/, "") : "";
+      const src = m.src ? vaultFetchUrl(m.src) : "";
       const thumb = src
-        ? `<div class="thumb"><img loading="lazy" src="${esc(src)}" alt="${esc(m.caption || m.id)}" onerror="this.remove()"></div>`
+        ? `<div class="thumb"><img loading="lazy" src="${esc(src)}" alt="${esc(m.caption || m.id)}" onerror="this.closest('.thumb').classList.add('thumb-missing');this.remove();"></div>`
         : `<div class="thumb thumb-missing">?</div>`;
-      card.innerHTML = `${thumb}
+      const tagOnly = (m.tags || []).filter(tg => tg !== m.role).map(tg => `<span class="pill">${esc(tg)}</span>`).join("");
+      card.innerHTML = `
+        <button type="button" class="media-del" title="${esc(t("media_delete_one"))}" aria-label="${esc(t("media_delete_one"))}">×</button>
+        ${thumb}
         <div class="mediameta">
           <div class="hid">${esc(m.id)}</div>
           <p class="ttl">${esc(m.caption || m.file || "")}</p>
-          <div class="pill-row">${rolePill}${tagPills}${hosted}</div>
+          <div class="pill-row">${rolePill}${tagOnly}${hosted}</div>
           ${links ? `<div class="pill-row">${links}</div>` : ""}
         </div>`;
+      card.querySelector(".media-del").onclick = (e) => {
+        e.stopPropagation();
+        deleteOneMedia(m.id);
+      };
       card.onclick = () => select(`media:${m.id}`);
       return card;
     }
@@ -7053,6 +8092,119 @@
       if (v === "tested" || v === "observed") return "warn";
       if (v === "weakened") return "bad";
       return "";
+    }
+
+    function pubEvidenceTier(p) {
+      const tier = String(p.evidence_tier || "").trim().toLowerCase();
+      if (/^(unknown|observed|tested|supported|weakened)$/.test(tier)) return tier;
+      return "unknown";
+    }
+
+    function pubNote(p) {
+      const notes = String(p.notes || "").trim();
+      if (notes) return notes;
+      const raw = String(p.evidence_tier || "").trim();
+      if (raw && !/^(unknown|observed|tested|supported|weakened)$/i.test(raw)) return raw;
+      return "";
+    }
+
+    function pubResult(p) {
+      const r = String(p.result || "unknown").trim().toLowerCase();
+      return /^(win|flat|loss|unknown)$/.test(r) ? r : "unknown";
+    }
+
+    function resultLabel(result) {
+      const key = {
+        win: "result_win",
+        flat: "result_flat",
+        loss: "result_loss",
+        unknown: "result_unknown",
+      }[pubResult({ result })] || "result_unknown";
+      return t(key);
+    }
+
+    function resultToneClass(result) {
+      const r = pubResult({ result });
+      if (r === "win") return "good";
+      if (r === "flat") return "warn";
+      if (r === "loss") return "bad";
+      return "";
+    }
+
+    function pubTitle(p) {
+      const folder = String(p.run_folder || "")
+        .replace(/^\d{4}-\d{2}-\d{2}-/, "")
+        .replace(/-(x|ig|instagram|linkedin|threads|tiktok|xiaohongshu)$/i, "")
+        .replace(/-/g, " ")
+        .trim();
+      if (folder) return folder.charAt(0).toUpperCase() + folder.slice(1);
+      const claim = String(p.claim || "").trim();
+      if (claim && claim.toLowerCase() !== "none") return claim;
+      if (p.date && p.platform) return `${p.platform} · ${p.date}`;
+      return p.ident || p.url || "—";
+    }
+
+    function pubCraftTags(p) {
+      const tags = [];
+      if (p.pillar) tags.push(p.pillar);
+      const swipe = String(p.swipe || "").trim();
+      if (swipe && swipe.toLowerCase() !== "none") tags.push(swipe.split(/\s+/)[0]);
+      const claim = String(p.claim || "").trim();
+      if (claim && claim.toLowerCase() !== "none") tags.push(claim.split(/\s+/)[0]);
+      if (p.layout_family) tags.push(p.layout_family);
+      if (p.topic_id) tags.push(p.topic_id);
+      return tags.slice(0, 5);
+    }
+
+    function learnCardEl(p) {
+      const result = pubResult(p);
+      const tier = pubEvidenceTier(p);
+      const note = pubNote(p);
+      const needsReview = result === "unknown";
+      const tone = needsReview ? "review" : result === "win" ? "win" : result === "loss" ? "loss" : "flat";
+      const badge = needsReview
+        ? `<span class="learn-badge review"><span class="dot"></span>${esc(t("learn_needs_review"))}</span>`
+        : `<span class="learn-badge ${tone}"><span class="dot"></span>${esc(t("learn_has_result"))}</span>`;
+      const tags = pubCraftTags(p)
+        .map(x => `<span class="pill">${esc(x)}</span>`)
+        .join("");
+      const el = document.createElement("div");
+      el.className = `learn-card tone-${tone}` + (selected === p.id ? " sel" : "");
+      el.innerHTML = `
+        <div class="learn-card-top">
+          <div class="learn-card-meta">
+            ${p.date ? `<span class="learn-chip">${esc(p.date)}</span>` : ""}
+            ${p.platform ? `<span class="learn-chip plat">${esc(p.platform)}</span>` : ""}
+            ${p.run_id ? `<span class="learn-chip">${esc(String(p.run_id).replace(/^RUN-/, ""))}</span>` : ""}
+          </div>
+          ${badge}
+        </div>
+        <div>
+          <p class="learn-card-title">${esc(pubTitle(p))}</p>
+          ${note ? `<p class="learn-card-note">${esc(note)}</p>` : ""}
+        </div>
+        <div class="learn-metrics">
+          <div class="learn-metric">
+            <span class="learn-metric-k">${esc(t("learn_result"))}</span>
+            <span class="learn-metric-v ${resultToneClass(result)}">${esc(resultLabel(result))}</span>
+            <span class="learn-metric-h">${esc(t(`learn_result_hint_${result}`))}</span>
+          </div>
+          <div class="learn-metric">
+            <span class="learn-metric-k">${esc(t("learn_evidence"))}</span>
+            <span class="learn-metric-v ${outcomeClass(tier)}">${esc(evidenceLabel(tier))}</span>
+            <span class="learn-metric-h">${esc(t(`learn_evidence_hint_${tier}`))}</span>
+          </div>
+        </div>
+        <div class="learn-card-foot">
+          <div class="learn-card-tags">${tags}</div>
+          ${p.url ? `<a class="learn-card-link" href="${esc(p.url)}" target="_blank" rel="noreferrer">${esc(t("learn_open_post"))}</a>` : ""}
+        </div>
+      `;
+      el.onclick = (e) => {
+        if (e.target.closest("a")) return;
+        select(p.id);
+      };
+      return el;
     }
 
     function fillTemplate(key, vars = {}) {
@@ -7456,10 +8608,6 @@
       const wikiItems = nodesOf("wiki");
       const noteItems = nodesOf("capture");
       const libItems = GRAPH.nodes.filter(n => n.lib && inScope(n));
-      const mediaItems = (GRAPH.media || []).map(m => {
-        const node = byId[`media:${m.id}`];
-        return node || { id: `media:${m.id}`, ident: m.id, label: m.caption || m.id, kind: "media" };
-      });
       const productItems = nodesOf("product");
       const recItems = nodesOf("recommendation");
       const hitItems = nodesOf("hit").filter(h => h.status === "triage");
@@ -7492,7 +8640,6 @@
           kicker: "hub_base_kicker_craft",
           shelves: [
             { view: "library", title: "card_library_title", desc: "card_library_desc", items: libItems, empty: "hub_base_empty_library" },
-            { view: "media", title: "card_media_title", desc: "card_media_desc", items: mediaItems, empty: "hub_base_empty_media" },
           ],
         },
         {
@@ -7640,15 +8787,18 @@
         .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
       wrap.innerHTML = `
         <div class="hub-hero">
-          <p class="hub-kicker">${t("shipped")}</p>
-          <h1 class="hub-title">${t("shipped")}</h1>
-          <p class="hub-desc">${t("shipped_lede")}</p>
+          <p class="hub-kicker">${t("hub_learn_title")}</p>
+          <h1 class="hub-title">${t("hub_learn_title")}</h1>
+          <p class="hub-desc">${t("hub_learn_desc")}</p>
         </div>
+        <div class="learn-summary" id="learnSummary"></div>
         <div class="learn-list" id="shippedList"></div>
       `;
       $list.appendChild(wrap);
       const list = wrap.querySelector("#shippedList");
+      const summary = wrap.querySelector("#learnSummary");
       if (!published.length) {
+        summary.hidden = true;
         list.innerHTML = `<div class="desk-empty">${sayCardHtml({
           kicker: t("shipped"),
           title: lang === "zh" ? "还没有发布记录" : "No published posts yet",
@@ -7658,20 +8808,14 @@
         bindSayCopy(list);
         return;
       }
-      published.forEach(p => {
-        const tier = p.evidence_tier || "unknown";
-        const item = document.createElement("div");
-        item.className = "next-item";
-        item.innerHTML = `
-          <div class="next-item-main">
-            <p class="next-item-title">${esc(p.label || p.url || p.ident)}</p>
-            <p class="next-item-meta">${esc([p.date, p.platform, p.result || ""].filter(Boolean).join(" · "))}</p>
-          </div>
-          <span class="outcome-pill ${outcomeClass(tier)}">${esc(evidenceLabel(tier))}</span>
-        `;
-        item.onclick = () => select(p.id);
-        list.appendChild(item);
-      });
+      const reviewN = published.filter(p => pubResult(p) === "unknown").length;
+      const knownN = published.length - reviewN;
+      summary.innerHTML = `
+        <span class="learn-summary-chip"><b>${published.length}</b>${esc(t("learn_summary_total"))}</span>
+        <span class="learn-summary-chip tone-warn"><b>${reviewN}</b>${esc(t("learn_summary_review"))}</span>
+        <span class="learn-summary-chip tone-ok"><b>${knownN}</b>${esc(t("learn_summary_known"))}</span>
+      `;
+      published.forEach(p => list.appendChild(learnCardEl(p)));
     }
 
     function renderSearchResults(q) {
@@ -9315,6 +10459,15 @@
     }
 
     function renderInsp() {
+      if (view === "brand" && !($q.value || "").trim()) {
+        $insp.innerHTML = `
+          <div class="brand-stage-panel">
+            <p class="kicker">${esc(t("brand_looks"))}</p>
+            <div class="brand-frame" id="brandFrame"></div>
+          </div>`;
+        mountBrandPreview();
+        return;
+      }
       if (!selected || !byId[selected]) {
         if (view === "overview") {
           renderVaultInsp();
@@ -9394,9 +10547,14 @@
         `;
       }
 
+      const mediaSrc = n.kind === "media" && n.src ? vaultFetchUrl(n.src) : "";
+      const mediaPreview = mediaSrc
+        ? `<div class="insp-media-preview"><img src="${esc(mediaSrc)}" alt="${esc(n.caption || n.label || n.ident)}"></div>`
+        : "";
       $insp.innerHTML = `${calBackHtml}<h2>${t("obj")}</h2>
         <p class="kicker">${esc(kindName(n.kind))} · ${esc(n.ident)}</p>
         <p class="title">${n.kind === "run" ? `<button type="button" class="ghost-link title-btn" data-run-open="${esc(n.id)}">${esc(n.label)}</button>` : esc(n.label)}</p>
+        ${mediaPreview}
         <dl class="kv">${kv.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
         ${kwBlock}
         ${heatBlock}
