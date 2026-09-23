@@ -1054,6 +1054,22 @@ def context_detail_capture(md: str, meta: dict | None = None, one_liner: str = "
     }
 
 
+def _yaml_id_list(meta: dict, key: str) -> list[str]:
+    raw = meta.get(key)
+    if isinstance(raw, list):
+        vals = [str(x).strip() for x in raw if str(x).strip()]
+    elif isinstance(raw, str) and raw.strip():
+        vals = [x.strip() for x in re.split(r"[\s,]+", raw.strip().strip("[]")) if x.strip()]
+    else:
+        vals = []
+    out: list[str] = []
+    for v in vals:
+        clean = v.strip().strip("\"'[]")
+        if clean:
+            out.append(clean)
+    return out
+
+
 def context_detail_claim(md: str, meta: dict | None = None, one_liner: str = "") -> dict:
     meta = meta or frontmatter(md or "")
     claim = ""
@@ -1076,10 +1092,18 @@ def context_detail_claim(md: str, meta: dict | None = None, one_liner: str = "")
         "kind": "claim",
         "title": one_liner or (meta.get("id") or ""),
         "claim": claim,
-        "applies_when": _list_snip(_section_body(md, "Applies when"), 3),
-        "avoid_when": _list_snip(_section_body(md, "Avoid when"), 3),
+        "applies_when": _list_snip(_section_body(md, "Applies when"), 4),
+        "avoid_when": _list_snip(_section_body(md, "Avoid when"), 4),
+        "procedure": _list_snip(
+            _section_body(md, "Procedure (angle constraints for Writer)")
+            or _section_body(md, "Procedure"),
+            5,
+        ),
         "status": (meta.get("status") or "").strip(),
         "confidence": (meta.get("confidence") or "").strip(),
+        "primary_metric": (meta.get("primary_metric") or "").strip(),
+        "related_swipe": _yaml_id_list(meta, "related_swipe"),
+        "related_atoms": _yaml_id_list(meta, "related_atoms"),
     }
 
 
@@ -1088,11 +1112,14 @@ def context_detail_swipe(md: str, meta: dict | None = None, one_liner: str = "")
     return {
         "kind": "swipe",
         "title": one_liner or "",
-        "when_to_use": _list_snip(_section_body(md, "When to use"), 3),
-        "when_to_avoid": _list_snip(_section_body(md, "When to avoid"), 3),
-        "beats": _list_snip(_section_body(md, "Beats / pages (argument structure only — no full copy)")
-                            or _section_body(md, "Beats / pages"), 4),
-        "constraints": _list_snip(_section_body(md, "Constraints"), 3),
+        "when_to_use": _list_snip(_section_body(md, "When to use"), 4),
+        "when_to_avoid": _list_snip(_section_body(md, "When to avoid"), 4),
+        "beats": _list_snip(
+            _section_body(md, "Beats / pages (argument structure only — no full copy)")
+            or _section_body(md, "Beats / pages"),
+            8,
+        ),
+        "constraints": _list_snip(_section_body(md, "Constraints"), 4),
         "form": (meta.get("form") or "").strip(),
         "status": (meta.get("status") or "").strip(),
         "tags": meta.get("tags") if isinstance(meta.get("tags"), list) else [],
@@ -1113,6 +1140,21 @@ def context_detail_atom(md: str, meta: dict | None = None, one_liner: str = "") 
         "kind": "atom",
         "title": one_liner or "",
         "text": _plain_snip(body, 360) or one_liner,
+        "procedure": _list_snip(
+            _section_body(md, "Procedure (how to write this beat)")
+            or _section_body(md, "Procedure"),
+            6,
+        ),
+        "applies_when": _list_snip(_section_body(md, "Applies when"), 4),
+        "avoid_when": _list_snip(
+            _section_body(md, "Avoid when") or _section_body(md, "When to avoid"),
+            4,
+        ),
+        "examples": _list_snip(
+            _section_body(md, "Examples (short; prefer paraphrase over full copy of others)")
+            or _section_body(md, "Examples"),
+            4,
+        ),
         "atom_type": (meta.get("type") or "").strip(),
         "status": (meta.get("status") or "").strip(),
     }
@@ -2676,9 +2718,19 @@ def build_graph() -> dict:
                     "has_evidence": bool(evidence_runs),
                     "lib": True,
                     "context_detail": claim_detail,
+                    "related_swipe": claim_detail.get("related_swipe") or [],
+                    "related_atoms": claim_detail.get("related_atoms") or [],
+                    "primary_metric": claim_detail.get("primary_metric") or "",
+                    "confidence": claim_detail.get("confidence") or "",
                 },
             )
         )
+        for sid in claim_detail.get("related_swipe") or []:
+            if sid.startswith("S"):
+                edge(nid("claim", ident), nid("swipe", sid), "related_craft")
+        for aid in claim_detail.get("related_atoms") or []:
+            if aid.startswith("A-"):
+                edge(nid("claim", ident), nid("atom", aid), "related_craft")
 
     for row in extract_runs_table(read("runs/_index.md")):
         ident = row["run_id"]
@@ -3139,6 +3191,132 @@ def build_graph() -> dict:
     for n in nodes.values():
         if n["kind"] in ("swipe", "atom", "claim"):
             n["refs"] = len(run_uses.get(n["id"], ()))
+
+    # Craft inspector: usage history + provenance for knowledge-graph modal.
+    topic_uses: dict[str, set[str]] = {}
+    for tnode in nodes.values():
+        if tnode.get("kind") != "topic":
+            continue
+        for row in tnode.get("provenance") or []:
+            ident = str((row or {}).get("ident") or "").strip()
+            if not ident:
+                continue
+            for kind in ("swipe", "atom", "claim"):
+                tid = nid(kind, ident)
+                if tid in nodes:
+                    topic_uses.setdefault(tid, set()).add(tnode["ident"])
+                    break
+
+    def _craft_usage_rows(node_id: str) -> list[dict]:
+        rows: list[dict] = []
+        for rid in sorted(run_uses.get(node_id, ())):
+            run = nodes.get(rid)
+            if not run:
+                continue
+            rows.append(
+                {
+                    "ident": run.get("ident") or "",
+                    "label": run.get("label") or "",
+                    "status": run.get("status") or "",
+                    "result": run.get("published_result") or run.get("result") or "",
+                    "platform": run.get("platform") or run.get("platforms") or "",
+                }
+            )
+        return rows
+
+    def _craft_source_ids(node_id: str) -> list[str]:
+        out: list[str] = []
+        for e in uniq:
+            if e["from"] != node_id or e["rel"] != "sourced_from":
+                continue
+            cap = nodes.get(e["to"])
+            if cap and cap.get("ident"):
+                out.append(cap["ident"])
+        return out
+
+    def _craft_related(n: dict) -> list[tuple[str, str]]:
+        out: list[tuple[str, str]] = []
+        seen: set[str] = set()
+        detail = n.get("context_detail") or {}
+        for key, role in (("related_swipe", "craft"), ("related_atoms", "craft")):
+            for ident in detail.get(key) or n.get(key) or []:
+                if ident in seen:
+                    continue
+                seen.add(ident)
+                out.append((ident, role))
+        # Reverse: claims that point at this craft
+        my = n["id"]
+        for e in uniq:
+            if e["rel"] != "related_craft":
+                continue
+            other = ""
+            if e["from"] == my:
+                other = e["to"]
+            elif e["to"] == my:
+                other = e["from"]
+            if not other:
+                continue
+            peer = nodes.get(other)
+            if not peer or peer["kind"] not in {"swipe", "atom", "claim"}:
+                continue
+            if peer["ident"] in seen:
+                continue
+            seen.add(peer["ident"])
+            out.append((peer["ident"], "craft"))
+        return out
+
+    for n in nodes.values():
+        if n["kind"] not in ("swipe", "atom", "claim"):
+            continue
+        usage = _craft_usage_rows(n["id"])
+        sources = _craft_source_ids(n["id"])
+        topics = sorted(topic_uses.get(n["id"], ()))
+        related = _craft_related(n)
+        evidence = list(n.get("evidence_runs") or [])
+        prov: list[dict] = []
+        seen_p: set[str] = set()
+
+        def push_prov(ident: str, role: str, reason: str = "") -> None:
+            ident = str(ident or "").strip()
+            if not ident or ident in seen_p or ident == n.get("ident"):
+                return
+            seen_p.add(ident)
+            live = None
+            for kind in ("capture", "raw", "wiki", "topic", "run", "swipe", "atom", "claim", "product", "need"):
+                cand = nodes.get(nid(kind, ident))
+                if cand:
+                    live = cand
+                    break
+            prov.append(
+                {
+                    "ident": ident,
+                    "role": role,
+                    "kind": (live or {}).get("kind") or "",
+                    "epistemic": "",
+                    "reason": reason,
+                }
+            )
+
+        for cid in sources:
+            push_prov(cid, "evidence", "source")
+        for tid in topics:
+            push_prov(tid, "input", "selected_by_topic")
+        for rid in [u["ident"] for u in usage]:
+            push_prov(rid, "input", "used_in_run")
+        for eid in evidence:
+            push_prov(eid, "evidence", "claim_evidence")
+        for ident, role in related:
+            push_prov(ident, role, "related_craft")
+
+        published = sum(1 for u in usage if str(u.get("status") or "").lower() == "published")
+        n["craft_detail"] = {
+            "usage_runs": usage,
+            "topic_ids": topics,
+            "source_ids": sources,
+            "related": [{"ident": i, "role": r} for i, r in related],
+            "published_count": published,
+            "provenance": prov,
+        }
 
     # flat pillars: prefer first profile for legacy callers; JS uses pillars_by_profile
     flat_pillars = {}

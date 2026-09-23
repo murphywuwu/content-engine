@@ -3563,6 +3563,188 @@
     }
 
 
+
+    /* Library / Expression parts inspector */
+    .lib-insp { display: grid; gap: 12px; }
+    .lib-hero {
+      display: grid; gap: 8px; padding: 14px;
+      border: 1px solid var(--line); border-radius: 14px;
+      background: color-mix(in srgb, var(--paper) 90%, var(--accent-subtle));
+      box-shadow: var(--shadow-sm);
+    }
+    .lib-hero-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .lib-pill {
+      display: inline-flex; align-items: center;
+      font-size: 10.5px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line);
+      background: var(--bg-2); color: var(--muted);
+    }
+    .lib-pill.working, .lib-pill.supported { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .lib-pill.trial, .lib-pill.hypothesis { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+    .lib-pill.dead, .lib-pill.weakened, .lib-pill.retired, .lib-pill.contradicted {
+      background: #fee2e2; color: #991b1b; border-color: #fecaca;
+    }
+    .lib-hero .title {
+      margin: 0; font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .lib-hero .lib-id { margin: 0; font-size: 11px; font-weight: 650; color: var(--faint); }
+    .lib-hero .lib-meta { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .lib-section {
+      border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
+      padding: 12px 13px; display: grid; gap: 10px; box-shadow: var(--shadow-sm);
+    }
+    .lib-section h3 {
+      margin: 0; font-size: 10.5px; font-weight: 750; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .lib-feature {
+      margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--bg-2);
+      border-left: 3px solid var(--accent); font-size: 13.5px; line-height: 1.55; color: var(--text);
+    }
+    .lib-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+    .lib-list li { font-size: 13px; line-height: 1.45; color: var(--text); }
+    .lib-kv { display: grid; gap: 8px; }
+    .lib-kv > div { display: grid; gap: 3px; }
+    .lib-kv dt {
+      margin: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .lib-kv dd { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text); white-space: pre-wrap; }
+
+    /* How-to-use: tactile reading layout */
+    .lib-how { display: grid; gap: 12px; }
+    .lib-how-pair {
+      display: grid; gap: 8px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 420px) {
+      .lib-how-pair.two { grid-template-columns: 1fr 1fr; }
+    }
+    .lib-how-panel {
+      display: grid; gap: 8px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--bg-2);
+      min-width: 0;
+    }
+    .lib-how-panel.use {
+      background: color-mix(in srgb, var(--ok-bg) 72%, var(--paper));
+      border-color: color-mix(in srgb, var(--ok) 22%, var(--line));
+    }
+    .lib-how-panel.avoid {
+      background: color-mix(in srgb, var(--warn-bg) 78%, var(--paper));
+      border-color: color-mix(in srgb, var(--warn) 24%, var(--line));
+    }
+    .lib-how-panel.soft {
+      background: var(--paper);
+      border-color: var(--line);
+    }
+    .lib-how-panel-head {
+      display: flex; align-items: center; gap: 7px;
+    }
+    .lib-how-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      background: var(--faint);
+    }
+    .lib-how-panel.use .lib-how-dot { background: var(--ok); }
+    .lib-how-panel.avoid .lib-how-dot { background: var(--warn); }
+    .lib-how-panel-label {
+      margin: 0;
+      font-size: 10.5px; font-weight: 750; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .lib-how-panel.use .lib-how-panel-label { color: color-mix(in srgb, var(--ok) 70%, var(--text)); }
+    .lib-how-panel.avoid .lib-how-panel-label { color: color-mix(in srgb, var(--warn) 65%, var(--text)); }
+    .lib-how-bullets {
+      margin: 0; padding: 0; list-style: none; display: grid; gap: 7px;
+    }
+    .lib-how-bullets li {
+      position: relative;
+      padding-left: 12px;
+      font-size: 12.5px; line-height: 1.5; color: var(--text);
+    }
+    .lib-how-bullets li::before {
+      content: "";
+      position: absolute; left: 0; top: .55em;
+      width: 5px; height: 5px; border-radius: 50%;
+      background: color-mix(in srgb, var(--faint) 70%, transparent);
+    }
+    .lib-how-panel.use .lib-how-bullets li::before { background: var(--ok); }
+    .lib-how-panel.avoid .lib-how-bullets li::before { background: var(--warn); }
+    .lib-how-empty {
+      margin: 0; font-size: 12px; color: var(--faint); font-style: italic;
+    }
+    .lib-how-steps {
+      margin: 0; padding: 0; list-style: none; display: grid; gap: 8px;
+    }
+    .lib-how-step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 11px;
+      border-radius: 11px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--paper) 88%, var(--bg-2));
+    }
+    .lib-how-step-num {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 11px; font-weight: 750;
+      color: var(--accent);
+      background: var(--accent-faint);
+      border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+      flex-shrink: 0;
+    }
+    .lib-how-step-body {
+      margin: 0; padding-top: 3px;
+      font-size: 13px; line-height: 1.5; color: var(--text);
+    }
+    .lib-how-block {
+      display: grid; gap: 8px;
+    }
+    .lib-how-block-label {
+      margin: 0;
+      font-size: 10.5px; font-weight: 750; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .lib-how-meta {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .lib-how-chip {
+      display: inline-flex; align-items: baseline; gap: 5px;
+      padding: 5px 9px; border-radius: 999px;
+      border: 1px solid var(--line); background: var(--bg-2);
+      font-size: 11.5px; color: var(--muted);
+    }
+    .lib-how-chip b {
+      font-weight: 700; color: var(--text); font-size: 11px;
+      letter-spacing: .02em; text-transform: uppercase;
+    }
+    .lib-reading {
+      margin: 0; font-size: 13px; line-height: 1.5; color: var(--text);
+      padding: 8px 10px; border-radius: 8px; background: var(--bg-2);
+    }
+    .lib-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .lib-actions button, .lib-actions a.btn {
+      border: 1px solid var(--line); background: var(--bg-2); color: var(--text);
+      border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12px; font-weight: 650;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+    }
+    .lib-actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .lib-usage { display: grid; gap: 6px; }
+    .lib-usage button {
+      text-align: left; border: 1px solid var(--line); background: var(--bg-2);
+      border-radius: 8px; padding: 8px 10px; cursor: pointer; font: inherit;
+    }
+    .lib-usage button:hover { border-color: var(--accent); }
+    .lib-usage .u-id { font-size: 11px; font-weight: 700; color: var(--faint); }
+    .lib-usage .u-lab { font-size: 12.5px; color: var(--text); margin-top: 2px; line-height: 1.35; }
+    .lib-usage .u-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
     /* Run Inspector (production console) */
     .run-insp { display: grid; gap: 12px; }
     .run-hero {
@@ -5266,6 +5448,50 @@
         kv_signal: "信号", kv_hit_source: "命中来源", kv_needs: "关联网址/需求", kv_recs: "推荐工具",
         kv_heat_at: "热度抓取于", kv_result: "结果",
         lib_use_hist: "在以下 Run 中被引用过：",
+        lib_insp_what: "它是什么",
+        lib_insp_how: "怎么使用",
+        lib_insp_verify: "验证状态",
+        lib_insp_graph: "它和哪些内容有关",
+        lib_insp_usage: "生产使用记录",
+        lib_insp_copy: "复制给 Agent",
+        lib_insp_copied: "已复制",
+        lib_insp_open_md: "打开原文",
+        lib_insp_open_graph: "查看知识图谱",
+        lib_insp_used_n: "被 {n} 个 Run 使用",
+        lib_insp_unused: "还没有进入生产 Run",
+        lib_insp_published_n: "其中 {n} 个已发布",
+        lib_insp_when_use: "适用场景",
+        lib_insp_when_avoid: "避免场景",
+        lib_insp_beats: "结构节拍",
+        lib_insp_procedure: "写法",
+        lib_insp_examples: "示例",
+        lib_insp_constraints: "约束",
+        lib_insp_claim: "主张",
+        lib_insp_metric: "主指标",
+        lib_insp_confidence: "置信度",
+        lib_insp_related: "配套零件",
+        lib_insp_reading: "当前解读",
+        lib_reading_trial: "可以参考试用，但还不是稳定的品牌公式。",
+        lib_reading_working: "多次使用后表现稳定，可作为默认零件。",
+        lib_reading_dead: "已确认不再使用。",
+        lib_reading_hypothesis: "这是待验证主张，不能写成已证实事实。",
+        lib_reading_supported: "已有足够记录支持，可按证据强度使用。",
+        lib_reading_weakened: "现有结果削弱了这条主张，使用时需降调。",
+        lib_reading_retired: "已退役，不要再推进这条主张。",
+        lib_reading_unknown: "已有发布，但结果尚未回填，证据仍薄。",
+        lib_reading_unused: "尚未进入生产，先确认适用场景再使用。",
+        lib_ctx_read: "这个零件连着 {n} 个知识节点",
+        lib_ctx_none_short: "还没有记下关联节点",
+        lib_ctx_title: "这个表达零件连着什么",
+        lib_ctx_lede: "中心是当前表达零件。周围是来源、配套零件、选用它的 Topic，以及实际使用它的 Run。",
+        lib_ctx_none: "这个表达零件还没有可展示的关联。",
+        lib_ctx_why_source: "拆解来源。",
+        lib_ctx_why_topic: "被此 Topic 选用。",
+        lib_ctx_why_run: "被此 Run 使用。",
+        lib_ctx_why_evidence: "作为主张证据。",
+        lib_ctx_why_related: "可组合的配套表达零件。",
+        lib_handoff_lede: "把下面这段话贴进对话。Agent 会按零件约束来写，不会发明证据。",
+
         lib_claim_ev: "论据来自以下内容：",
       },
       en: {
@@ -5919,6 +6145,50 @@
         kv_signal: "Signal", kv_hit_source: "Hit Source", kv_needs: "Needs / Links", kv_recs: "Recommended Tools",
         kv_heat_at: "Metrics at", kv_result: "Result",
         lib_use_hist: "Referenced in the following Runs:",
+        lib_insp_what: "What it is",
+        lib_insp_how: "How to use it",
+        lib_insp_verify: "Validation",
+        lib_insp_graph: "What it connects to",
+        lib_insp_usage: "Production history",
+        lib_insp_copy: "Copy to Agent",
+        lib_insp_copied: "Copied",
+        lib_insp_open_md: "Open source file",
+        lib_insp_open_graph: "See knowledge graph",
+        lib_insp_used_n: "Used in {n} Runs",
+        lib_insp_unused: "Not used in a production Run yet",
+        lib_insp_published_n: "{n} published",
+        lib_insp_when_use: "When to use",
+        lib_insp_when_avoid: "When to avoid",
+        lib_insp_beats: "Beats",
+        lib_insp_procedure: "Procedure",
+        lib_insp_examples: "Examples",
+        lib_insp_constraints: "Constraints",
+        lib_insp_claim: "Claim",
+        lib_insp_metric: "Primary metric",
+        lib_insp_confidence: "Confidence",
+        lib_insp_related: "Related craft",
+        lib_insp_reading: "Current reading",
+        lib_reading_trial: "Worth trying, but not a stable house formula yet.",
+        lib_reading_working: "Stable after reuse — safe as a default craft piece.",
+        lib_reading_dead: "Retired. Do not reuse.",
+        lib_reading_hypothesis: "A hypothesis, not a verified fact. Keep the evidence gap visible.",
+        lib_reading_supported: "Supported by recorded results; still bound by evidence strength.",
+        lib_reading_weakened: "Current results weaken this claim — soften the language.",
+        lib_reading_retired: "Retired. Do not advance this claim.",
+        lib_reading_unknown: "Shipped, but results are still unknown — evidence stays thin.",
+        lib_reading_unused: "Not in production yet. Confirm fit before using.",
+        lib_ctx_read: "Connected to {n} knowledge nodes",
+        lib_ctx_none_short: "No linked nodes recorded yet",
+        lib_ctx_title: "What this craft connects to",
+        lib_ctx_lede: "The craft piece is at the center. Surrounding nodes are sources, related craft, Topics that selected it, and Runs that used it.",
+        lib_ctx_none: "This craft piece has no recorded connections yet.",
+        lib_ctx_why_source: "Source it was mined from.",
+        lib_ctx_why_topic: "Selected by this Topic.",
+        lib_ctx_why_run: "Used in this Run.",
+        lib_ctx_why_evidence: "Evidence for the claim.",
+        lib_ctx_why_related: "Companion craft that can be composed with it.",
+        lib_handoff_lede: "Paste this into chat. The Agent will follow the craft constraints and invent no evidence.",
+
         lib_claim_ev: "Evidence from the following sources:",
       }
     };
@@ -11608,6 +11878,7 @@
       craft: "#c4a06a",
       topic: "#9c3d32",
       run: "#2f6fed",
+      craft_hub: "#8b6914",
     };
     const TOPIC_CTX_RING = { input: 130, judgment: 170, evidence: 210, craft: 250 };
 
@@ -11636,7 +11907,9 @@
         for (const row of cols[col]) rows.push(row);
       }
       const topicId = topic.id || `topic:${topic.ident}`;
-      const hubKind = topic.kind === "run" ? "run" : "topic";
+      const hubKind = topic.kind === "run" ? "run"
+        : (topic.kind === "swipe" || topic.kind === "atom" || topic.kind === "claim") ? "craft_hub"
+        : "topic";
       const nodes = [{
         id: topicId,
         ident: topic.ident,
@@ -12195,14 +12468,15 @@
       const $lede = document.getElementById("ctxLede");
       if (!$map || !ctxTopic) return;
       const isRunHub = ctxTopic.kind === "run";
-      $title.textContent = t(isRunHub ? "run_ctx_title" : "topic_ctx_title");
-      $lede.textContent = t(isRunHub ? "run_ctx_lede" : "topic_ctx_lede");
+      const isCraftHub = ctxTopic.kind === "swipe" || ctxTopic.kind === "atom" || ctxTopic.kind === "claim";
+      $title.textContent = t(isCraftHub ? "lib_ctx_title" : (isRunHub ? "run_ctx_title" : "topic_ctx_title"));
+      $lede.textContent = t(isCraftHub ? "lib_ctx_lede" : (isRunHub ? "run_ctx_lede" : "topic_ctx_lede"));
       const cols = topicContextColumns(ctxTopic);
       const total = topicContextCount(cols);
       const constraints = (ctxTopic.constraints || []).filter(Boolean);
       if (!total && !constraints.length) {
         stopTopicContextAnim();
-        $map.innerHTML = `<p class="note" style="padding:16px">${esc(t(isRunHub ? "run_ctx_none" : "topic_ctx_none"))}</p>`;
+        $map.innerHTML = `<p class="note" style="padding:16px">${esc(t(isCraftHub ? "lib_ctx_none" : (isRunHub ? "run_ctx_none" : "topic_ctx_none")))}</p>`;
         renderTopicContextDetail();
         return;
       }
@@ -12210,8 +12484,8 @@
         .filter(col => cols[col].length)
         .map(col => `<span><i style="background:${TOPIC_CTX_ROLE_COLOR[col]}"></i>${esc(t("topic_ctx_col_" + col))}</span>`)
         .join("");
-      const hubLab = isRunHub ? "Run" : "Topic";
-      const hubColor = isRunHub ? TOPIC_CTX_ROLE_COLOR.run : TOPIC_CTX_ROLE_COLOR.topic;
+      const hubLab = isCraftHub ? "Craft" : (isRunHub ? "Run" : "Topic");
+      const hubColor = isCraftHub ? TOPIC_CTX_ROLE_COLOR.craft_hub : (isRunHub ? TOPIC_CTX_ROLE_COLOR.run : TOPIC_CTX_ROLE_COLOR.topic);
       const consHtml = constraints.length
         ? `<div class="ctx-constraints"><h3>${esc(t("topic_ctx_constraints"))}</h3><ul>${
             constraints.map(c => `<li>${esc(c)}</li>`).join("")
@@ -12242,6 +12516,387 @@
       ctxSelected = "";
     }
 
+
+
+    function craftDetailOf(n) {
+      return (n && n.craft_detail && typeof n.craft_detail === "object") ? n.craft_detail : {};
+    }
+
+    function craftContextOf(n) {
+      return (n && n.context_detail && typeof n.context_detail === "object") ? n.context_detail : {};
+    }
+
+    function libListHtml(items) {
+      const arr = (items || []).filter(Boolean);
+      if (!arr.length) return "";
+      return `<ul class="lib-list">${arr.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    }
+
+    function libKvHtml(rows) {
+      const bits = rows.filter(([, v]) => {
+        if (v == null || v === "") return false;
+        if (Array.isArray(v) && !v.length) return false;
+        return true;
+      }).map(([label, val]) => {
+        const body = Array.isArray(val) ? libListHtml(val) : `<dd>${esc(String(val))}</dd>`;
+        if (Array.isArray(val)) {
+          return `<div><dt>${esc(label)}</dt>${body}</div>`;
+        }
+        return `<div><dt>${esc(label)}</dt>${body}</div>`;
+      });
+      return bits.length ? `<dl class="lib-kv">${bits.join("")}</dl>` : "";
+    }
+
+    function libSubtypeLabel(n) {
+      return n.atom_type || n.form || n.claim_type || n.kind || "";
+    }
+
+    function libPillClass(status) {
+      const s = String(status || "").toLowerCase();
+      if (["working", "supported", "trial", "hypothesis", "dead", "weakened", "retired", "contradicted"].includes(s)) return s;
+      return "";
+    }
+
+    function libReading(n) {
+      const st = String(n.status || "").toLowerCase();
+      const cd = craftDetailOf(n);
+      const usage = cd.usage_runs || [];
+      if (n.kind === "claim") {
+        if (st === "supported") return t("lib_reading_supported");
+        if (st === "weakened") return t("lib_reading_weakened");
+        if (st === "retired") return t("lib_reading_retired");
+        if (usage.length && usage.every(u => !u.result || u.result === "unknown")) return t("lib_reading_unknown");
+        return t("lib_reading_hypothesis");
+      }
+      if (st === "working") return t("lib_reading_working");
+      if (st === "dead") return t("lib_reading_dead");
+      if (!usage.length) return t("lib_reading_unused");
+      if (usage.every(u => !u.result || u.result === "unknown")) return t("lib_reading_unknown");
+      return t("lib_reading_trial");
+    }
+
+    function libFeatureText(n) {
+      const d = craftContextOf(n);
+      if (n.kind === "claim") return d.claim || n.label || "";
+      if (n.kind === "atom") return d.text || n.label || "";
+      return n.label || d.title || "";
+    }
+
+    function libWhatHtml(n) {
+      const feature = libFeatureText(n);
+      const lede = n.kind === "swipe"
+        ? (lang === "zh" ? "这是一套可复用的内容结构，不是可直接复制的成稿。" : "A reusable argument structure — not finished copy.")
+        : n.kind === "atom"
+        ? (lang === "zh" ? "这是一个单独的表达动作。" : "A single reusable writing move.")
+        : (lang === "zh" ? "这是一条需要被验证的主张，不是已证实事实。" : "A claim to validate — not a verified fact.");
+      return `<section class="lib-section">
+        <h3>${esc(t("lib_insp_what"))}</h3>
+        <p class="note" style="margin:0">${esc(lede)}</p>
+        ${feature ? `<p class="lib-feature">${esc(feature)}</p>` : ""}
+      </section>`;
+    }
+
+    function libHowBullets(items) {
+      const arr = (items || []).map(x => String(x || "").trim()).filter(Boolean);
+      if (!arr.length) return `<p class="lib-how-empty">—</p>`;
+      return `<ul class="lib-how-bullets">${arr.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    }
+
+    function libHowPanel(tone, label, items) {
+      const arr = (items || []).map(x => String(x || "").trim()).filter(Boolean);
+      if (!arr.length) return "";
+      return `<div class="lib-how-panel ${tone}">
+        <div class="lib-how-panel-head">
+          <span class="lib-how-dot" aria-hidden="true"></span>
+          <p class="lib-how-panel-label">${esc(label)}</p>
+        </div>
+        ${libHowBullets(arr)}
+      </div>`;
+    }
+
+    function libHowSteps(items) {
+      const arr = (items || []).map(x => String(x || "").trim()).filter(Boolean);
+      if (!arr.length) return "";
+      const steps = arr.map((raw, i) => {
+        const body = raw.replace(/^\d+[\.\)]\s*/, "").replace(/^\*\*?/, "").replace(/\*\*$/, "").trim() || raw;
+        const num = String(i + 1).padStart(2, "0");
+        return `<li class="lib-how-step">
+          <span class="lib-how-step-num">${num}</span>
+          <p class="lib-how-step-body">${esc(body)}</p>
+        </li>`;
+      }).join("");
+      return `<ol class="lib-how-steps">${steps}</ol>`;
+    }
+
+    function libHowHtml(n) {
+      const d = craftContextOf(n);
+      const useItems = n.kind === "swipe" ? d.when_to_use : d.applies_when;
+      const avoidItems = n.kind === "swipe" ? d.when_to_avoid : d.avoid_when;
+      const usePanel = libHowPanel("use", t("lib_insp_when_use"), useItems);
+      const avoidPanel = libHowPanel("avoid", t("lib_insp_when_avoid"), avoidItems);
+      const pairCount = (usePanel ? 1 : 0) + (avoidPanel ? 1 : 0);
+      const pair = pairCount
+        ? `<div class="lib-how-pair${pairCount === 2 ? " two" : ""}">${usePanel}${avoidPanel}</div>`
+        : "";
+
+      let primary = "";
+      if (n.kind === "swipe" && (d.beats || []).length) {
+        primary = `<div class="lib-how-block">
+          <p class="lib-how-block-label">${esc(t("lib_insp_beats"))}</p>
+          ${libHowSteps(d.beats)}
+        </div>`;
+      } else if ((n.kind === "atom" || n.kind === "claim") && (d.procedure || []).length) {
+        primary = `<div class="lib-how-block">
+          <p class="lib-how-block-label">${esc(t("lib_insp_procedure"))}</p>
+          ${libHowSteps(d.procedure)}
+        </div>`;
+      }
+
+      let extras = "";
+      if (n.kind === "swipe" && (d.constraints || []).length) {
+        extras += libHowPanel("soft", t("lib_insp_constraints"), d.constraints);
+      }
+      if (n.kind === "atom" && (d.examples || []).length) {
+        extras += `<div class="lib-how-block">
+          <p class="lib-how-block-label">${esc(t("lib_insp_examples"))}</p>
+          ${libHowBullets(d.examples)}
+        </div>`;
+      }
+
+      const chips = [];
+      if (n.kind === "claim") {
+        const metric = d.primary_metric || n.primary_metric || "";
+        const conf = d.confidence || n.confidence || "";
+        if (metric) chips.push(`<span class="lib-how-chip"><b>${esc(t("lib_insp_metric"))}</b>${esc(metric)}</span>`);
+        if (conf) chips.push(`<span class="lib-how-chip"><b>${esc(t("lib_insp_confidence"))}</b>${esc(conf)}</span>`);
+      }
+      const meta = chips.length ? `<div class="lib-how-meta">${chips.join("")}</div>` : "";
+
+      if (!pair && !primary && !extras && !meta) return "";
+      return `<section class="lib-section">
+        <h3>${esc(t("lib_insp_how"))}</h3>
+        <div class="lib-how">
+          ${pair}
+          ${primary}
+          ${extras}
+          ${meta}
+        </div>
+      </section>`;
+    }
+
+    function libVerifyHtml(n) {
+      const cd = craftDetailOf(n);
+      const usage = cd.usage_runs || [];
+      const pub = cd.published_count || 0;
+      const usageLine = usage.length
+        ? fillTemplate("lib_insp_used_n", { n: usage.length })
+          + (pub ? ` · ${fillTemplate("lib_insp_published_n", { n: pub })}` : "")
+        : t("lib_insp_unused");
+      const st = n.status || "";
+      const win = n.win != null ? `${n.win}w` : "";
+      const loss = n.loss != null ? `${n.loss}l` : "";
+      const hits = (win || loss) ? [win, loss].filter(Boolean).join(" / ") : "";
+      const rows = [
+        [t("lib_insp_verify"), st],
+        [t("lib_insp_usage"), usageLine],
+      ];
+      if (n.kind === "claim") {
+        rows.push([t("lib_insp_confidence"), n.confidence || craftContextOf(n).confidence || ""]);
+        rows.push([t("lib_insp_metric"), n.primary_metric || craftContextOf(n).primary_metric || ""]);
+      }
+      if (hits) rows.push([t("kv_hits"), hits]);
+      return `<section class="lib-section">
+        <h3>${esc(t("lib_insp_verify"))}</h3>
+        ${libKvHtml(rows)}
+        <p class="lib-reading"><strong>${esc(t("lib_insp_reading"))}</strong> · ${esc(libReading(n))}</p>
+      </section>`;
+    }
+
+    function libProvReason(code) {
+      const map = {
+        source: "lib_ctx_why_source",
+        selected_by_topic: "lib_ctx_why_topic",
+        used_in_run: "lib_ctx_why_run",
+        claim_evidence: "lib_ctx_why_evidence",
+        related_craft: "lib_ctx_why_related",
+      };
+      return t(map[code] || code) || code;
+    }
+
+    function libContextHub(n) {
+      const cd = craftDetailOf(n);
+      const prov = (cd.provenance || []).map(row => ({
+        ...row,
+        reason: libProvReason(row.reason || ""),
+      }));
+      return {
+        kind: n.kind,
+        id: n.id,
+        ident: n.ident,
+        label: n.label || "",
+        status: n.status || "",
+        core_judgment: libFeatureText(n),
+        constraints: craftContextOf(n).constraints || craftContextOf(n).avoid_when || [],
+        provenance: prov,
+      };
+    }
+
+    function libGraphHtml(n) {
+      const hub = libContextHub(n);
+      const cols = topicContextColumns(hub);
+      const total = topicContextCount(cols);
+      const bits = ["input", "judgment", "evidence", "craft"]
+        .filter(col => cols[col].length)
+        .map(col => `${t("topic_ctx_col_" + col)} ${cols[col].length}`)
+        .join(" · ");
+      const head = total
+        ? fillTemplate("lib_ctx_read", { n: total })
+        : t("lib_ctx_none_short");
+      return `<section class="lib-section topic-ctx-card">
+        <h3>${esc(t("lib_insp_graph"))}</h3>
+        <p class="topic-ctx-summary">${esc(head)}</p>
+        ${bits ? `<p class="topic-ctx-bits">${esc(bits)}</p>` : ""}
+        <button type="button" class="topic-ctx-open" id="libCtxOpen">${esc(t("lib_insp_open_graph"))}</button>
+      </section>`;
+    }
+
+    function libUsageHtml(n) {
+      const usage = craftDetailOf(n).usage_runs || [];
+      if (!usage.length) return "";
+      const items = usage.slice(0, 8).map(u => {
+        const runNode = Object.values(byId).find(x => x.kind === "run" && x.ident === u.ident);
+        const meta = [u.status, u.result, u.platform].filter(Boolean).join(" · ");
+        const attrs = runNode ? `data-goto="${esc(runNode.id)}"` : `data-run-open-ident="${esc(u.ident)}"`;
+        return `<button type="button" ${attrs}>
+          <div class="u-id">${esc(u.ident)}</div>
+          <div class="u-lab">${esc(u.label || "")}</div>
+          ${meta ? `<div class="u-meta">${esc(meta)}</div>` : ""}
+        </button>`;
+      }).join("");
+      return `<section class="lib-section">
+        <h3>${esc(t("lib_insp_usage"))}</h3>
+        <div class="lib-usage">${items}</div>
+      </section>`;
+    }
+
+    function libHandoffPrompt(n) {
+      const en = lang !== "zh";
+      const d = craftContextOf(n);
+      const feature = libFeatureText(n);
+      const subtype = libSubtypeLabel(n);
+      const avoid = (d.avoid_when || d.when_to_avoid || []).slice(0, 3);
+      const use = (d.applies_when || d.when_to_use || []).slice(0, 3);
+      if (n.kind === "claim") {
+        if (en) {
+          let body = `Next step: use this claim carefully.\n\nClaim: ${n.ident}\nStatus: ${n.status || "hypothesis"}\nConfidence: ${n.confidence || d.confidence || "low"}\n\nObjective:\n${feature}\n\nPlease:\n1. Treat this as a hypothesis, not a verified fact.\n2. Keep evidence gaps visible.\n3. Obey Applies when / Avoid when.\n4. Write 1–2 draft angles for the current Topic/Run.`;
+          if (use.length) body += `\n\nApplies when:\n- ` + use.join("\n- ");
+          if (avoid.length) body += `\n\nAvoid when:\n- ` + avoid.join("\n- ");
+          return body;
+        }
+        let body = `下一步：谨慎使用这条主张。\n\n主张：${n.ident}\n状态：${n.status || "hypothesis"}\n置信度：${n.confidence || d.confidence || "low"}\n\n主张内容：\n${feature}\n\n请执行：\n1. 把它当待验证假设，不要写成事实。\n2. 保留证据缺口。\n3. 遵守 Applies when / Avoid when。\n4. 为当前 Topic/Run 写 1–2 个角度。`;
+        if (use.length) body += `\n\n适用：\n- ` + use.join("\n- ");
+        if (avoid.length) body += `\n\n避免：\n- ` + avoid.join("\n- ");
+        return body;
+      }
+      if (n.kind === "atom") {
+        const proc = (d.procedure || []).slice(0, 5);
+        if (en) {
+          let body = `Next step: apply this craft atom.\n\nAtom: ${n.ident}\nType: ${subtype}\n\nCore move:\n${feature}\n\nPlease:\n1. Read Procedure / Applies when / Avoid when.\n2. Use it as writing structure only — invent no product facts.\n3. Write 2 draft passages for the current theme, keeping voice.`;
+          if (proc.length) body += `\n\nProcedure:\n- ` + proc.join("\n- ");
+          return body;
+        }
+        let body = `下一步：使用这个表达原子。\n\n原子：${n.ident}\n类型：${subtype}\n\n核心动作：\n${feature}\n\n请执行：\n1. 先读 Procedure / Applies when / Avoid when。\n2. 只当作写作结构，不要发明产品事实。\n3. 按当前主题写 2 段落地文案，保持语气。`;
+        if (proc.length) body += `\n\n写法：\n- ` + proc.join("\n- ");
+        return body;
+      }
+      // swipe
+      const beats = (d.beats || []).slice(0, 6);
+      if (en) {
+        let body = `Next step: apply this swipe structure.\n\nSwipe: ${n.ident}\nForm: ${subtype}\n\nOne-liner:\n${feature}\n\nPlease:\n1. Follow When to use / When to avoid / Constraints.\n2. Reuse the beat structure, not finished copy from sources.\n3. Draft one outline for the current Topic/Run.`;
+        if (beats.length) body += `\n\nBeats:\n- ` + beats.join("\n- ");
+        return body;
+      }
+      let body = `下一步：使用这套 Swipe 结构。\n\nSwipe：${n.ident}\n形式：${subtype}\n\n一句话：\n${feature}\n\n请执行：\n1. 遵守 When to use / When to avoid / Constraints。\n2. 复用结构节拍，不要照搬来源成稿。\n3. 为当前 Topic/Run 写一份大纲。`;
+      if (beats.length) body += `\n\n节拍：\n- ` + beats.join("\n- ");
+      return body;
+    }
+
+    function openLibContext(n) {
+      openTopicContext(libContextHub(n));
+    }
+
+    function renderLibInsp(n) {
+      const subtype = libSubtypeLabel(n);
+      const st = n.status || "";
+      const cd = craftDetailOf(n);
+      const usage = cd.usage_runs || [];
+      const metaBits = [
+        subtype,
+        n.platforms || n.platform,
+        n.profiles || n.profile,
+      ].filter(Boolean);
+      const usageMeta = usage.length
+        ? fillTemplate("lib_insp_used_n", { n: usage.length })
+        : t("lib_insp_unused");
+      const handoff = libHandoffPrompt(n);
+      const mdPath = mdFileForNode(n);
+
+      $insp.innerHTML = `<div class="lib-insp">
+        <div class="lib-hero">
+          <div class="lib-hero-top">
+            ${st ? `<span class="lib-pill ${libPillClass(st)}">${esc(st)}</span>` : ""}
+            <span class="lib-pill">${esc(n.kind)}</span>
+          </div>
+          <p class="title">${esc(n.label || n.ident)}</p>
+          <p class="lib-id">${esc(n.ident)}</p>
+          ${metaBits.length ? `<p class="lib-meta">${metaBits.map(esc).join(" · ")}</p>` : ""}
+          <p class="lib-meta">${esc(usageMeta)}</p>
+        </div>
+
+        <section class="lib-section">
+          <h3>${esc(t("lib_insp_copy"))}</h3>
+          <p class="note" style="margin:0">${esc(t("lib_handoff_lede"))}</p>
+          <div class="action-prompt-preview">${esc(handoff)}</div>
+          <div class="lib-actions">
+            <button type="button" class="primary" id="libCopyPromptBtn">${esc(t("lib_insp_copy"))}</button>
+            ${mdPath ? `<button type="button" data-md="${esc(mdPath)}" data-md-title="${esc(n.ident)}">${esc(t("lib_insp_open_md"))}</button>` : ""}
+          </div>
+        </section>
+
+        ${libWhatHtml(n)}
+        ${libHowHtml(n)}
+        ${libVerifyHtml(n)}
+        ${libGraphHtml(n)}
+        ${libUsageHtml(n)}
+        <p class="note">${t("readonly")}</p>
+      </div>`;
+
+      const cp = $insp.querySelector("#libCopyPromptBtn");
+      if (cp) {
+        cp.onclick = () => {
+          navigator.clipboard.writeText(handoff).then(() => {
+            cp.textContent = t("lib_insp_copied");
+            setTimeout(() => { cp.textContent = t("lib_insp_copy"); }, 2000);
+          });
+        };
+      }
+      const ctxBtn = $insp.querySelector("#libCtxOpen");
+      if (ctxBtn) ctxBtn.onclick = () => openLibContext(n);
+      $insp.querySelectorAll("[data-goto]").forEach(btn => {
+        btn.onclick = () => select(btn.getAttribute("data-goto"));
+      });
+      $insp.querySelectorAll("[data-run-open-ident]").forEach(btn => {
+        btn.onclick = () => {
+          const ident = btn.getAttribute("data-run-open-ident");
+          const run = Object.values(byId).find(x => x.kind === "run" && x.ident === ident);
+          if (run) {
+            selected = run.id;
+            render();
+            openRun(run);
+          }
+        };
+      });
+    }
 
     function runDetailOf(n) {
       return (n && n.run_detail && typeof n.run_detail === "object") ? n.run_detail : {};
@@ -12526,10 +13181,6 @@
         (n.lane || "").replace(/_/g, " "),
       ].filter(Boolean);
       const handoff = runHandoffPrompt(n);
-      const topic = d.topic_id || n.topic_id || "";
-      const topicNode = topic
-        ? (Object.values(byId).find(x => x.kind === "topic" && x.ident === topic) || null)
-        : null;
       const nextHint = d.next_hint
         ? `<p class="run-meta">${esc(d.next_hint)}</p>`
         : "";
@@ -12554,7 +13205,6 @@
           <div class="run-action-actions">
             <button type="button" class="primary" id="runCopyPromptBtn">${esc(t("run_insp_copy"))}</button>
             <button type="button" data-run-open="${esc(n.id)}" data-run-stage="${esc(cur)}">${esc(t("run_insp_open_full"))}</button>
-            ${topicNode ? `<button type="button" data-goto="${esc(topicNode.id)}">${esc(t("run_insp_goto_topic"))}</button>` : ""}
           </div>
         </section>
 
@@ -12715,9 +13365,7 @@
           : `下一步：从这条命中拆表达零件。\n\nHit：${name}\n\n请拆钩子结构，并提炼可进 Swipe/Atom 的公式。`;
       }
       if (k === "swipe" || k === "atom" || k === "claim") {
-        return en
-          ? `Next step: apply this craft piece.\n\nCraft: ${name}\n\nPlease write 2 draft passages that reuse it in the current theme, keeping the voice.`
-          : `下一步：把这个表达零件用起来。\n\n零件：${name}\n\n请按当前主题写 2 段落地文案，保持原有语气。`;
+        return libHandoffPrompt(n);
       }
       return en
         ? `Next step: decide what to do with this item.\n\nItem: ${name}\nKind: ${k}\n\nPlease explain its upstream/downstream links and recommend one concrete next action.`
@@ -12755,6 +13403,10 @@
       }
       if (n.kind === "run") {
         renderRunInsp(n);
+        return;
+      }
+      if (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") {
+        renderLibInsp(n);
         return;
       }
       const ctx = connected(n.id);

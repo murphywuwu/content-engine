@@ -1,5 +1,12 @@
 # Hits
 
-Research triage board. Scan → stage here → route to Needs or Library (swipe/atom). Not a Topic queue.
+Research **triage** board. Not topics. Not Discovery-for-angles.
+
+```text
+keywords / handles scan → hits/ (triage)
+  → route need     → needs/
+  → route library  → inbox + swipe/atom (existing ingest)
+  → discard
+```
 
 See engine `CLAUDE.md` **§ Hits**.
