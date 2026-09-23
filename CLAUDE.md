@@ -827,18 +827,29 @@ Rank:
 - Swipe/atom: `working` before `trial`; then higher `win/n` (if n=0, treat as unranked trial).
 - Claim: **do not** rank by `hypothesis` vs `supported`. Rank remaining by `win/n`. `hypothesis` is valid to pick. `weakened` only if the user wants that tension.
 
-Then: swipe 0–1 → atoms by role → claim 0–1. **`none` always allowed** with why.
-Sibling runs for the same topic may pick different swipe/atoms (native rewrite).
+If the Run comes from a Topic with an explicit craft selection, inherit that
+selection as the Run strategy. Do not ask the Run to re-select the same
+Swipe / Atoms / Claim. A Run may adapt the inherited strategy to its platform
+format, but must not silently replace the Topic's content decision.
+
+Only Topics without an explicit craft selection use the legacy fallback:
+swipe 0–1 → atoms by role → claim 0–1. **`none` always allowed** with why.
+If a fallback selection is needed, write it into the Topic before opening
+future Runs; do not create a second competing strategy in each Run.
 
 **Write the pick into `idea.md` (this is the citation).** Chat card alone does not count.
 
 | Field | Required form |
 |-------|----------------|
-| `swipe_id` | `none` or `S1` (one id) |
-| `atoms` | `none` or `hook:A-… cta:A-…` (real `A-` ids) |
-| `claim_id` | `none` or catalog `C-…` — **not** the `hypothesis:` one-off line |
+| `swipe_id` | inherited Topic selection, or `none` |
+| `atoms` | inherited Topic selection, or `none` |
+| `claim_id` | inherited Topic selection, or `none` — not a one-off hypothesis |
 
-If the user later changes the pick, **overwrite** those three fields. Do **not** bump catalog `n`/`win`/`loss` here — that is ship-only (§ Catalog evidence).
+For a Topic-backed Run, these fields are a historical citation of the
+inherited strategy, not a second selection surface. If the Topic strategy is
+wrong, update the Topic and open a new Run; do not silently overwrite the Run
+strategy. Do **not** bump catalog `n`/`win`/`loss` here — that is ship-only
+(§ Catalog evidence).
 
 **引用** = how many **runs** currently name this id in `idea.md` (killed runs still count unless selection was cleared). The workbench derives it by scanning runs; it is not a column the agent increments. Observatory numbers update on `workbench/build.py`, not at the moment of chat.
 
@@ -889,7 +900,8 @@ Reading surface — fill in this order:
 Appendix — fill after the reading surface:
 
 6. **Inherited from Topic** — context, audience, conflict, insight, outcome, evidence (sharpened, not copied).
-7. **Selection** — swipe, atoms, claim ids.
+7. **Inherited strategy** — the Topic's swipe, atoms, claim ids, plus any
+platform-only adapter rules. Do not re-select the core strategy.
 8. **Quality gate** — 6 × 1–5 scores.
 
 **Step 4 — Brief quality gate (self-scoring)**

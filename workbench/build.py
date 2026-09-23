@@ -367,6 +367,21 @@ def _bullet_vals(md: str, *keys: str) -> dict[str, str]:
     return found
 
 
+def _recover_yaml_fields(fm: dict, text: str, *keys: str) -> dict:
+    """Fill missing frontmatter keys from later `key: value` lines.
+
+    Some pack templates put comments in the first --- block and real fields after.
+    """
+    out = dict(fm or {})
+    for key in keys:
+        if str(out.get(key) or "").strip():
+            continue
+        m = re.search(rf"^{re.escape(key)}:\s*(.*)$", text or "", re.M)
+        if m:
+            out[key] = m.group(1).strip()
+    return out
+
+
 def _stage_done_flags(name: str, fm: dict, text: str, index_pack: str = "") -> bool:
     status = str(fm.get("status") or "").strip().upper()
     if name == "idea":
@@ -391,28 +406,33 @@ def _stage_done_flags(name: str, fm: dict, text: str, index_pack: str = "") -> b
         m = re.search(r"\*\*Total:\*\*\s*(\d+)", text)
         return bool(m and int(m.group(1)) > 0)
     if name == "pack":
+        # Index pack=no → text-only run; unused template is not a finished pack.
+        if str(index_pack or "").lower() in {"no", "false", "0"}:
+            return False
         if str(index_pack or "").lower() in {"yes", "true", "1"}:
             return True
-        if "NOT_REQUIRED" in status or "N/A" in status or status == "SKIP":
-            return True
-        if status in {"UNUSED", "EMPTY", ""}:
+        if "NOT_REQUIRED" in status or "N/A" in status or status in {"SKIP", "UNUSED", "EMPTY", ""}:
             return False
         try:
             return int(str(fm.get("page_count") or "0")) > 0
         except ValueError:
-            return status not in {"UNUSED", "EMPTY"}
+            return False
     if name == "feedback":
-        vals = _bullet_vals(text, "url", "result")
+        vals = _bullet_vals(text, "url", "result", "metrics")
         result = str(fm.get("result") or vals.get("result") or "").strip().lower()
-        url = str(vals.get("url") or "").strip()
         if (
             result in {"", "unknown", "win | flat | loss | unknown", "|"}
             or "win | flat" in result
         ):
             result = ""
-        if url.startswith("http"):
+        # URL alone means published, not that feedback was actually collected.
+        if result in {"win", "flat", "loss"}:
             return True
-        return bool(result) and result not in {"empty"}
+        metrics = str(vals.get("metrics") or "").strip().lower()
+        if metrics and metrics not in {"(user-provided only)", "user-provided only", "-"}:
+            if re.search(r"\d", metrics):
+                return True
+        return False
     return False
 
 
@@ -424,6 +444,7 @@ def parse_run_detail(
     index_pack: str = "",
     index_notes: str = "",
     topic_id: str = "",
+    topic_strategy: dict | None = None,
     published_url: str = "",
     published_result: str = "",
 ) -> dict:
@@ -442,21 +463,41 @@ def parse_run_detail(
         info: dict = {
             "exists": bool(rel),
             "done": False,
+            "skipped": False,
             "path": rel,
             "status": "",
             "summary": "",
         }
         if not rel or not folder:
+            if name == "pack" and str(index_pack or "").lower() in {"no", "false", "0"}:
+                info["skipped"] = True
+                info["summary"] = "not needed"
             stages[name] = info
             continue
         path = ROOT / rel
         if not path.exists():
+            if name == "pack" and str(index_pack or "").lower() in {"no", "false", "0"}:
+                info["skipped"] = True
+                info["summary"] = "not needed"
             stages[name] = info
             continue
         text = path.read_text(encoding="utf-8")
         fm = frontmatter(text)
+        if name == "pack":
+            fm = _recover_yaml_fields(fm, text, "status", "page_count", "platform")
         info["status"] = str(fm.get("status") or "").strip()
         info["done"] = _stage_done_flags(name, fm, text, index_pack=index_pack)
+        if name == "pack":
+            st_u = info["status"].upper()
+            index_l = str(index_pack or "").lower()
+            info["skipped"] = (
+                index_l in {"no", "false", "0"}
+                or "NOT_REQUIRED" in st_u
+                or st_u in {"UNUSED", "N/A", "SKIP", "EMPTY"}
+            )
+            if info["skipped"]:
+                info["done"] = False
+
 
         if name == "idea":
             vals = _bullet_vals(text, "one_liner", "swipe_id", "atoms", "claim_id", "topic_id")
@@ -543,19 +584,26 @@ def parse_run_detail(
         elif name == "pack":
             info["page_count"] = str(fm.get("page_count") or "").strip()
             info["platform"] = str(fm.get("platform") or "").strip()
-            if "NOT_REQUIRED" in info["status"].upper():
-                info["summary"] = "not required"
+            if info.get("skipped"):
+                info["summary"] = "not needed"
+            elif "NOT_REQUIRED" in info["status"].upper():
+                info["summary"] = "not needed"
             else:
                 info["summary"] = info["status"] or ("ready" if info["done"] else "unused")
 
         elif name == "feedback":
             vals = _bullet_vals(text, "url", "result", "metrics", "vs claim", "notes")
             result = vals.get("result") or published_result or str(fm.get("result") or "")
-            if "win | flat" in result.lower():
+            if "win | flat" in result.lower() or result.strip().lower() in {"unknown", ""}:
                 result = ""
             info["url"] = vals.get("url") or published_url or ""
             info["result"] = result
-            info["summary"] = result or ("published" if published_url else "")
+            if result:
+                info["summary"] = result
+            elif info["url"]:
+                info["summary"] = "awaiting result"
+            else:
+                info["summary"] = ""
 
         stages[name] = info
 
@@ -577,12 +625,27 @@ def parse_run_detail(
     if m_next:
         next_hint = m_next.group(1).strip()
 
+    topic_strategy = topic_strategy or {}
+    run_swipes = sorted(set(re.findall(r"\bS\d+\b", selection.get("swipe") or "")))
+    run_atoms = sorted(set(re.findall(r"\bA-[A-Za-z0-9-]+\b", selection.get("atoms") or "")))
+    run_claims = sorted(set(re.findall(r"\bC-(?!\d{8}-\d{2}\b)[A-Za-z0-9-]+\b", selection.get("claim") or "")))
+    inherited = {
+        "swipes": topic_strategy.get("swipes") or [],
+        "atoms": topic_strategy.get("atoms") or [],
+        "claims": topic_strategy.get("claims") or [],
+    }
+    selected = {"swipes": run_swipes, "atoms": run_atoms, "claims": run_claims}
+    drift = any(inherited[key] != selected[key] for key in inherited) if topic_strategy.get("explicit") else False
+
     return {
         "thesis": thesis,
         "constraints": constraints,
         "w_ids": w_ids,
         "topic_id": topic_id,
         "selection": selection,
+        "topic_strategy": topic_strategy or {},
+        "inherited_strategy": inherited,
+        "strategy_drift": drift,
         "current_stage": current,
         "next_hint": next_hint,
         "editor_verdict": editor_verdict,
@@ -671,10 +734,17 @@ def parse_pack_chain(text: str) -> dict:
         variables = m_vars.group(1).strip()
     meta = {}
     meta_body = _md_section(text, "Meta")
+    # Stay on one line. `\s` includes newlines, so an empty `**w_ids:**` used to
+    # swallow the next bullet (`- **product_ids:** none`) and the run graph
+    # split that into fake judgment nodes.
     for key in ("w_ids", "product_ids", "recommendation_ids", "hook_type", "topic_id", "profile", "run_id"):
-        m = re.search(rf"\*\*{key}:\*\*\s*(.+)", meta_body, re.I)
-        if m:
-            meta[key] = m.group(1).strip()
+        m = re.search(rf"\*\*{key}:\*\*[ \t]*([^\n]*)", meta_body, re.I)
+        if not m:
+            continue
+        val = m.group(1).strip()
+        if not val or val.lower() in {"none", "—", "-"}:
+            continue
+        meta[key] = val
     arc = ""
     m_arc = re.search(r"\*\*one_liner:\*\*\s*(.+)", _md_section(text, "Arc"), re.I)
     if m_arc:
@@ -1171,6 +1241,28 @@ def context_detail_need(quote: str = "", speaker: str = "", frequency: str = "",
     }
 
 
+def parse_topic_craft_selection(trace: dict[str, str]) -> dict:
+    """Return the craft strategy explicitly recorded by a Topic Trace."""
+    swipe = sorted(set(re.findall(r"\bS\d+\b", trace.get("swipe") or "")))
+    atoms = sorted(set(re.findall(r"\bA-[A-Za-z0-9-]+\b", trace.get("atoms") or "")))
+    claims = sorted(
+        set(
+            re.findall(
+                r"\bC-(?!\d{8}-\d{2}\b)[A-Za-z0-9-]+\b",
+                trace.get("claim") or "",
+            )
+        )
+    )
+    return {
+        "swipes": swipe,
+        "atoms": atoms,
+        "claims": claims,
+        "primary_swipe": swipe[0] if len(swipe) == 1 else "",
+        "primary_claim": claims[0] if len(claims) == 1 else "",
+        "explicit": bool(swipe or atoms or claims),
+    }
+
+
 def parse_topic_item(md: str) -> dict:
     """Extract decision + generation provenance from a Topic item file."""
     out: dict = {
@@ -1278,6 +1370,7 @@ def parse_topic_item(md: str) -> dict:
             continue
         trace[key] = val
     out["trace"] = trace
+    out["craft_selection"] = parse_topic_craft_selection(trace)
 
     # Context Packet
     cp_body = ""
@@ -2506,6 +2599,7 @@ def build_graph() -> dict:
                     "context_packet": card.get("context_packet") or {},
                     "constraints": card.get("constraints") or [],
                     "provenance": card.get("provenance") or [],
+                    "craft_selection": card.get("craft_selection") or {},
                 },
             )
         )
@@ -2812,6 +2906,10 @@ def build_graph() -> dict:
             index_pack=row.get("pack", "") or "",
             index_notes=row.get("notes", "") or "",
             topic_id=topic_id,
+            topic_strategy=(
+                nodes.get(nid("topic", topic_id), {}).get("craft_selection")
+                if topic_id else {}
+            ),
         )
         # Prefer idea-file selection when richer; keep index/idea scrape as fallback.
         for k in ("swipe", "atoms", "claim"):
@@ -3376,6 +3474,10 @@ def _self_check() -> None:
     )
     assert m["src_views"] == "8091" and m["src_likes"] == "103", m
     assert m["src_bookmarks"] == "29" and m["src_replies"] == "20", m
+    empty_pack = parse_pack_chain(
+        "## Meta\n\n- **w_ids:**\n- **product_ids:** none\n- **hook_type:**\n"
+    )
+    assert empty_pack["meta"] == {}, empty_pack["meta"]
     pack = parse_pack_chain(
         "## Meta\n\n- **w_ids:** W-demo\n- **hook_type:** contrarian\n\n"
         "## Arc\n\n- **one_liner:** Speed moves the bottleneck\n\n"
@@ -3398,8 +3500,19 @@ def _self_check() -> None:
     assert pack["media"][0]["media_id"] == "M-20260921-01", pack
     assert pack["templates"][0]["layout_family"] == "Poster Hook", pack
     assert pack["experiment"]["comparable"] == "yes", pack
+    craft = parse_topic_craft_selection(
+        {
+            "swipe": "S8 / S9 as ally",
+            "atoms": "A-hook-one A-process-two",
+            "claim": "C-claim-one; C-20260921-01",
+        }
+    )
+    assert craft["swipes"] == ["S8", "S9"], craft
+    assert craft["atoms"] == ["A-hook-one", "A-process-two"], craft
+    assert craft["claims"] == ["C-claim-one"], craft
     print("parse_engagement_snapshot self-check ok")
     print("parse_pack_chain self-check ok")
+    print("parse_topic_craft_selection self-check ok")
 
     dummy_md = (
         "| run_id | path | date | scheduled | status | account | profile | primary_platform | platforms | topic_id | pillar | one_liner | pack | export | notes |\n"

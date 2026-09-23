@@ -3851,6 +3851,12 @@
     .run-chip.on { background: var(--accent-faint); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
     .run-chip.ok { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
     .run-chip.wait { color: #9a3412; background: #ffedd5; border-color: #fed7aa; }
+    .run-chip.skip {
+      color: var(--faint); background: transparent; border-style: dashed;
+    }
+    .run-rail-item.skipped .run-rail-dot {
+      background: transparent; border: 1.5px dashed var(--line-strong);
+    }
 
     .mediacard .media-gbadge {
       position: absolute; left: 8px; top: 8px; z-index: 2;
@@ -5123,14 +5129,17 @@
         run_ctx_read: "这一单用了 {n} 个知识节点",
         run_ctx_none_short: "还没有记下这一单继承了什么",
         run_ctx_open: "查看这一单用了什么",
-        run_ctx_title: "这一单继承了什么",
-        run_ctx_lede: "中心是这份 Run。周围节点是它实际继承并使用的 Topic、判断与表达零件，不是全库邻居。",
+        run_ctx_title: "查看这一单用了什么",
+        run_ctx_lede: "中间是这一单。周围是它实际用到的 Topic、判断和表达零件。点周围节点，可读它说了什么、为什么被用上。",
         run_ctx_none: "这一单没有记下继承的上下文。",
         run_ctx_hub: "这份 Run",
         run_ctx_why_topic: "这一单从该 Topic 开出，核心判断由此继承。",
+        run_ctx_why_inherited: "这个节点属于 Topic 的正式上下文，Run 应直接继承。",
         run_ctx_why_wiki: "写作时服从的判断节点。",
         run_ctx_why_craft: "这一单实际选用的表达零件。",
         run_ctx_why_claim: "这一单要推进的主张。",
+        run_ctx_drift: "发现策略偏移",
+        run_ctx_drift_desc: "Topic 已经选定的表达零件，和这个 Run 的历史选择不一致。该 Run 保留历史记录；新 Run 应直接继承 Topic 策略。",
 
         run_insp_copy: "复制给 Agent",
         run_insp_copied: "已复制",
@@ -5141,6 +5150,7 @@
         run_insp_stage_done: "已完成",
         run_insp_stage_todo: "未完成",
         run_insp_stage_missing: "尚无文件",
+        run_insp_stage_skip: "不需要",
         run_insp_thesis: "核心命题",
         run_insp_constraints: "硬边界",
         run_insp_craft: "表达零件",
@@ -5152,7 +5162,7 @@
         run_stage_draft: "Draft",
         run_stage_editor: "Editor review",
         run_stage_rubric: "Rubric",
-        run_stage_pack: "Pack",
+        run_stage_pack: "配图稿",
         run_stage_feedback: "Feedback",
         run_action_idea: "确认这一单要做什么，再进入 Brief。",
         run_action_brief: "写清 Thesis、读者变化、证据与边界。",
@@ -5160,7 +5170,7 @@
         run_action_draft: "写出平台稿件。保持核心判断，不要发明证据。",
         run_action_editor: "审稿：检查 Hook、边界和平台表达，给出 APPROVE / REWRITE / HOLD。",
         run_action_rubric: "打分并决定 SHIP 或 HOLD。证据不足时不要假装已验证。",
-        run_action_pack: "准备发布物料。纯文字帖可标记为不需要 Pack。",
+        run_action_pack: "准备配图稿（轮播 / 幻灯片）。纯文字帖可跳过这一步。",
         run_action_feedback: "发布后回填 URL、结果与证据；不要推断未知指标。",
         run_action_published: "已发布。回填反馈后，才能升级判断。",
         run_action_editor_ok: "Editor 已批准当前草稿。下一步完成 Rubric，再进入发布准备。",
@@ -5819,14 +5829,17 @@
         run_ctx_read: "This run used {n} knowledge nodes",
         run_ctx_none_short: "No inherited context was recorded",
         run_ctx_open: "See what this run used",
-        run_ctx_title: "What this run inherited",
-        run_ctx_lede: "The Run is at the center. Surrounding nodes are what it actually inherited and used — not every neighbor in the vault.",
+        run_ctx_title: "See what this run used",
+        run_ctx_lede: "This run is in the middle. Around it are the Topic, judgments, and craft pieces it actually used. Click a node to read what it says and why it was used here.",
         run_ctx_none: "This run has no recorded inherited context.",
         run_ctx_hub: "This run",
         run_ctx_why_topic: "This run was opened from that Topic; the core judgment is inherited.",
+        run_ctx_why_inherited: "This node belongs to the Topic's declared context and should be inherited by the Run.",
         run_ctx_why_wiki: "Judgment node this run must obey while writing.",
         run_ctx_why_craft: "Craft piece actually selected for this run.",
         run_ctx_why_claim: "Claim this run is advancing.",
+        run_ctx_drift: "Strategy drift detected",
+        run_ctx_drift_desc: "The Topic's declared craft and this Run's historical selection differ. History is preserved; new Runs should inherit the Topic strategy directly.",
 
         run_insp_copy: "Copy to Agent",
         run_insp_copied: "Copied",
@@ -5837,6 +5850,7 @@
         run_insp_stage_done: "Done",
         run_insp_stage_todo: "Todo",
         run_insp_stage_missing: "Missing",
+        run_insp_stage_skip: "Not needed",
         run_insp_thesis: "Core thesis",
         run_insp_constraints: "Hard limits",
         run_insp_craft: "Craft used",
@@ -5848,7 +5862,7 @@
         run_stage_draft: "Draft",
         run_stage_editor: "Editor review",
         run_stage_rubric: "Rubric",
-        run_stage_pack: "Pack",
+        run_stage_pack: "Visual deck",
         run_stage_feedback: "Feedback",
         run_action_idea: "Confirm what this run is about, then move to Brief.",
         run_action_brief: "Write the thesis, reader change, evidence, and boundaries.",
@@ -5856,7 +5870,7 @@
         run_action_draft: "Write the platform draft. Keep the core judgment; invent no evidence.",
         run_action_editor: "Review hook, boundaries, and platform craft. Return APPROVE / REWRITE / HOLD.",
         run_action_rubric: "Score and decide SHIP or HOLD. Do not pretend thin evidence is proven.",
-        run_action_pack: "Prepare publish assets. Text-only posts may mark Pack as not required.",
+        run_action_pack: "Prepare the visual deck (carousel / slideshow). Text-only posts can skip this step.",
         run_action_feedback: "After publishing, fill URL, result, and evidence. Do not invent metrics.",
         run_action_published: "Published. Record feedback before upgrading any judgment.",
         run_action_editor_ok: "Editor approved the draft. Finish Rubric, then prepare to publish.",
@@ -12925,6 +12939,7 @@
 
     function runStageSummaryLine(name, info) {
       if (!info) return t("run_insp_stage_missing");
+      if (info.skipped) return t("run_insp_stage_skip");
       if (!info.exists) return t("run_insp_stage_missing");
       const bits = [];
       if (info.summary) bits.push(info.summary);
@@ -13013,12 +13028,12 @@
       const action = runActionBody(n);
       const constraints = (d.constraints || []).slice(0, 4);
       if (en) {
-        let body = `Next step: continue this Run from ${stageLab}.\n\nRun: ${n.ident}\nStatus: ${n.status || "draft"}\nCurrent stage: ${stageLab}\nPlatform: ${platform || "(unset)"}\nProfile: ${profile || "(unset)"}\nTopic: ${topic || "(unset)"}\n\nThesis:\n${thesis}\n\nWhat to do now:\n${action}\n\nPlease:\n1. Read the current stage file and upstream stages for this Run.\n2. Advance only the current stage (${cur}); do not skip gates.\n3. Keep topic_id and Core judgment intact; invent no evidence.\n4. Write results back into the Run folder.`;
+        let body = `Next step: continue this Run from ${stageLab}.\n\nRun: ${n.ident}\nStatus: ${n.status || "draft"}\nCurrent stage: ${stageLab}\nPlatform: ${platform || "(unset)"}\nProfile: ${profile || "(unset)"}\nTopic: ${topic || "(unset)"}\n\nThesis:\n${thesis}\n\nWhat to do now:\n${action}\n\nPlease:\n1. Read the current stage file and upstream stages for this Run.\n2. Use the Topic's declared Swipe / Atom / Claim strategy; do not re-select it.\n3. Advance only the current stage (${cur}); do not skip gates.\n4. Keep topic_id and Core judgment intact; invent no evidence.\n5. Write results back into the Run folder.`;
         if (constraints.length) body += `\n\nHard limits:\n- ` + constraints.join("\n- ");
         if (d.next_hint) body += `\n\nIndex note (next): ${d.next_hint}`;
         return body;
       }
-      let body = `下一步：从 ${stageLab} 继续这一单。\n\nRun: ${n.ident}\n状态: ${n.status || "draft"}\n当前阶段: ${stageLab}\n平台: ${platform || "（未定）"}\nProfile: ${profile || "（未定）"}\nTopic: ${topic || "（未定）"}\n\n核心命题：\n${thesis}\n\n现在需要你做什么：\n${action}\n\n请执行：\n1. 读取这一单当前阶段文件及上游阶段。\n2. 只推进当前阶段（${cur}），不要跳闸。\n3. 保持 topic_id 与核心判断；不要发明证据。\n4. 把结果写回 Run 文件夹。`;
+      let body = `下一步：从 ${stageLab} 继续这一单。\n\nRun: ${n.ident}\n状态: ${n.status || "draft"}\n当前阶段: ${stageLab}\n平台: ${platform || "（未定）"}\nProfile: ${profile || "（未定）"}\nTopic: ${topic || "（未定）"}\n\n核心命题：\n${thesis}\n\n现在需要你做什么：\n${action}\n\n请执行：\n1. 读取这一单当前阶段文件及上游阶段。\n2. 使用 Topic 已确定的 Swipe / Atom / Claim，不要重新选择。\n3. 只推进当前阶段（${cur}），不要跳闸。\n4. 保持 topic_id 与核心判断；不要发明证据。\n5. 把结果写回 Run 文件夹。`;
       if (constraints.length) body += `\n\n硬边界：\n- ` + constraints.join("\n- ");
       if (d.next_hint) body += `\n\n索引备注（next）: ${d.next_hint}`;
       return body;
@@ -13033,6 +13048,7 @@
         const info = stages[name] || { exists: !!(n.stage_files || {})[name], done: false };
         let cls = "run-rail-item";
         if (info.done) cls += " done";
+        else if (info.skipped) cls += " skipped";
         else if (!info.exists) cls += " missing";
         if (name === cur) cls += " current";
         if (name === open) cls += " open";
@@ -13103,9 +13119,21 @@
       };
       const topic = d.topic_id || n.topic_id || "";
       if (topic) push(topic, "input", "run_ctx_why_topic");
+      const topicNode = topic
+        ? Object.values(byId).find(x => x.kind === "topic" && x.ident === topic)
+        : null;
+      for (const row of (topicNode && topicNode.provenance) || []) {
+        if (!row || row.role === "constraint") continue;
+        const role = row.role === "counter_evidence" ? "evidence" : row.role;
+        push(row.ident, role || "input", "run_ctx_why_inherited");
+      }
+      const inherited = d.inherited_strategy || {};
+      for (const id of inherited.swipes || []) push(id, "craft", "run_ctx_why_inherited");
+      for (const id of inherited.atoms || []) push(id, "craft", "run_ctx_why_inherited");
+      for (const id of inherited.claims || []) push(id, "claim", "run_ctx_why_inherited");
       for (const wid of (d.w_ids || [])) push(wid, "judgment", "run_ctx_why_wiki");
       const packW = (((n.pack_chain || {}).meta || {}).w_ids || "");
-      String(packW).split(/[\s,]+/).filter(Boolean).forEach(wid => push(wid, "judgment", "run_ctx_why_wiki"));
+      String(packW).split(/[\s,]+/).filter(id => /^W-[A-Za-z0-9-]+$/.test(id)).forEach(wid => push(wid, "judgment", "run_ctx_why_wiki"));
       runCraftIdents(sel.swipe).forEach(id => push(id, "craft", "run_ctx_why_craft"));
       runCraftIdents(sel.atoms).forEach(id => push(id, "craft", "run_ctx_why_craft"));
       runCraftIdents(sel.claim).forEach(id => push(id, "claim", "run_ctx_why_claim"));
@@ -13138,11 +13166,15 @@
         ? fillTemplate("run_ctx_read", { n: total })
         : t("run_ctx_none_short");
       const cons = (hub.constraints || []).filter(Boolean);
+      const drift = d.strategy_drift
+        ? `<p class="topic-gap"><span>${esc(t("run_ctx_drift"))}</span>${esc(t("run_ctx_drift_desc"))}</p>`
+        : "";
       if (!total && !cons.length) return "";
       return `<section class="run-section topic-ctx-card">
         <h3>${esc(t("run_insp_context"))}</h3>
         <p class="topic-ctx-summary">${esc(head)}</p>
         ${bits ? `<p class="topic-ctx-bits">${esc(bits)}</p>` : ""}
+        ${drift}
         <button type="button" class="topic-ctx-open" id="runCtxOpen">${esc(t("run_ctx_open"))}</button>
       </section>`;
     }
@@ -13155,11 +13187,12 @@
       const d = runDetailOf(n);
       const stages = d.stages || {};
       const chips = STAGE_ORDER.map(name => {
-        const info = stages[name] || { exists: !!(n.stage_files || {})[name], done: false };
+        const info = stages[name] || { exists: !!(n.stage_files || {})[name], done: false, skipped: false };
         let cls = "run-chip";
-        if (info.done) cls += " ok";
-        else if (info.exists) cls += " wait";
-        const mark = info.done ? "✓" : (info.exists ? "●" : "○");
+        let mark = "○";
+        if (info.done) { cls += " ok"; mark = "✓"; }
+        else if (info.skipped) { cls += " skip"; mark = "–"; }
+        else if (info.exists) { cls += " wait"; mark = "●"; }
         const tip = runStageSummaryLine(name, info);
         return `<button type="button" class="${cls}" data-run-rail="${esc(name)}" title="${esc(tip)}">${mark} ${esc(runStageLabel(name))}</button>`;
       }).join("");
