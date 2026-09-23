@@ -2709,15 +2709,22 @@
       transition: all .15s ease;
     }
     .action-prompt-btn:hover { background: var(--accent-dim); }
-    .action-prompt-preview {
+    .action-prompt-lede {
+      margin: 0;
       font-size: 11.5px;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.45;
+    }
+    .action-prompt-preview {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.55;
       background: var(--paper);
       border: 1px solid var(--line);
       border-radius: 6px;
-      padding: 8px 10px;
-      font-style: italic;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      font-style: normal;
     }
 
     /* Trace Spine */
@@ -2833,11 +2840,40 @@
 
     .heat-chip {
       display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
-      font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 6px;
+      font-variant-numeric: tabular-nums; padding: 3px 8px; border-radius: 999px;
       background: var(--bg-2); border: 1px solid var(--line); color: var(--text);
     }
-    .heat-chip .sym { font-size: 10px; opacity: .8; }
-    .heat-chip .val { font-weight: 600; }
+    .heat-chip .sym { font-size: 11px; line-height: 1; opacity: .95; }
+    .heat-chip .val { font-weight: 700; letter-spacing: .01em; }
+    .heat-chip.views {
+      color: #0369a1; background: #e0f2fe; border-color: #bae6fd;
+    }
+    .heat-chip.likes {
+      color: #be123c; background: #ffe4e6; border-color: #fecdd3;
+    }
+    .heat-chip.replies {
+      color: #0f766e; background: #ccfbf1; border-color: #99f6e4;
+    }
+    .heat-chip.bookmarks {
+      color: #a16207; background: #fef3c7; border-color: #fde68a;
+    }
+    [data-theme="dark"] .heat-chip.views {
+      color: #7dd3fc; background: rgba(14, 165, 233, .16); border-color: rgba(56, 189, 248, .35);
+    }
+    [data-theme="dark"] .heat-chip.likes {
+      color: #fda4af; background: rgba(244, 63, 94, .16); border-color: rgba(251, 113, 133, .35);
+    }
+    [data-theme="dark"] .heat-chip.replies {
+      color: #5eead4; background: rgba(20, 184, 166, .16); border-color: rgba(45, 212, 191, .35);
+    }
+    [data-theme="dark"] .heat-chip.bookmarks {
+      color: #fcd34d; background: rgba(245, 158, 11, .16); border-color: rgba(251, 191, 36, .35);
+    }
+    .heat {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    }
+    .ctx-field .heat { margin-top: 2px; }
+
     .pill.hit-loss { color: var(--gap); background: var(--gap-bg); }
     .pill.hit-win { color: var(--ok); background: var(--ok-bg); }
     .pill.hit-n { color: var(--muted); background: var(--bg-3); }
@@ -3163,6 +3199,498 @@
       height: 100%;
       object-fit: contain;
       display: block;
+    }
+    .media-graph-panel {
+      margin: 0 0 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+      display: grid;
+      gap: 10px;
+    }
+    .media-graph-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 9px; border-radius: 999px;
+      border: 1px solid var(--line);
+      width: fit-content;
+    }
+    .media-graph-status.cataloged { background: #f4f0e6; color: #6b5e45; }
+    .media-graph-status.linked { background: #eaf3ec; color: #20572b; border-color: #b7d8be; }
+    .media-graph-status.orphaned { background: #fdeeed; color: #9e2319; border-color: #f5c4c0; }
+    .media-graph-lede { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .media-nbr-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .media-nbr {
+      display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start;
+      width: 100%; text-align: left; border: 1px solid var(--line);
+      background: var(--bg-2); border-radius: 8px; padding: 8px 10px; cursor: pointer;
+    }
+    .media-nbr:hover { border-color: var(--accent); }
+    .media-nbr-rel {
+      font-size: 10px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase;
+      color: var(--accent); padding-top: 2px;
+    }
+    .media-nbr-main { display: grid; gap: 2px; min-width: 0; }
+    .media-nbr-id { font-size: 12px; font-weight: 700; color: var(--text); }
+    .media-nbr-label { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .media-link-form { display: grid; gap: 8px; }
+    .media-link-form input {
+      width: 100%; box-sizing: border-box; border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 10px; font: inherit; background: var(--bg-2); color: var(--text);
+    }
+    .media-link-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .media-link-actions button {
+      border: 1px solid var(--line); background: var(--bg-2); color: var(--text);
+      border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+    }
+    .media-link-actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .media-link-hint { margin: 0; font-size: 11px; color: var(--faint); line-height: 1.4; }
+
+    /* Topic Inspector */
+    .topic-insp { display: grid; gap: 14px; }
+    .topic-meta-line {
+      margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45;
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+    }
+    .topic-meta-line .sep { color: var(--faint); }
+    .topic-status-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .topic-pill {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 750; letter-spacing: .03em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line);
+      background: var(--bg-2); color: var(--muted);
+    }
+    .topic-pill.ready { background: #eaf3ec; color: #20572b; border-color: #b7d8be; }
+    .topic-pill.unused { background: #f4f0e6; color: #6b5e45; }
+    .topic-pill.promoted { background: #e8eef8; color: #1e3a6e; border-color: #b9c9e6; }
+    .topic-pill.killed, .topic-pill.discard { background: #fdeeed; color: #9e2319; border-color: #f5c4c0; }
+    .topic-score { font-size: 12px; font-weight: 650; color: var(--text); }
+    .topic-section {
+      border: 1px solid var(--line); border-radius: 10px;
+      background: var(--paper); padding: 12px; display: grid; gap: 10px;
+    }
+    .topic-section h3 {
+      margin: 0; font-size: 11px; font-weight: 750; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .topic-dl { display: grid; gap: 8px; margin: 0; }
+    .topic-dl > div { display: grid; gap: 2px; }
+    .topic-dl dt { margin: 0; font-size: 10.5px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .03em; }
+    .topic-dl dd { margin: 0; font-size: 12.5px; color: var(--text); line-height: 1.45; white-space: pre-wrap; }
+    .topic-warn {
+      margin: 0; font-size: 12px; color: #9e2319; background: #fdeeed;
+      border: 1px solid #f5c4c0; border-radius: 8px; padding: 8px 10px; line-height: 1.4;
+    }
+    .topic-prov-group { display: grid; gap: 6px; }
+    .topic-prov-group + .topic-prov-group { margin-top: 6px; }
+    .topic-prov-role {
+      font-size: 10.5px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase;
+      color: var(--accent);
+    }
+    .topic-prov-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .topic-prov-item {
+      display: grid; gap: 2px; width: 100%; text-align: left;
+      border: 1px solid var(--line); background: var(--bg-2); border-radius: 8px;
+      padding: 8px 10px; cursor: pointer;
+    }
+    .topic-prov-item:hover { border-color: var(--accent); }
+    .topic-prov-id { font-size: 12px; font-weight: 700; color: var(--text); }
+    .topic-prov-sub { font-size: 11px; color: var(--muted); line-height: 1.35; }
+    .topic-graph-fold {
+      border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg-2);
+    }
+    .topic-graph-fold summary {
+      cursor: pointer; font-size: 11.5px; font-weight: 650; color: var(--muted);
+      list-style: none;
+    }
+    .topic-graph-fold summary::-webkit-details-marker { display: none; }
+    .topic-graph-fold[open] summary { margin-bottom: 8px; }
+
+    .topic-decision { display: grid; gap: 12px; }
+    .topic-core {
+      margin: 0; font-size: 15px; font-weight: 650; line-height: 1.45; color: var(--text);
+    }
+    .topic-beat { display: grid; gap: 3px; }
+    .topic-beat-label {
+      font-size: 10.5px; font-weight: 750; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .topic-beat p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text); white-space: pre-wrap; }
+    .topic-why {
+      margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted);
+    }
+    .topic-ready-ok {
+      margin: 0; font-size: 12.5px; font-weight: 700; color: #20572b;
+    }
+    .topic-ready-block { display: grid; gap: 8px; }
+    .topic-gap {
+      margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text); white-space: pre-wrap;
+    }
+    .topic-gap span {
+      display: block; margin-bottom: 3px;
+      font-size: 10.5px; font-weight: 750; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .topic-ctx-card { display: grid; gap: 8px; }
+    .topic-ctx-summary { margin: 0; font-size: 13px; font-weight: 650; color: var(--text); line-height: 1.4; }
+    .topic-ctx-bits { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .topic-ctx-open {
+      justify-self: start; border: 1px solid var(--line); background: var(--bg-2);
+      color: var(--text); border-radius: 8px; padding: 7px 10px;
+      font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+    }
+    .topic-ctx-open:hover { border-color: var(--accent); }
+
+    .ctx-modal {
+      position: fixed; inset: 0; z-index: 110;
+      background: var(--modal-backdrop);
+      backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center;
+      padding: 24px 16px;
+    }
+    .ctx-modal.open { display: flex; }
+    .ctx-sheet {
+      width: min(1080px, 100%);
+      height: min(82vh, 760px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .ctx-head {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+      padding: 14px 18px; border-bottom: 1px solid var(--line); flex-shrink: 0;
+    }
+    .ctx-head h2 { margin: 0; font-size: 16px; }
+    .ctx-head p { margin: 4px 0 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .ctx-head button {
+      border: 0; background: transparent; color: var(--muted); font-size: 16px; cursor: pointer;
+    }
+    .ctx-body { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: 0; flex: 1; }
+    .ctx-map {
+      min-height: 0; overflow: hidden; display: flex; flex-direction: column;
+      padding: 0; background: var(--bg-2);
+    }
+    .ctx-graph-host { flex: 1; min-height: 0; position: relative; }
+    .ctx-graph-svg { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+    .ctx-graph-svg.dragging { cursor: grabbing; }
+    .ctx-graph-svg .link { stroke: var(--graph-link); stroke-opacity: .7; fill: none; }
+    .ctx-graph-svg .link-label {
+      fill: var(--faint); font-size: 9px; font-weight: 650; letter-spacing: .02em;
+    }
+    .ctx-graph-svg .node-label {
+      fill: var(--text); font-size: 11px; font-weight: 700; pointer-events: none;
+    }
+    .ctx-graph-svg .node-sub {
+      fill: var(--muted); font-size: 9.5px; pointer-events: none;
+    }
+    .ctx-graph-svg .node { cursor: pointer; }
+    .ctx-graph-svg .node.sel circle {
+      stroke: var(--accent); stroke-width: 2.5;
+      filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 45%, transparent));
+    }
+    .ctx-graph-svg .node.topic circle { stroke: var(--accent); stroke-width: 2; }
+    .ctx-legend {
+      display: flex; flex-wrap: wrap; gap: 10px 14px; padding: 8px 14px;
+      border-top: 1px solid var(--line); background: var(--paper); flex-shrink: 0;
+      font-size: 11px; color: var(--muted);
+    }
+    .ctx-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .ctx-legend i {
+      width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+    }
+    .ctx-constraints {
+      display: grid; gap: 4px; padding: 8px 14px 12px;
+      border-top: 1px solid var(--line); background: var(--paper); flex-shrink: 0;
+      max-height: 96px; overflow: auto;
+    }
+    .ctx-constraints h3 {
+      margin: 0; font-size: 10.5px; font-weight: 750; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .ctx-constraints li { font-size: 12px; color: var(--text); line-height: 1.4; }
+    .ctx-detail {
+      border-left: 1px solid var(--line);
+      padding: 0;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--accent-subtle) 65%, var(--paper)) 0%, var(--paper) 120px);
+    }
+    .ctx-detail-inner {
+      display: grid; gap: 12px; padding: 16px 16px 20px; align-content: start;
+    }
+    .ctx-hero {
+      display: grid; gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      box-shadow: var(--shadow-sm);
+    }
+    .ctx-hero-top {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    }
+    .ctx-detail .ctx-kicker {
+      margin: 0;
+      display: inline-flex; align-items: center;
+      font-size: 10.5px; font-weight: 750; letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-faint);
+      border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .ctx-chip {
+      display: inline-flex; align-items: center;
+      font-size: 10.5px; font-weight: 650;
+      color: var(--muted);
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .ctx-detail .ctx-lead {
+      margin: 0;
+      font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .ctx-detail .ctx-id {
+      margin: 0;
+      font-size: 11px; font-weight: 650;
+      color: var(--faint);
+      font-variant-numeric: tabular-nums;
+    }
+    .ctx-detail .ctx-meta {
+      margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.45;
+    }
+    .ctx-detail .ctx-empty {
+      margin: 0;
+      font-size: 12.5px; color: var(--muted); line-height: 1.45;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--bg-2);
+      border: 1px dashed var(--line);
+    }
+    .ctx-block {
+      display: grid; gap: 10px;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: var(--shadow-sm);
+    }
+    .ctx-block h4 {
+      margin: 0;
+      font-size: 10.5px; font-weight: 750; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .ctx-block-body { display: grid; gap: 10px; }
+    .ctx-field { display: grid; gap: 4px; }
+    .ctx-field-label {
+      font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .ctx-field-value {
+      margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text);
+    }
+    .ctx-feature {
+      margin: 0;
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: var(--bg-2);
+      border-left: 3px solid var(--accent);
+      font-size: 14px; line-height: 1.55; color: var(--text); font-weight: 550;
+    }
+    .ctx-block p, .ctx-block li {
+      margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text);
+    }
+    .ctx-block ul {
+      margin: 0; padding: 0; list-style: none; display: grid; gap: 6px;
+    }
+    .ctx-block li {
+      position: relative;
+      padding: 8px 10px 8px 24px;
+      border-radius: 8px;
+      background: var(--bg-2);
+      border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+    }
+    .ctx-block li::before {
+      content: "";
+      position: absolute; left: 10px; top: 14px;
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .ctx-block a { color: var(--accent); word-break: break-all; }
+    .ctx-block.trust {
+      background: color-mix(in srgb, #fef3c7 55%, var(--paper));
+      border-color: color-mix(in srgb, #f59e0b 28%, var(--line));
+    }
+    html.dark .ctx-block.trust,
+    [data-theme="dark"] .ctx-block.trust {
+      background: color-mix(in srgb, #78350f 28%, var(--paper));
+      border-color: color-mix(in srgb, #f59e0b 35%, var(--line));
+    }
+    .ctx-block.trust h4 { color: #b45309; }
+    html.dark .ctx-block.trust h4,
+    [data-theme="dark"] .ctx-block.trust h4 { color: #fbbf24; }
+    .ctx-graph-svg .link.dim { stroke-opacity: .18; }
+    .ctx-graph-svg .link.on {
+      stroke: var(--accent); stroke-opacity: .95; stroke-width: 2.2;
+    }
+    .ctx-graph-svg .node.dim { opacity: .35; }
+    .ctx-graph-svg .node-sub {
+      fill: var(--muted); font-size: 9.5px; pointer-events: none;
+    }
+    .ctx-detail h3 { margin: 0; font-size: 14px; line-height: 1.35; }
+    .ctx-detail .k {
+      margin: 0 0 2px; font-size: 10.5px; font-weight: 750; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .ctx-detail .v { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text); }
+    .ctx-vault {
+      justify-self: start; border: 1px solid var(--line); background: var(--bg-2);
+      border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+    }
+    @media (max-width: 800px) {
+      .ctx-body { grid-template-columns: 1fr; }
+      .ctx-detail { border-left: 0; border-top: 1px solid var(--line); }
+    }
+
+
+    /* Run Inspector (production console) */
+    .run-insp { display: grid; gap: 12px; }
+    .run-hero {
+      display: grid; gap: 8px; padding: 14px;
+      border: 1px solid var(--line); border-radius: 14px;
+      background: color-mix(in srgb, var(--paper) 90%, var(--accent-subtle));
+      box-shadow: var(--shadow-sm);
+    }
+    .run-hero-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .run-pill {
+      display: inline-flex; align-items: center;
+      font-size: 10.5px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line);
+      background: var(--bg-2); color: var(--muted);
+    }
+    .run-pill.draft, .run-pill.open, .run-pill.brief { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+    .run-pill.ready, .run-pill.scored { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .run-pill.published, .run-pill.reviewed { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+    .run-pill.hold, .run-pill.killed, .run-pill.overdue { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .run-pill.scheduled { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+    .run-pill.stage {
+      background: var(--accent-faint); color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+    }
+    .run-hero .title {
+      margin: 0; font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .run-hero .run-id { margin: 0; font-size: 11px; font-weight: 650; color: var(--faint); }
+    .run-hero .run-meta { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .run-section {
+      border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
+      padding: 12px 13px; display: grid; gap: 10px; box-shadow: var(--shadow-sm);
+    }
+    .run-section h3 {
+      margin: 0; font-size: 10.5px; font-weight: 750; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .run-action {
+      border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+      background: color-mix(in srgb, var(--accent-subtle) 70%, var(--paper));
+    }
+    .run-action h3 { color: var(--accent); }
+    .run-action-body { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text); }
+    .run-action-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .run-action-actions button {
+      border: 1px solid var(--line); background: var(--bg-2); color: var(--text);
+      border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+    }
+    .run-action-actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .run-rail { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+    .run-rail-item {
+      display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start;
+      position: relative; padding-bottom: 8px;
+    }
+    .run-rail-item:last-child { padding-bottom: 0; }
+    .run-rail-spine { position: relative; width: 18px; }
+    .run-rail-dot {
+      width: 10px; height: 10px; margin: 4px auto 0; border-radius: 50%;
+      background: var(--line); box-sizing: border-box;
+    }
+    .run-rail-item.done .run-rail-dot { background: var(--ok, #16a34a); }
+    .run-rail-item.current .run-rail-dot {
+      background: var(--accent); box-shadow: 0 0 0 4px var(--accent-faint);
+    }
+    .run-rail-item.missing .run-rail-dot { background: transparent; border: 1.5px solid var(--line-strong); }
+    .run-rail-item:not(:last-child) .run-rail-spine::after {
+      content: ""; position: absolute; left: 50%; top: 16px; bottom: -4px;
+      width: 1px; transform: translateX(-50%); background: var(--line);
+    }
+    .run-rail-btn {
+      width: 100%; text-align: left; border: 1px solid transparent; background: transparent;
+      border-radius: 8px; padding: 4px 8px; cursor: pointer; font: inherit;
+    }
+    .run-rail-btn:hover, .run-rail-item.open .run-rail-btn {
+      background: var(--bg-2); border-color: var(--line);
+    }
+    .run-rail-name { font-size: 12.5px; font-weight: 700; color: var(--text); }
+    .run-rail-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .run-rail-panel {
+      margin: 6px 0 4px; padding: 10px;
+      border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2);
+      display: grid; gap: 8px;
+    }
+    .run-rail-panel p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text); }
+    .run-feature {
+      margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--bg-2);
+      border-left: 3px solid var(--accent); font-size: 13.5px; line-height: 1.55; color: var(--text);
+    }
+    .run-kv { display: grid; gap: 8px; }
+    .run-kv > div { display: grid; gap: 3px; }
+    .run-kv dt {
+      margin: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .run-kv dd { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text); white-space: pre-wrap; }
+    .run-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .run-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 650; padding: 3px 8px; border-radius: 999px;
+      border: 1px solid var(--line); background: var(--bg-2); color: var(--muted); cursor: pointer;
+    }
+    .run-chip:hover { border-color: var(--accent); color: var(--text); }
+    .run-chip.on { background: var(--accent-faint); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
+    .run-chip.ok { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
+    .run-chip.wait { color: #9a3412; background: #ffedd5; border-color: #fed7aa; }
+
+    .mediacard .media-gbadge {
+      position: absolute; left: 8px; top: 8px; z-index: 2;
+      font-size: 10px; font-weight: 750; letter-spacing: .02em;
+      padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35);
+      background: rgba(20,18,16,.72); color: #fff;
+    }
+    .mediacard .media-gbadge.linked { background: rgba(32,87,43,.85); }
+    .mediacard .media-gbadge.described { background: rgba(30,64,120,.85); }
+    .mediacard .media-gbadge.orphaned { background: rgba(158,35,25,.85); }
+    .media-graph-status.ready { background: #eaf3ec; color: #20572b; border-color: #b7d8be; }
+    .media-graph-status.incomplete { background: #f4f0e6; color: #6b5e45; }
+    .media-caption-block {
+      margin: 0; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--line); background: var(--bg-2);
+      font-size: 13px; line-height: 1.45; color: var(--text);
+    }
+    .mediacard .media-gbadge.ready { background: rgba(32,87,43,.85); }
+    .media-link-form label { display: grid; gap: 4px; font-size: 11px; font-weight: 700; color: var(--muted); }
+    .media-link-form select {
+      width: 100%; box-sizing: border-box; border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 10px; font: inherit; background: var(--bg-2); color: var(--text);
     }
     .media-page-head { margin: 0 0 14px; }
     .media-page-head .lib-page-lede { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
@@ -4037,6 +4565,21 @@
       </aside>
     </div>
   </div>
+  <div class="ctx-modal" id="ctxModal" role="dialog" aria-modal="true" aria-labelledby="ctxTitle">
+    <div class="ctx-sheet" id="ctxSheet">
+      <div class="ctx-head">
+        <div>
+          <h2 id="ctxTitle"></h2>
+          <p id="ctxLede"></p>
+        </div>
+        <button type="button" id="ctxClose" aria-label="Close">✕</button>
+      </div>
+      <div class="ctx-body">
+        <div class="ctx-map" id="ctxMap"></div>
+        <aside class="ctx-detail" id="ctxDetail"></aside>
+      </div>
+    </div>
+  </div>
   <div class="md-modal" id="mdModal" role="dialog" aria-modal="true" aria-labelledby="mdTitle">
     <div class="md-sheet" id="mdSheet">
       <div class="md-head">
@@ -4351,9 +4894,179 @@
         kanban_col_shipped: "✅ 已发布复盘",
         kanban_col_archived: "🗃️ 归档/关闭",
         journey_title: "内容全生命周期溯源",
-        prompt_box_title: "AI 协作生产指令",
-        prompt_copy_btn: "复制指令",
-        prompt_copied: "已复制指令！",
+        topic_open_as_run: "开一单",
+        topic_copy_handoff: "复制开单指令",
+        topic_handoff_lede: "把下面这段话贴进对话。Agent 会按 Topic 开 Run；观察台本身不自动建单。",
+        topic_handoff_copied: "已复制",
+        topic_sec_decision: "判断",
+        topic_sec_ready: "开单条件",
+        topic_sec_prov: "生成依据",
+        topic_sec_graph: "当前图谱连接（可选）",
+        topic_field_verdict: "结论",
+        topic_field_core: "核心判断",
+        topic_field_who: "给谁看",
+        topic_field_why: "为何是这个状态",
+        topic_field_next: "下一步",
+        topic_field_form: "建议形态",
+        topic_field_platform: "平台",
+        topic_field_profile: "人设",
+        topic_field_lane: "车道",
+        topic_field_mode: "生成模式",
+        topic_field_fit: "产品贴合",
+        topic_field_gaps: "证据缺口",
+        topic_score_line: "{opp} 机会 · {aud} 听众",
+        topic_prov_input: "显式输入",
+        topic_prov_judgment: "判断节点",
+        topic_prov_evidence: "证据节点",
+        topic_prov_counter_evidence: "反证",
+        topic_prov_constraint: "约束",
+        topic_prov_craft: "表达零件",
+        topic_prov_claim: "主张",
+        topic_prov_need: "需求",
+        topic_prov_product: "产品",
+        topic_prov_capture: "捕获",
+        topic_prov_wiki: "笔记",
+        topic_prov_empty: "这份 Topic 没有记录生成时引用的节点。",
+        topic_warn_no_platform: "还没定平台 — 开单前先选好。",
+        topic_warn_no_profile: "还没定人设 — 开单前先写上 profile。",
+        topic_warn_killed: "状态是 killed / discard — 不要直接开单。",
+        topic_warn_has_run: "已经开过 Run：{id}",
+        topic_graph_empty: "当前图谱上没有直接邻居。",
+        topic_already_run: "打开已有 Run",
+        run_insp_progress: "生产进度",
+        run_insp_now: "现在需要你做什么",
+        run_insp_say: "这一单要说什么",
+        run_insp_artifacts: "已完成的产出",
+        run_insp_context: "继承的上下文",
+        run_ctx_read: "这一单用了 {n} 个知识节点",
+        run_ctx_none_short: "还没有记下这一单继承了什么",
+        run_ctx_open: "查看这一单用了什么",
+        run_ctx_title: "这一单继承了什么",
+        run_ctx_lede: "中心是这份 Run。周围节点是它实际继承并使用的 Topic、判断与表达零件，不是全库邻居。",
+        run_ctx_none: "这一单没有记下继承的上下文。",
+        run_ctx_hub: "这份 Run",
+        run_ctx_why_topic: "这一单从该 Topic 开出，核心判断由此继承。",
+        run_ctx_why_wiki: "写作时服从的判断节点。",
+        run_ctx_why_craft: "这一单实际选用的表达零件。",
+        run_ctx_why_claim: "这一单要推进的主张。",
+
+        run_insp_copy: "复制给 Agent",
+        run_insp_copied: "已复制",
+        run_insp_open_full: "打开完整阶段视图",
+        run_insp_open_stage: "查看该阶段全文",
+        run_insp_goto_topic: "打开 Topic",
+        run_insp_stage_current: "当前",
+        run_insp_stage_done: "已完成",
+        run_insp_stage_todo: "未完成",
+        run_insp_stage_missing: "尚无文件",
+        run_insp_thesis: "核心命题",
+        run_insp_constraints: "硬边界",
+        run_insp_craft: "表达零件",
+        run_insp_wiki: "判断笔记",
+        run_insp_handoff_lede: "把下面这段话贴进对话。Agent 会按当前阶段推进这一单。",
+        run_stage_idea: "Idea",
+        run_stage_brief: "Brief",
+        run_stage_packet: "Context Packet",
+        run_stage_draft: "Draft",
+        run_stage_editor: "Editor review",
+        run_stage_rubric: "Rubric",
+        run_stage_pack: "Pack",
+        run_stage_feedback: "Feedback",
+        run_action_idea: "确认这一单要做什么，再进入 Brief。",
+        run_action_brief: "写清 Thesis、读者变化、证据与边界。",
+        run_action_packet: "组装 Writer 上下文包，再开写。",
+        run_action_draft: "写出平台稿件。保持核心判断，不要发明证据。",
+        run_action_editor: "审稿：检查 Hook、边界和平台表达，给出 APPROVE / REWRITE / HOLD。",
+        run_action_rubric: "打分并决定 SHIP 或 HOLD。证据不足时不要假装已验证。",
+        run_action_pack: "准备发布物料。纯文字帖可标记为不需要 Pack。",
+        run_action_feedback: "发布后回填 URL、结果与证据；不要推断未知指标。",
+        run_action_published: "已发布。回填反馈后，才能升级判断。",
+        run_action_editor_ok: "Editor 已批准当前草稿。下一步完成 Rubric，再进入发布准备。",
+
+        topic_beat_who: "给谁",
+        topic_beat_believe: "他们现在信的",
+        topic_beat_cut: "这一刀",
+        topic_beat_after: "读完应变成",
+        topic_ready_ok: "可以开单",
+        topic_ctx_read: "生成时读了 {n} 个节点",
+        topic_ctx_none_short: "没有写下生成时读过的节点",
+        topic_ctx_open: "查看这次用了什么",
+        topic_ctx_title: "这个 Topic 是怎么来的",
+        topic_ctx_lede: "中心是这份 Topic。周围节点是生成时写进 Context Packet 的依据，不是当前全库邻居。",
+        topic_ctx_none: "这份 Topic 没有写生成引用。",
+        topic_ctx_pick: "点周围的节点，读它本身说了什么，以及为什么出现在这次生成里。",
+        topic_ctx_this: "这份 Topic",
+        topic_ctx_as_fact: "这里把它当作事实。",
+        topic_ctx_as_judgment: "这里把它当作判断，还没有验证成事实。",
+        topic_ctx_as_obs: "这里把它当作观察到的材料，不是我们自己的判断。",
+        topic_ctx_as_proposal: "这里把它当作提议，发出去之前还不是事实。",
+        topic_ctx_conf: "置信度 {v}",
+        topic_ctx_for: "面向 {v}",
+        topic_ctx_sec_says: "它本身说了什么",
+        topic_ctx_sec_why: "为什么出现在这里",
+        topic_ctx_sec_trust: "可靠性与边界",
+        topic_ctx_role_here: "在这次生成中的角色",
+        topic_ctx_why_read: "为什么读它",
+        topic_ctx_effect: "它影响了什么",
+        topic_ctx_status: "当前状态",
+        topic_ctx_belief: "核心判断",
+        topic_ctx_counter: "反证",
+        topic_ctx_next_test: "下一步验证",
+        topic_ctx_promise: "产品承诺",
+        topic_ctx_what: "是什么",
+        topic_ctx_best: "最适合",
+        topic_ctx_not: "不适合",
+        topic_ctx_bounds: "边界",
+        topic_ctx_donot: "不能说",
+        topic_ctx_observed: "观察到什么",
+        topic_ctx_source: "来源",
+        topic_ctx_heat: "热度",
+        topic_ctx_claim: "主张",
+        topic_ctx_applies: "适用",
+        topic_ctx_avoid: "避免",
+        topic_ctx_use: "何时用",
+        topic_ctx_beats: "结构节拍",
+        topic_ctx_quote: "原话",
+        topic_ctx_speaker: "说话者",
+        topic_ctx_kind_wiki: "判断节点",
+        topic_ctx_kind_product: "产品事实",
+        topic_ctx_kind_capture: "对照来源",
+        topic_ctx_kind_claim: "主张",
+        topic_ctx_kind_swipe: "表达零件",
+        topic_ctx_kind_atom: "表达原子",
+        topic_ctx_kind_need: "听众原话",
+        topic_ctx_kind_topic: "选题",
+        topic_ctx_kind_run: "生产单",
+        topic_ctx_topic_why: "为什么成立",
+        topic_ctx_topic_gaps: "证据缺口",
+        topic_ctx_effect_judgment: "帮助定下这次选题的判断切口，避免重复旧角度。",
+        topic_ctx_effect_input: "提供这次选题必须服从的事实输入。",
+        topic_ctx_effect_evidence: "作为对照材料，帮 Topic 说清自己不是什么。",
+        topic_ctx_effect_craft: "提供可参考的表达结构；默认不当成事实依据。",
+        topic_ctx_effect_claim: "提供可复用的主张角度，仍需按证据强度使用。",
+        topic_ctx_caveat_hyp: "不要把它写成已验证的市场事实。",
+        topic_ctx_caveat_obs: "这是外部观察，不是我们自己的产品事实。",
+        topic_ctx_caveat_foil: "这次只作对照，不要当成要复用的主结构。",
+        topic_ctx_caveat_product: "只能使用产品事实与边界，不能发明未记录的能力。",
+        topic_ctx_col_input: "输入",
+        topic_ctx_col_judgment: "判断",
+        topic_ctx_col_evidence: "对照",
+        topic_ctx_col_craft: "零件",
+        topic_ctx_constraints: "不能说的",
+        topic_ctx_plain_input: "输入，不是判断",
+        topic_ctx_plain_judgment: "判断，不是原料",
+        topic_ctx_plain_evidence: "对照或证据",
+        topic_ctx_plain_counter_evidence: "反证",
+        topic_ctx_plain_craft: "表达零件，还没选定",
+        topic_ctx_plain_claim: "主张",
+        topic_ctx_plain_product: "产品事实",
+        topic_ctx_plain_need: "需求原话",
+        topic_ctx_plain_capture: "捕获",
+        topic_ctx_plain_wiki: "已有判断",
+        prompt_box_title: "复制给 Agent",
+        prompt_box_lede: "把下面这段话贴进对话。Agent 会按这段话处理当前条目；观察台本身不自动改文件。",
+        prompt_copy_btn: "复制",
+        prompt_copied: "已复制",
         copy_ident: "复制引用",
         copy_ident_done: "已复制引用！",
         theme_toggle: "切换深色/浅色模式",
@@ -4374,6 +5087,16 @@
         media_deleting: "删除中…",
         media_upload_done: "已添加 {n} 张",
         media_delete_done: "已删除",
+        media_graph_incomplete: "待完善",
+        media_graph_ready: "已就绪",
+        media_graph_lede_incomplete: "这张图还没有说明，也还没挂进知识图谱。复制下方指令给 Agent，让它看图写描述并建议挂到哪些节点。",
+        media_graph_lede_ready: "这张图已有说明。下方是描述，以及它在图谱里挂在谁下面。",
+        media_graph_lede_ready_orphan: "描述有了，但 links 指向的节点找不到：{ids}。",
+        media_graph_caption: "图片说明",
+        media_graph_neighbors: "图谱关联",
+        media_graph_empty_nbr: "尚未挂到任何知识节点。",
+        media_badge_incomplete: "待完善",
+        media_badge_ready: "已就绪",
         wiki_empty: "该 profile 的 wiki/pages/<profile>/ 下还没有 W- 笔记",
         wiki_believe: "我们现在相信",
         wiki_graph_title: "知识图谱",
@@ -4823,9 +5546,179 @@
         kanban_col_shipped: "✅ Shipped & Retrospect",
         kanban_col_archived: "🗃️ Archived",
         journey_title: "Full Lifecycle Trace Journey",
-        prompt_box_title: "AI Pair Action Prompt",
-        prompt_copy_btn: "Copy Prompt",
-        prompt_copied: "Prompt Copied!",
+        topic_open_as_run: "Open as Run",
+        topic_copy_handoff: "Copy handoff",
+        topic_handoff_lede: "Paste the text below into chat. The Agent opens a Run from this Topic; the observatory does not create runs itself.",
+        topic_handoff_copied: "Copied",
+        topic_sec_decision: "Decision",
+        topic_sec_ready: "Run readiness",
+        topic_sec_prov: "Generation provenance",
+        topic_sec_graph: "Current graph connections (optional)",
+        topic_field_verdict: "Verdict",
+        topic_field_core: "Core judgment",
+        topic_field_who: "Who it's for",
+        topic_field_why: "Why this status",
+        topic_field_next: "Next step",
+        topic_field_form: "Suggested form",
+        topic_field_platform: "Platform",
+        topic_field_profile: "Profile",
+        topic_field_lane: "Lane",
+        topic_field_mode: "Generation mode",
+        topic_field_fit: "Product fit",
+        topic_field_gaps: "Evidence gaps",
+        topic_score_line: "{opp} opportunity · {aud} audience",
+        topic_prov_input: "Explicit input",
+        topic_prov_judgment: "Judgment nodes",
+        topic_prov_evidence: "Evidence nodes",
+        topic_prov_counter_evidence: "Counter-evidence",
+        topic_prov_constraint: "Constraints",
+        topic_prov_craft: "Supporting craft",
+        topic_prov_claim: "Claims",
+        topic_prov_need: "Needs",
+        topic_prov_product: "Products",
+        topic_prov_capture: "Captures",
+        topic_prov_wiki: "Wiki",
+        topic_prov_empty: "This Topic has no recorded generation references.",
+        topic_warn_no_platform: "Platform is missing — set it before opening a run.",
+        topic_warn_no_profile: "Profile is missing — set it before opening a run.",
+        topic_warn_killed: "Status is killed / discard — do not open a run.",
+        topic_warn_has_run: "Already opened as run: {id}",
+        topic_graph_empty: "No direct neighbors on the current graph.",
+        topic_already_run: "Open existing Run",
+        run_insp_progress: "Production progress",
+        run_insp_now: "What to do now",
+        run_insp_say: "What this run says",
+        run_insp_artifacts: "Artifacts",
+        run_insp_context: "Inherited context",
+        run_ctx_read: "This run used {n} knowledge nodes",
+        run_ctx_none_short: "No inherited context was recorded",
+        run_ctx_open: "See what this run used",
+        run_ctx_title: "What this run inherited",
+        run_ctx_lede: "The Run is at the center. Surrounding nodes are what it actually inherited and used — not every neighbor in the vault.",
+        run_ctx_none: "This run has no recorded inherited context.",
+        run_ctx_hub: "This run",
+        run_ctx_why_topic: "This run was opened from that Topic; the core judgment is inherited.",
+        run_ctx_why_wiki: "Judgment node this run must obey while writing.",
+        run_ctx_why_craft: "Craft piece actually selected for this run.",
+        run_ctx_why_claim: "Claim this run is advancing.",
+
+        run_insp_copy: "Copy to Agent",
+        run_insp_copied: "Copied",
+        run_insp_open_full: "Open full stage view",
+        run_insp_open_stage: "Open stage file",
+        run_insp_goto_topic: "Open Topic",
+        run_insp_stage_current: "Current",
+        run_insp_stage_done: "Done",
+        run_insp_stage_todo: "Todo",
+        run_insp_stage_missing: "Missing",
+        run_insp_thesis: "Core thesis",
+        run_insp_constraints: "Hard limits",
+        run_insp_craft: "Craft used",
+        run_insp_wiki: "Judgment notes",
+        run_insp_handoff_lede: "Paste this into chat. The Agent continues this run from the current stage.",
+        run_stage_idea: "Idea",
+        run_stage_brief: "Brief",
+        run_stage_packet: "Context Packet",
+        run_stage_draft: "Draft",
+        run_stage_editor: "Editor review",
+        run_stage_rubric: "Rubric",
+        run_stage_pack: "Pack",
+        run_stage_feedback: "Feedback",
+        run_action_idea: "Confirm what this run is about, then move to Brief.",
+        run_action_brief: "Write the thesis, reader change, evidence, and boundaries.",
+        run_action_packet: "Assemble the Writer context packet before drafting.",
+        run_action_draft: "Write the platform draft. Keep the core judgment; invent no evidence.",
+        run_action_editor: "Review hook, boundaries, and platform craft. Return APPROVE / REWRITE / HOLD.",
+        run_action_rubric: "Score and decide SHIP or HOLD. Do not pretend thin evidence is proven.",
+        run_action_pack: "Prepare publish assets. Text-only posts may mark Pack as not required.",
+        run_action_feedback: "After publishing, fill URL, result, and evidence. Do not invent metrics.",
+        run_action_published: "Published. Record feedback before upgrading any judgment.",
+        run_action_editor_ok: "Editor approved the draft. Finish Rubric, then prepare to publish.",
+
+        topic_beat_who: "Who it's for",
+        topic_beat_believe: "What they believe now",
+        topic_beat_cut: "The cut",
+        topic_beat_after: "After reading",
+        topic_ready_ok: "Ready to open",
+        topic_ctx_read: "Read {n} nodes when this was written",
+        topic_ctx_none_short: "No generation references were written down",
+        topic_ctx_open: "See what was used",
+        topic_ctx_title: "How this topic was made",
+        topic_ctx_lede: "The Topic is at the center. Surrounding nodes are what the Context Packet recorded — not every neighbor in the vault graph.",
+        topic_ctx_none: "This Topic has no recorded generation references.",
+        topic_ctx_pick: "Select a surrounding node to read what it says and why it was used here.",
+        topic_ctx_this: "This topic",
+        topic_ctx_as_fact: "Used here as fact.",
+        topic_ctx_as_judgment: "Used here as a judgment, not yet verified as fact.",
+        topic_ctx_as_obs: "Used here as something observed, not our own judgment.",
+        topic_ctx_as_proposal: "Used here as a proposal, not a fact until it ships.",
+        topic_ctx_conf: "Confidence {v}",
+        topic_ctx_for: "For {v}",
+        topic_ctx_sec_says: "What it says",
+        topic_ctx_sec_why: "Why it is here",
+        topic_ctx_sec_trust: "Reliability & limits",
+        topic_ctx_role_here: "Role in this generation",
+        topic_ctx_why_read: "Why it was read",
+        topic_ctx_effect: "What it shaped",
+        topic_ctx_status: "Current status",
+        topic_ctx_belief: "Core judgment",
+        topic_ctx_counter: "Counter-evidence",
+        topic_ctx_next_test: "Next test",
+        topic_ctx_promise: "Product promise",
+        topic_ctx_what: "What it is",
+        topic_ctx_best: "Best for",
+        topic_ctx_not: "Not for",
+        topic_ctx_bounds: "Boundaries",
+        topic_ctx_donot: "Do not say",
+        topic_ctx_observed: "What was observed",
+        topic_ctx_source: "Source",
+        topic_ctx_heat: "Heat",
+        topic_ctx_claim: "Claim",
+        topic_ctx_applies: "Applies when",
+        topic_ctx_avoid: "Avoid when",
+        topic_ctx_use: "When to use",
+        topic_ctx_beats: "Beats",
+        topic_ctx_quote: "Quote",
+        topic_ctx_speaker: "Speaker",
+        topic_ctx_kind_wiki: "Judgment node",
+        topic_ctx_kind_product: "Product fact",
+        topic_ctx_kind_capture: "Observed source",
+        topic_ctx_kind_claim: "Claim",
+        topic_ctx_kind_swipe: "Supporting craft",
+        topic_ctx_kind_atom: "Craft atom",
+        topic_ctx_kind_need: "Audience quote",
+        topic_ctx_kind_topic: "Topic",
+        topic_ctx_kind_run: "Run",
+        topic_ctx_topic_why: "Why it holds",
+        topic_ctx_topic_gaps: "Evidence gaps",
+        topic_ctx_effect_judgment: "Helped set this Topic's cut and avoid a lookalike angle.",
+        topic_ctx_effect_input: "Supplied facts this Topic must obey.",
+        topic_ctx_effect_evidence: "Served as foil so the Topic can name what it is not.",
+        topic_ctx_effect_craft: "Offered a craft pattern for reference — not treated as fact.",
+        topic_ctx_effect_claim: "Offered a reusable claim angle, still bounded by evidence strength.",
+        topic_ctx_caveat_hyp: "Do not write this as a verified market fact.",
+        topic_ctx_caveat_obs: "This is an external observation, not our product fact.",
+        topic_ctx_caveat_foil: "Foil only here — do not treat it as the structure to reuse.",
+        topic_ctx_caveat_product: "Use only recorded product facts and boundaries; invent nothing else.",
+        topic_ctx_col_input: "Input",
+        topic_ctx_col_judgment: "Judgment",
+        topic_ctx_col_evidence: "Evidence",
+        topic_ctx_col_craft: "Craft",
+        topic_ctx_constraints: "Do not say",
+        topic_ctx_plain_input: "Input, not a judgment",
+        topic_ctx_plain_judgment: "Judgment, not source material",
+        topic_ctx_plain_evidence: "Evidence or foil",
+        topic_ctx_plain_counter_evidence: "Counter-evidence",
+        topic_ctx_plain_craft: "Craft reference, not a pick yet",
+        topic_ctx_plain_claim: "Claim",
+        topic_ctx_plain_product: "Product facts",
+        topic_ctx_plain_need: "Audience quote",
+        topic_ctx_plain_capture: "Capture",
+        topic_ctx_plain_wiki: "Existing judgment",
+        prompt_box_title: "Copy to Agent",
+        prompt_box_lede: "Paste the text below into chat. The Agent follows it for this item; the observatory does not edit files by itself.",
+        prompt_copy_btn: "Copy",
+        prompt_copied: "Copied",
         copy_ident: "Copy ID",
         copy_ident_done: "ID Copied!",
         theme_toggle: "Toggle Dark/Light Mode",
@@ -4844,8 +5737,19 @@
         media_need_serve: "Open via workbench/serve.py to upload or delete.",
         media_uploading: "Uploading…",
         media_deleting: "Deleting…",
-        media_upload_done: "Added {n}",
+                media_upload_done: "Added {n}",
         media_delete_done: "Deleted",
+        media_graph_incomplete: "Needs setup",
+        media_graph_ready: "Ready",
+        media_graph_lede_incomplete: "This image has no description yet and is not on the knowledge graph. Copy the instruction below to your Agent so it can look at the file, write a caption, and suggest which nodes to hang it on.",
+        media_graph_lede_ready: "This image has a description. Below: what it is, and which graph nodes it hangs under.",
+        media_graph_lede_ready_orphan: "Description exists, but link targets are missing: {ids}.",
+        media_graph_caption: "Description",
+        media_graph_neighbors: "Graph links",
+        media_graph_empty_nbr: "Not hung on any knowledge node yet.",
+        media_badge_incomplete: "needs setup",
+        media_badge_ready: "ready",
+
         wiki_empty: "No W- notes under wiki/pages/<profile>/ yet",
         wiki_believe: "Current Beliefs",
         wiki_graph_title: "Knowledge Graph",
@@ -5163,6 +6067,7 @@
     const $mdRail = document.getElementById("mdRail");
     const STAGE_ORDER = ["idea", "brief", "packet", "draft", "editor", "rubric", "pack", "feedback"];
     let runModal = null; // { id, stage }
+    let runInspOpenStage = "";
     let mdFetchToken = 0;
     document.getElementById("stamp").textContent = GRAPH.generated_at || "";
 
@@ -5696,7 +6601,8 @@
         e.preventDefault();
         e.stopPropagation();
         const node = byId[runBtn.getAttribute("data-run-open")];
-        if (node) openRun(node);
+        const stage = runBtn.getAttribute("data-run-stage") || "";
+        if (node) openRun(node, stage || undefined);
         return;
       }
       const acctBtn = e.target.closest("[data-account-open]");
@@ -5716,9 +6622,18 @@
       openMd(rel, el.getAttribute("data-md-title") || "");
     });
 
+    document.getElementById("ctxClose").onclick = closeTopicContext;
+    document.getElementById("ctxModal").addEventListener("click", (e) => {
+      if (e.target.id === "ctxModal") closeTopicContext();
+    });
     document.getElementById("mdClose").onclick = closeMd;
     $modal.addEventListener("click", (e) => { if (e.target === $modal) closeMd(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMd(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const ctx = document.getElementById("ctxModal");
+      if (ctx && ctx.classList.contains("open")) { closeTopicContext(); return; }
+      closeMd();
+    });
 
     const VIEW_PARENT = {
       overview: "overview",
@@ -6037,6 +6952,7 @@
     }
 
     function select(id) {
+      if (byId[id] && byId[id].kind === "run" && id !== selected) runInspOpenStage = "";
       const n = byId[id];
       if (view === "overview" && n && n.kind === "account") {
         openAccount(n);
@@ -6157,18 +7073,41 @@
       if (!hasHeat(n)) return "";
       const hint = opts.hint ? `<span class="heat-note">${esc(t("heat_hint"))}</span>` : "";
       const items = [
+        { key: "views", sym: "👁", title: "views" },
         { key: "likes", sym: "♥", title: "likes" },
         { key: "replies", sym: "💬", title: "replies" },
         { key: "bookmarks", sym: "🔖", title: "bookmarks" },
-        { key: "views", sym: "👁", title: "views" },
       ];
       const chips = items.map(({ key, sym, title }) => {
         const val = heatMetric(n, key);
+        if (val === null && opts.skipEmpty) return "";
         const shown = val === null ? "—" : val;
         const empty = val === null ? " empty" : "";
         return `<span class="heat-chip ${key}${empty}" title="${esc(title)}"><span class="sym">${sym}</span><span class="val">${esc(shown)}</span></span>`;
       }).join("");
       return `<div class="heat" title="${esc(t("heat_hint"))}">${chips}</div>${hint}`;
+    }
+
+    function heatChipsFromText(blob) {
+      const raw = String(blob || "").trim();
+      if (!raw) return "";
+      const specs = [
+        { key: "views", sym: "👁", re: /([\d.,]+\s*[kKmMbB]?)\s*views?\b/i },
+        { key: "likes", sym: "♥", re: /([\d.,]+\s*[kKmMbB]?)\s*likes?\b/i },
+        { key: "replies", sym: "💬", re: /([\d.,]+\s*[kKmMbB]?)\s*replies?\b/i },
+        { key: "bookmarks", sym: "🔖", re: /([\d.,]+\s*[kKmMbB]?)\s*bookmarks?\b/i },
+      ];
+      const chips = specs.map(({ key, sym, re }) => {
+        const m = raw.match(re);
+        if (!m) return "";
+        return `<span class="heat-chip ${key}" title="${esc(key)}"><span class="sym">${sym}</span><span class="val">${esc(m[1].replace(/\s+/g, ""))}</span></span>`;
+      }).filter(Boolean).join("");
+      return chips ? `<div class="heat">${chips}</div>` : "";
+    }
+
+    function heatFieldHtml(node, heatText) {
+      if (node && hasHeat(node)) return heatStripHtml(node, { skipEmpty: true });
+      return heatChipsFromText(heatText);
     }
     function listRowEl(n, extra) {
       const d = document.createElement("div");
@@ -8048,6 +8987,11 @@
     function mediaCard(m) {
       const card = document.createElement("div");
       card.className = "mediacard" + (selected === `media:${m.id}` ? " sel" : "");
+      const gNode = byId[`media:${m.id}`];
+      const gReady = gNode ? mediaIsReady(gNode) : false;
+      const gBadge = gReady
+        ? `<span class="media-gbadge ready">${esc(t("media_badge_ready"))}</span>`
+        : `<span class="media-gbadge">${esc(t("media_badge_incomplete"))}</span>`;
       const rolePill = m.role ? `<span class="pill">${esc(m.role)}</span>` : "";
       const hosted = m.hosted
         ? `<span class="pill ok" title="${esc(m.hosted_image_id)}">${t("media_hosted")}</span>`
@@ -8059,6 +9003,7 @@
         : `<div class="thumb thumb-missing">?</div>`;
       const tagOnly = (m.tags || []).filter(tg => tg !== m.role).map(tg => `<span class="pill">${esc(tg)}</span>`).join("");
       card.innerHTML = `
+        ${gBadge}
         <button type="button" class="media-del" title="${esc(t("media_delete_one"))}" aria-label="${esc(t("media_delete_one"))}">×</button>
         ${thumb}
         <div class="mediameta">
@@ -10438,24 +11383,1345 @@
       });
     }
 
-    
-    function getAiActionPrompt(n) {
-      const k = n.kind;
-      if (k === "topic") {
-        return `作为内容主编，针对选题【${n.ident} ${n.label}】，结合所属立柱【${n.pillar || '核心'}】，生成 3 个不同切入视角的爆款大纲方案，包含 Hook 开头、核心洞察链及 Call to Action。`;
-      } else if (k === "wiki") {
-        return `针对认知判断【${n.ident} ${n.label}】（置信度: ${n.confidence || '高'}），请输出一份强化论证备忘录，包括 2 个反事实推演、3 条支撑论据以及可以派生的 2 个实战选题方向。`;
-      } else if (k === "run") {
-        return `针对生产任务【${n.ident} ${n.label}】（状态: ${n.status || 'drafting'}），请审查其当前阶段文案的表达张力，按照内容工程规范检查 Hook 钩子、阅读节奏、表达零件复用度，并生成定稿优化建议。`;
-      } else if (k === "need") {
-        return `针对用户核心痛点【${n.ident} ${n.label}】（原声: "${n.quote || n.label}"），设计 3 个高转化切入选题，并分别列出契合该痛点的认知反常识（W-）与行动方案。`;
-      } else if (k === "hit") {
-        return `深度拆解爆款案例【${n.ident} ${n.label}】的病毒机制：分析其情绪触发点、钩子前 3 秒吸引力结构，并提炼出可沉淀到 Swipe/Atom 库中的表达公式。`;
-      } else if (k === "swipe" || k === "atom" || k === "claim") {
-        return `将表达零件【${n.ident} ${n.label}】融入到当前主题创作中，生成 2 组具体的落地文案段落示例，保持原汁原味的人格音调。`;
-      } else {
-        return `针对实体【${n.ident} ${n.label}】，分析其在内容生产系统中的上下游关联，并给出下一步行动建议。`;
+
+    function mediaGraphStatus(n) {
+      const s = String(n.graph_status || "").trim();
+      if (s === "linked" || s === "orphaned" || s === "described" || s === "cataloged") return s;
+      const semantic = (n.links || []).filter(l => /^(P|R|C|W|RUN)-/.test(l));
+      const edges = mediaDirectEdges(n.id);
+      if (edges.length) return "linked";
+      if (semantic.length) return "orphaned";
+      if (n.described) return "described";
+      return "cataloged";
+    }
+
+    function mediaIsReady(n) {
+      // Two UI states only: incomplete vs ready (has description and/or graph presence).
+      const st = mediaGraphStatus(n);
+      return st === "described" || st === "linked" || st === "orphaned" || Boolean(n.described) || mediaDirectEdges(n.id).length > 0;
+    }
+
+    function mediaDirectEdges(mediaId) {
+      const out = [];
+      for (const e of GRAPH.edges || []) {
+        if (e.from !== mediaId && e.to !== mediaId) continue;
+        const otherId = e.from === mediaId ? e.to : e.from;
+        const other = byId[otherId];
+        if (!other) continue;
+        out.push({ rel: e.rel || "", node: other, from: e.from, to: e.to });
       }
+      const rank = { wiki: 0, product: 1, recommendation: 2, capture: 3, run: 4, published: 5 };
+      out.sort((a, b) => (rank[a.node.kind] ?? 9) - (rank[b.node.kind] ?? 9));
+      return out.slice(0, 12);
+    }
+
+    function mediaGraphPanelHtml(n) {
+      const ready = mediaIsReady(n);
+      const edges = mediaDirectEdges(n.id);
+      const orphans = Array.isArray(n.orphan_links) ? n.orphan_links : [];
+      const statusClass = ready ? "ready" : "incomplete";
+      const statusLabel = ready ? t("media_graph_ready") : t("media_graph_incomplete");
+      let lede = ready ? t("media_graph_lede_ready") : t("media_graph_lede_incomplete");
+      if (ready && orphans.length) {
+        lede = fillTemplate("media_graph_lede_ready_orphan", { ids: orphans.join(" ") });
+      }
+
+      if (!ready) {
+        // Incomplete: panel is just a short pointer; Copy to Agent card below does the work.
+        return `<div class="media-graph-panel" data-media-id="${esc(n.ident)}">
+          <span class="media-graph-status ${statusClass}">${esc(statusLabel)}</span>
+          <p class="media-graph-lede">${esc(lede)}</p>
+        </div>`;
+      }
+
+      const caption = (n.caption || n.label || "").trim();
+      const captionHtml = caption
+        ? `<div class="note" style="font-weight:700">${esc(t("media_graph_caption"))}</div>
+           <p class="media-caption-block">${esc(caption)}</p>`
+        : "";
+      let nbrHtml = "";
+      if (edges.length) {
+        nbrHtml = `<div class="note" style="font-weight:700">${esc(t("media_graph_neighbors"))}</div>
+          <ul class="media-nbr-list">${edges.map(({ rel, node }) => `
+            <li><button type="button" class="media-nbr" data-goto="${esc(node.id)}">
+              <span class="media-nbr-rel">${esc(rel || "related")}</span>
+              <span class="media-nbr-main">
+                <span class="media-nbr-id">${esc(kindName(node.kind))} · ${esc(node.ident)}</span>
+                <span class="media-nbr-label">${esc(node.label || node.one_liner || "")}</span>
+              </span>
+            </button></li>`).join("")}</ul>`;
+      } else {
+        nbrHtml = `<p class="media-graph-lede">${esc(t("media_graph_empty_nbr"))}</p>`;
+      }
+      return `<div class="media-graph-panel" data-media-id="${esc(n.ident)}">
+        <span class="media-graph-status ${statusClass}">${esc(statusLabel)}</span>
+        <p class="media-graph-lede">${esc(lede)}</p>
+        ${captionHtml}
+        ${nbrHtml}
+      </div>`;
+    }
+
+    function bindMediaGraphPanel(root, n) {
+      // Read-only panel in both UI states; Agent prompt handles writes.
+    }
+
+    const TOPIC_PROV_ROLES = [
+      "input", "judgment", "evidence", "counter_evidence",
+      "craft", "claim", "need", "product", "capture", "wiki", "constraint"
+    ];
+
+    function topicProvRoleLabel(role) {
+      const key = "topic_prov_" + role;
+      const lab = t(key);
+      return lab === key ? role : lab;
+    }
+
+    function topicNodeByIdent(ident) {
+      if (!ident) return null;
+      return Object.values(byId).find(n => n.ident === ident) || null;
+    }
+
+    function topicHandoffPrompt(n) {
+      const en = lang !== "zh";
+      const platform = n.platform || (en ? "(unset)" : "（未定）");
+      const profile = n.profile || n.profile_id || (en ? "(unset)" : "（未定）");
+      const lane = n.lane || (en ? "(unset)" : "（未定）");
+      const mode = (n.generation_mode || "").replace(/_/g, " ") || (en ? "(unset)" : "（未定）");
+      const core = n.core_judgment || n.label || "";
+      const gaps = (n.gaps || "").trim();
+      const runId = (n.run_id || "").trim();
+      if (en) {
+        let body = `Next step: open a run from this Topic.\n\nTopic: ${n.ident}\nPlatform: ${platform}\nProfile: ${profile}\nLane: ${lane}\nGeneration mode: ${mode}\n\nCore judgment:\n${core}\n\nPlease:\n1. Check hard gates for opening a Run from this Topic.\n2. Read its Context Packet, linked W- judgments, product facts, constraints, and generation Trace.\n3. If platform is set, create one Run for that platform.\n4. If multiple platforms are needed, create one Run per platform.\n5. Keep topic_id=${n.ident} on the Run.\n6. Do not reinvent the Core judgment; if evidence is thin or the cut must change, return to the Topic first.`;
+        if (gaps) body += `\n\nEvidence gaps:\n${gaps}`;
+        if (runId) body += `\n\nNote: a Run already exists (${runId}). Prefer continuing it unless I ask for a new one.`;
+        return body;
+      }
+      let body = `下一步：用这个 Topic 开一单。\n\nTopic: ${n.ident}\nPlatform: ${platform}\nProfile: ${profile}\nLane: ${lane}\nGeneration mode: ${mode}\n\n核心判断：\n${core}\n\n请执行：\n1. 先检查这个 Topic 是否满足开 Run 的 hard gate。\n2. 读取它的 Context Packet、关联 W- 判断、产品事实、约束和生成时的 Trace。\n3. 如果 platform 已明确，创建一个对应平台的 Run。\n4. 如果需要多个 platform，则每个平台创建一个独立 Run。\n5. 在 Run 中保留 topic_id=${n.ident}。\n6. 不要重新发明 Topic 的 Core judgment；如果发现证据不足或判断需要变化，先返回 Topic。`;
+      if (gaps) body += `\n\n证据缺口：\n${gaps}`;
+      if (runId) body += `\n\n注意：已经有 Run（${runId}）。除非我要求新开，否则优先继续那一单。`;
+      return body;
+    }
+
+    function topicBeats(n) {
+      return [
+        ["topic_beat_who", n.who_for || ""],
+        ["topic_beat_believe", n.believe_now || ""],
+        ["topic_beat_cut", n.cut || ""],
+        ["topic_beat_after", n.change_after || ""],
+      ].filter(([, v]) => String(v).trim());
+    }
+
+    function topicDecisionHtml(n) {
+      const core = n.core_judgment || n.label || "";
+      const beats = topicBeats(n).map(([key, v]) =>
+        `<div class="topic-beat"><div class="topic-beat-label">${esc(t(key))}</div><p>${esc(v)}</p></div>`
+      ).join("");
+      const why = (n.why_status || "").trim();
+      return `<section class="topic-section topic-decision">
+        ${core ? `<p class="topic-core">${esc(core)}</p>` : ""}
+        ${beats}
+        ${why ? `<p class="topic-why">${esc(why)}</p>` : ""}
+      </section>`;
+    }
+
+    function topicWarnings(n) {
+      const warns = [];
+      const st = String(n.verdict || n.status || "").toLowerCase();
+      if (st === "killed" || st === "discard") warns.push(t("topic_warn_killed"));
+      if (!(n.platform || "").trim()) warns.push(t("topic_warn_no_platform"));
+      if (!(n.profile || n.profile_id || "").toString().trim()) warns.push(t("topic_warn_no_profile"));
+      if ((n.run_id || "").trim()) warns.push(fillTemplate("topic_warn_has_run", { id: n.run_id }));
+      return warns;
+    }
+
+    function topicReadyHtml(n) {
+      const warns = topicWarnings(n);
+      const gaps = (n.gaps || "").trim();
+      if (!warns.length && !gaps) {
+        return `<p class="topic-ready-ok">${esc(t("topic_ready_ok"))}</p>`;
+      }
+      const warnHtml = warns.map(w => `<p class="topic-warn">${esc(w)}</p>`).join("");
+      const gapHtml = gaps
+        ? `<p class="topic-gap"><span>${esc(t("topic_field_gaps"))}</span>${esc(gaps)}</p>`
+        : "";
+      return `<div class="topic-ready-block">${warnHtml}${gapHtml}</div>`;
+    }
+
+    const TOPIC_CTX_COL = {
+      input: "input", product: "input", need: "input",
+      judgment: "judgment", wiki: "judgment",
+      evidence: "evidence", counter_evidence: "evidence", capture: "evidence",
+      craft: "craft", claim: "craft", swipe: "craft", atom: "craft",
+    };
+    const TOPIC_CTX_RANK = { input: 0, judgment: 1, evidence: 2, craft: 3 };
+
+    function topicContextColumns(n) {
+      const cols = { input: [], judgment: [], evidence: [], craft: [] };
+      const best = new Map();
+      for (const row of (n.provenance || [])) {
+        if (!row || !row.ident || row.role === "constraint") continue;
+        const col = TOPIC_CTX_COL[row.role] || "craft";
+        const prev = best.get(row.ident);
+        const prevCol = prev ? prev.col : "craft";
+        if (!prev || TOPIC_CTX_RANK[col] < TOPIC_CTX_RANK[prevCol]) {
+          best.set(row.ident, { ...row, col });
+        }
+      }
+      for (const row of best.values()) cols[row.col].push(row);
+      return cols;
+    }
+
+    function topicContextCount(cols) {
+      return Object.values(cols).reduce((sum, list) => sum + list.length, 0);
+    }
+
+    function topicContextSummaryHtml(n) {
+      const cols = topicContextColumns(n);
+      const total = topicContextCount(cols);
+      const bits = ["input", "judgment", "evidence", "craft"]
+        .filter(col => cols[col].length)
+        .map(col => `${t("topic_ctx_col_" + col)} ${cols[col].length}`)
+        .join(" · ");
+      const head = total
+        ? fillTemplate("topic_ctx_read", { n: total })
+        : t("topic_ctx_none_short");
+      return `<section class="topic-section topic-ctx-card">
+        <p class="topic-ctx-summary">${esc(head)}</p>
+        ${bits ? `<p class="topic-ctx-bits">${esc(bits)}</p>` : ""}
+        <button type="button" class="topic-ctx-open" id="topicCtxOpen">${esc(t("topic_ctx_open"))}</button>
+      </section>`;
+    }
+
+    function topicRolePlain(role) {
+      const key = "topic_ctx_plain_" + (role || "");
+      const lab = t(key);
+      return lab === key ? (role || "") : lab;
+    }
+
+    let ctxTopic = null;
+    let ctxSelected = "";
+
+    const TOPIC_CTX_ROLE_COLOR = {
+      input: "#7a6b9e",
+      judgment: "#9c3d32",
+      evidence: "#7d9aa8",
+      craft: "#c4a06a",
+      topic: "#9c3d32",
+      run: "#2f6fed",
+    };
+    const TOPIC_CTX_RING = { input: 130, judgment: 170, evidence: 210, craft: 250 };
+
+    let ctxAnim = null;
+    let ctxGraphApi = null;
+    let ctxTransform = { x: 0, y: 0, k: 1 };
+
+    function stopTopicContextAnim() {
+      if (ctxAnim) {
+        cancelAnimationFrame(ctxAnim);
+        ctxAnim = null;
+      }
+      ctxGraphApi = null;
+    }
+
+    function topicContextRows() {
+      if (!ctxTopic) return [];
+      const cols = topicContextColumns(ctxTopic);
+      return Object.values(cols).flat();
+    }
+
+    function buildTopicContextGraph(topic) {
+      const rows = [];
+      const cols = topicContextColumns(topic);
+      for (const col of ["input", "judgment", "evidence", "craft"]) {
+        for (const row of cols[col]) rows.push(row);
+      }
+      const topicId = topic.id || `topic:${topic.ident}`;
+      const hubKind = topic.kind === "run" ? "run" : "topic";
+      const nodes = [{
+        id: topicId,
+        ident: topic.ident,
+        label: topic.core_judgment || topic.label || "",
+        kind: hubKind,
+        role: hubKind,
+        hubKind,
+        isTopic: true,
+      }];
+      const links = [];
+      const seen = new Set([topic.ident]);
+      for (const row of rows) {
+        if (seen.has(row.ident)) continue;
+        seen.add(row.ident);
+        const live = topicNodeByIdent(row.ident);
+        const id = live ? live.id : `${row.kind || "node"}:${row.ident}`;
+        nodes.push({
+          id,
+          ident: row.ident,
+          label: live ? (live.label || "") : "",
+          kind: live ? live.kind : (row.kind || "wiki"),
+          role: row.role || row.col || "craft",
+          col: row.col || TOPIC_CTX_COL[row.role] || "craft",
+          epistemic: row.epistemic || "",
+          reason: row.reason || "",
+          isTopic: false,
+        });
+        links.push({
+          from: id,
+          to: topicId,
+          rel: topicProvRoleLabel(row.role || row.col || "craft"),
+        });
+      }
+      return { nodes, links };
+    }
+
+    function mountTopicContextGraph(host, topic) {
+      stopTopicContextAnim();
+      ctxTransform = { x: 0, y: 0, k: 1 };
+      const graph = buildTopicContextGraph(topic);
+      const width = Math.max(host.clientWidth || 640, 420);
+      const height = Math.max(host.clientHeight || 420, 320);
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "ctx-graph-svg");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute("width", "100%");
+      svg.setAttribute("height", "100%");
+      const root = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      svg.appendChild(root);
+      host.innerHTML = "";
+      host.appendChild(svg);
+
+      const byRole = { input: [], judgment: [], evidence: [], craft: [] };
+      for (const n of graph.nodes) {
+        if (n.isTopic) continue;
+        (byRole[n.col] || byRole.craft).push(n);
+      }
+      const nodes = graph.nodes.map((n, i) => {
+        if (n.isTopic) {
+          return { ...n, x: width / 2, y: height / 2, vx: 0, vy: 0, fx: width / 2, fy: height / 2 };
+        }
+        const bucket = byRole[n.col] || byRole.craft;
+        const idx = bucket.indexOf(n);
+        const count = Math.max(bucket.length, 1);
+        const base = { input: -Math.PI * 0.75, judgment: -Math.PI * 0.25, evidence: Math.PI * 0.25, craft: Math.PI * 0.75 };
+        const span = Math.PI * 0.45;
+        const angle = (base[n.col] || 0) - span / 2 + (count === 1 ? span / 2 : (idx / (count - 1)) * span);
+        const ring = TOPIC_CTX_RING[n.col] || 200;
+        const jx = ((i * 37) % 9) - 4;
+        const jy = ((i * 53) % 9) - 4;
+        return {
+          ...n,
+          x: width / 2 + Math.cos(angle) * ring + jx,
+          y: height / 2 + Math.sin(angle) * ring + jy,
+          vx: 0,
+          vy: 0,
+        };
+      });
+      const by = Object.fromEntries(nodes.map(n => [n.id, n]));
+      const links = graph.links
+        .map(e => ({ ...e, source: by[e.from], target: by[e.to] }))
+        .filter(e => e.source && e.target);
+
+      const gLinks = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const gLabels = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const gNodes = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      root.appendChild(gLinks);
+      root.appendChild(gLabels);
+      root.appendChild(gNodes);
+
+      const linkEls = links.map(e => {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("class", "link");
+        line.setAttribute("stroke-width", "1.4");
+        gLinks.appendChild(line);
+        return { e, line };
+      });
+
+      function shortLabel(n) {
+        if (n.isTopic) return n.ident.replace(/^T-\d{8}-/, "T-");
+        return String(n.ident || "").slice(0, 22);
+      }
+
+      const nodeEls = nodes.map(n => {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const selectedOn = (!n.isTopic && ctxSelected === n.ident) || (n.isTopic && !ctxSelected);
+        g.setAttribute("class", "node" + (n.isTopic ? " topic" : "") + (selectedOn && !n.isTopic ? " sel" : ""));
+        g.dataset.ident = n.ident;
+        const r = n.isTopic ? 18 : 11;
+        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("r", String(r));
+        c.setAttribute("fill", TOPIC_CTX_ROLE_COLOR[n.isTopic ? (n.hubKind || "topic") : (n.col || "craft")] || "#8a8276");
+        c.setAttribute("stroke", "#faf6ec");
+        c.setAttribute("stroke-width", n.isTopic ? "2" : "1.5");
+        const lab = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lab.setAttribute("class", "node-label");
+        lab.setAttribute("text-anchor", "middle");
+        lab.setAttribute("dy", String(r + 13));
+        lab.textContent = shortLabel(n);
+        const sub = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        sub.setAttribute("class", "node-sub");
+        sub.setAttribute("text-anchor", "middle");
+        sub.setAttribute("dy", String(r + 24));
+        const title = String(n.label || "").trim();
+        sub.textContent = title ? (title.length > 28 ? title.slice(0, 27) + "…" : title) : "";
+        g.appendChild(c);
+        g.appendChild(lab);
+        if (sub.textContent) g.appendChild(sub);
+        g.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          if (n.isTopic) {
+            ctxSelected = "";
+          } else {
+            ctxSelected = n.ident;
+          }
+          paintSelection();
+          renderTopicContextDetail();
+        });
+        let dragging = false;
+        g.addEventListener("pointerdown", (ev) => {
+          if (ev.button !== 0 || n.isTopic) return;
+          dragging = true;
+          n.fx = n.x; n.fy = n.y;
+          g.setPointerCapture(ev.pointerId);
+          ev.stopPropagation();
+        });
+        g.addEventListener("pointermove", (ev) => {
+          if (!dragging) return;
+          const pt = clientToGraph(ev.clientX, ev.clientY);
+          n.fx = pt.x; n.fy = pt.y;
+          n.x = pt.x; n.y = pt.y;
+          wake(0.25);
+        });
+        g.addEventListener("pointerup", (ev) => {
+          if (!dragging) return;
+          dragging = false;
+          n.fx = null; n.fy = null;
+          try { g.releasePointerCapture(ev.pointerId); } catch (_) {}
+          wake(0.2);
+        });
+        gNodes.appendChild(g);
+        return { n, g, r };
+      });
+
+      function paintSelection() {
+        const has = !!ctxSelected;
+        nodeEls.forEach(({ n, g }) => {
+          const on = !n.isTopic && ctxSelected === n.ident;
+          g.classList.toggle("sel", on);
+          g.classList.toggle("dim", has && !on && !n.isTopic);
+        });
+        linkEls.forEach(({ e, line }) => {
+          const on = has && (e.source.ident === ctxSelected || e.target.ident === ctxSelected);
+          line.classList.toggle("on", on);
+          line.classList.toggle("dim", has && !on);
+        });
+      }
+
+      function applyTransform() {
+        root.setAttribute("transform", `translate(${ctxTransform.x},${ctxTransform.y}) scale(${ctxTransform.k})`);
+      }
+      applyTransform();
+
+      function clientToGraph(cx, cy) {
+        const rect = svg.getBoundingClientRect();
+        return {
+          x: (cx - rect.left - ctxTransform.x) / ctxTransform.k,
+          y: (cy - rect.top - ctxTransform.y) / ctxTransform.k,
+        };
+      }
+
+      let panning = false, pan0 = null;
+      svg.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0) return;
+        if (ev.target.closest(".node")) return;
+        panning = true;
+        svg.classList.add("dragging");
+        pan0 = { x: ev.clientX, y: ev.clientY, tx: ctxTransform.x, ty: ctxTransform.y };
+        svg.setPointerCapture(ev.pointerId);
+      });
+      svg.addEventListener("pointermove", (ev) => {
+        if (!panning || !pan0) return;
+        ctxTransform.x = pan0.tx + (ev.clientX - pan0.x);
+        ctxTransform.y = pan0.ty + (ev.clientY - pan0.y);
+        applyTransform();
+      });
+      svg.addEventListener("pointerup", () => {
+        panning = false;
+        pan0 = null;
+        svg.classList.remove("dragging");
+      });
+      svg.addEventListener("wheel", (ev) => {
+        ev.preventDefault();
+        const rect = svg.getBoundingClientRect();
+        const mx = ev.clientX - rect.left;
+        const my = ev.clientY - rect.top;
+        const prev = ctxTransform.k;
+        const next = Math.min(2.4, Math.max(0.45, prev * (ev.deltaY < 0 ? 1.08 : 0.92)));
+        ctxTransform.x = mx - (mx - ctxTransform.x) * (next / prev);
+        ctxTransform.y = my - (my - ctxTransform.y) * (next / prev);
+        ctxTransform.k = next;
+        applyTransform();
+      }, { passive: false });
+
+      let alpha = 1;
+      const alphaMin = 0.03;
+      const alphaDecay = 0.94;
+      const charge = Math.min(900, Math.max(280, 18000 / Math.max(nodes.length, 1)));
+
+      function stepPhysics(strength) {
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i], b = nodes[j];
+            let dx = a.x - b.x, dy = a.y - b.y;
+            let dist2 = dx * dx + dy * dy || 0.01;
+            const dist = Math.sqrt(dist2);
+            const force = (charge * strength) / dist2;
+            dx = dx / dist * force; dy = dy / dist * force;
+            a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
+          }
+        }
+        for (const e of links) {
+          const a = e.source, b = e.target;
+          let dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const ideal = TOPIC_CTX_RING[a.col] || 180;
+          const f = (dist - ideal) * 0.045 * strength;
+          dx = dx / dist * f; dy = dy / dist * f;
+          a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
+        }
+        for (const n of nodes) {
+          if (n.fx != null) { n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; continue; }
+          n.vx *= 0.82; n.vy *= 0.82;
+          n.x += n.vx; n.y += n.vy;
+          n.x = Math.min(width - 24, Math.max(24, n.x));
+          n.y = Math.min(height - 28, Math.max(28, n.y));
+        }
+      }
+
+      function paint() {
+        for (const { e, line } of linkEls) {
+          line.setAttribute("x1", e.source.x);
+          line.setAttribute("y1", e.source.y);
+          line.setAttribute("x2", e.target.x);
+          line.setAttribute("y2", e.target.y);
+        }
+        for (const { n, g } of nodeEls) {
+          g.setAttribute("transform", `translate(${n.x},${n.y})`);
+        }
+      }
+
+      function wake(boost) {
+        alpha = Math.max(alpha, boost || 0.35);
+        if (!ctxAnim) ctxAnim = requestAnimationFrame(tick);
+      }
+
+      function tick() {
+        ctxAnim = null;
+        if (alpha < alphaMin) {
+          paint();
+          return;
+        }
+        stepPhysics(alpha);
+        alpha *= alphaDecay;
+        paint();
+        ctxAnim = requestAnimationFrame(tick);
+      }
+
+      paint();
+      paintSelection();
+      ctxAnim = requestAnimationFrame(tick);
+      ctxGraphApi = { paintSelection };
+      return ctxGraphApi;
+    }
+
+    function ctxKindLabel(kind) {
+      const key = "topic_ctx_kind_" + (kind || "");
+      const lab = t(key);
+      return lab === key ? (kind || "") : lab;
+    }
+
+    function epistemicPlain(raw) {
+      const s = String(raw || "").toLowerCase();
+      if (!s) return "";
+      if (s.includes("proposal")) return t("topic_ctx_as_proposal");
+      if (s.includes("observation")) return t("topic_ctx_as_obs");
+      if (s.includes("hypothesis") || s.includes("judgment")) return t("topic_ctx_as_judgment");
+      if (s.includes("fact")) return t("topic_ctx_as_fact");
+      return "";
+    }
+
+    function ctxBlock(title, bodyHtml, extraClass = "") {
+      if (!bodyHtml) return "";
+      const cls = extraClass ? ` ctx-block ${extraClass}` : "ctx-block";
+      return `<section class="${cls.trim()}"><h4>${esc(title)}</h4><div class="ctx-block-body">${bodyHtml}</div></section>`;
+    }
+
+    function ctxP(text) {
+      const v = String(text || "").trim();
+      return v ? `<p>${esc(v)}</p>` : "";
+    }
+
+    function ctxList(items) {
+      const rows = (items || []).map(x => String(x || "").trim()).filter(Boolean);
+      if (!rows.length) return "";
+      return `<ul>${rows.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    }
+
+    function ctxField(label, value, { feature = false, html = false } = {}) {
+      const v = String(value || "").trim();
+      if (!v) return "";
+      const body = feature
+        ? `<p class="ctx-feature">${html ? v : esc(v)}</p>`
+        : `<p class="ctx-field-value">${html ? v : esc(v)}</p>`;
+      return `<div class="ctx-field"><div class="ctx-field-label">${esc(label)}</div>${body}</div>`;
+    }
+
+    function ctxChips(items) {
+      const rows = (items || []).map(x => String(x || "").trim()).filter(Boolean);
+      if (!rows.length) return "";
+      return rows.map(x => `<span class="ctx-chip">${esc(x)}</span>`).join("");
+    }
+
+    function ctxHero({ kicker, title, ident, chips = [], meta = "" }) {
+      return `<header class="ctx-hero">
+        <div class="ctx-hero-top">
+          <span class="ctx-kicker">${esc(kicker || "")}</span>
+          ${ctxChips(chips)}
+        </div>
+        <p class="ctx-lead">${esc(title || "")}</p>
+        ${ident ? `<p class="ctx-id">${esc(ident)}</p>` : ""}
+        ${meta ? `<p class="ctx-meta">${esc(meta)}</p>` : ""}
+      </header>`;
+    }
+
+    function ctxSaysHtml(node, detail) {
+      const d = detail || {};
+      const kind = (node && node.kind) || d.kind || "";
+      if (kind === "wiki") {
+        return [
+          ctxField(t("topic_ctx_belief"), d.belief || (node && node.label) || "", { feature: true }),
+          ctxField(t("topic_ctx_counter"), d.counter_evidence),
+          ctxField(t("topic_ctx_next_test"), d.next_test),
+        ].join("");
+      }
+      if (kind === "product") {
+        return [
+          ctxField(t("topic_ctx_promise"), d.promise, { feature: true }),
+          ctxField(t("topic_ctx_what"), d.what_it_is || (node && node.label) || ""),
+          ctxField(t("topic_ctx_best"), d.best_for || d.audience || (node && node.audience) || ""),
+          ctxField(t("topic_ctx_not"), d.not_for),
+          ctxField(t("topic_ctx_bounds"), d.boundaries),
+          d.do_not_say && d.do_not_say.length
+            ? `<div class="ctx-field"><div class="ctx-field-label">${esc(t("topic_ctx_donot"))}</div>${ctxList(d.do_not_say)}</div>`
+            : "",
+        ].join("");
+      }
+      if (kind === "capture") {
+        const sourceHtml = [
+          d.handle ? esc(d.handle) : "",
+          d.source_url ? `<a href="${esc(d.source_url)}" target="_blank" rel="noreferrer">${esc(d.source_url)}</a>` : "",
+        ].filter(Boolean).join(" · ");
+        return [
+          ctxField(t("topic_ctx_observed"), d.one_liner || (node && node.label) || "", { feature: true }),
+          sourceHtml ? ctxField(t("topic_ctx_source"), sourceHtml, { html: true }) : "",
+          (() => {
+            const heatHtml = heatFieldHtml(node, d.heat);
+            return heatHtml
+              ? `<div class="ctx-field"><div class="ctx-field-label">${esc(t("topic_ctx_heat"))}</div>${heatHtml}</div>`
+              : "";
+          })(),
+          d.notes && d.notes.length ? ctxList(d.notes) : "",
+        ].join("");
+      }
+      if (kind === "claim") {
+        return [
+          ctxField(t("topic_ctx_claim"), d.claim || (node && node.label) || "", { feature: true }),
+          d.applies_when && d.applies_when.length
+            ? `<div class="ctx-field"><div class="ctx-field-label">${esc(t("topic_ctx_applies"))}</div>${ctxList(d.applies_when)}</div>` : "",
+          d.avoid_when && d.avoid_when.length
+            ? `<div class="ctx-field"><div class="ctx-field-label">${esc(t("topic_ctx_avoid"))}</div>${ctxList(d.avoid_when)}</div>` : "",
+        ].join("");
+      }
+      if (kind === "swipe") {
+        return [
+          (d.title || (node && node.label))
+            ? `<p class="ctx-feature">${esc(d.title || node.label)}</p>` : "",
+          d.when_to_use && d.when_to_use.length
+            ? `<div class="ctx-field"><div class="ctx-field-label">${esc(t("topic_ctx_use"))}</div>${ctxList(d.when_to_use)}</div>` : "",
+          d.beats && d.beats.length
+            ? `<div class="ctx-field"><div class="ctx-field-label">${esc(t("topic_ctx_beats"))}</div>${ctxList(d.beats)}</div>` : "",
+          d.when_to_avoid && d.when_to_avoid.length
+            ? `<div class="ctx-field"><div class="ctx-field-label">${esc(t("topic_ctx_avoid"))}</div>${ctxList(d.when_to_avoid)}</div>` : "",
+        ].join("");
+      }
+      if (kind === "atom") {
+        return [
+          ctxField(t("topic_ctx_claim"), d.text || (node && node.label) || "", { feature: true }),
+          ctxField(t("topic_ctx_status"), [d.atom_type, d.status].filter(Boolean).join(" · ")),
+        ].join("");
+      }
+      if (kind === "need") {
+        return [
+          ctxField(t("topic_ctx_quote"), d.quote || (node && node.quote) || (node && node.label) || "", { feature: true }),
+          ctxField(t("topic_ctx_speaker"), d.speaker || (node && node.speaker) || ""),
+          ctxField(t("topic_ctx_status"), [d.frequency && `×${d.frequency}`, d.status].filter(Boolean).join(" · ")),
+        ].join("");
+      }
+      return ctxP((node && node.label) || "");
+    }
+
+    function ctxEffectForRole(role) {
+      const map = {
+        input: "topic_ctx_effect_input",
+        product: "topic_ctx_effect_input",
+        need: "topic_ctx_effect_input",
+        judgment: "topic_ctx_effect_judgment",
+        wiki: "topic_ctx_effect_judgment",
+        evidence: "topic_ctx_effect_evidence",
+        counter_evidence: "topic_ctx_effect_evidence",
+        capture: "topic_ctx_effect_evidence",
+        craft: "topic_ctx_effect_craft",
+        swipe: "topic_ctx_effect_craft",
+        atom: "topic_ctx_effect_craft",
+        claim: "topic_ctx_effect_claim",
+      };
+      const key = map[role] || "";
+      return key ? t(key) : "";
+    }
+
+    function ctxCaveats(row, node, detail) {
+      const out = [];
+      const epi = String((row && row.epistemic) || "").toLowerCase();
+      const status = String((detail && detail.status) || (node && node.status) || "").toLowerCase();
+      const role = (row && row.role) || "";
+      if (epi.includes("hypothesis") || epi.includes("judgment") || status === "hypothesis") {
+        out.push(t("topic_ctx_caveat_hyp"));
+      }
+      if (epi.includes("observation") || (node && node.kind === "capture")) {
+        out.push(t("topic_ctx_caveat_obs"));
+      }
+      if ((node && node.kind === "swipe") || role === "craft") {
+        const tags = (detail && detail.tags) || [];
+        const foilish = tags.includes("foil") || /foil/i.test((node && node.label) || "");
+        if (foilish || role === "craft") out.push(t("topic_ctx_caveat_foil"));
+      }
+      if (node && node.kind === "product") out.push(t("topic_ctx_caveat_product"));
+      // unique
+      return [...new Set(out)];
+    }
+
+    function ctxWhyHtml(row) {
+      const role = topicRolePlain(row.role);
+      const why = String(row.reason || "").trim();
+      const effect = ctxEffectForRole(row.role);
+      return [
+        ctxField(t("topic_ctx_role_here"), role),
+        ctxField(t("topic_ctx_why_read"), why),
+        ctxField(t("topic_ctx_effect"), effect),
+      ].join("");
+    }
+
+    function ctxTrustHtml(row, node, detail) {
+      const bits = [];
+      const epi = epistemicPlain(row && row.epistemic);
+      if (epi) bits.push(ctxP(epi));
+      const conf = (detail && detail.confidence) || (node && node.confidence) || "";
+      if (conf) bits.push(ctxP(fillTemplate("topic_ctx_conf", { v: conf })));
+      const state = (detail && detail.state) || (node && node.state) || "";
+      const status = (detail && detail.status) || (node && node.status) || "";
+      const st = [state, status].filter(Boolean).join(" · ");
+      if (st) bits.push(ctxField(t("topic_ctx_status"), st));
+      const caveats = ctxCaveats(row, node, detail);
+      if (caveats.length) bits.push(ctxList(caveats));
+      return bits.join("");
+    }
+
+    function renderTopicContextDetail() {
+      const $detail = document.getElementById("ctxDetail");
+      if (!$detail || !ctxTopic) return;
+      if (!ctxSelected) {
+        const isRunHub = ctxTopic.kind === "run";
+        const who = (ctxTopic.who_for || "").trim();
+        const why = (ctxTopic.why_status || ctxTopic.cut || "").trim();
+        const gaps = (ctxTopic.gaps || "").trim();
+        const chips = [ctxTopic.verdict || ctxTopic.status, ctxTopic.usage].filter(Boolean);
+        const cons = (ctxTopic.constraints || []).filter(Boolean).slice(0, 4);
+        $detail.innerHTML = `<div class="ctx-detail-inner">
+          ${ctxHero({
+            kicker: ctxKindLabel(isRunHub ? "run" : "topic"),
+            title: ctxTopic.core_judgment || ctxTopic.label || ctxTopic.ident,
+            ident: ctxTopic.ident,
+            chips,
+            meta: who,
+          })}
+          ${isRunHub
+            ? ctxBlock(t("run_insp_thesis"), ctxTopic.core_judgment ? `<p class="ctx-feature">${esc(ctxTopic.core_judgment)}</p>` : "")
+              + (cons.length ? ctxBlock(t("run_insp_constraints"), ctxList(cons)) : "")
+            : ctxBlock(t("topic_ctx_topic_why"), why ? `<p class="ctx-feature">${esc(why)}</p>` : "")
+              + ctxBlock(t("topic_ctx_topic_gaps"), ctxP(gaps))}
+          <p class="ctx-empty">${esc(t("topic_ctx_pick"))}</p>
+        </div>`;
+        return;
+      }
+      const row = topicContextRows().find(r => r.ident === ctxSelected);
+      if (!row) {
+        $detail.innerHTML = `<div class="ctx-detail-inner"><p class="ctx-empty">${esc(t("topic_ctx_pick"))}</p></div>`;
+        return;
+      }
+      const node = topicNodeByIdent(row.ident);
+      const detail = (node && node.context_detail) || {};
+      const kind = (node && node.kind) || row.kind || "";
+      const title = detail.title || (node && node.label) || row.ident;
+      const chips = [
+        detail.state,
+        detail.status || (node && node.status) || "",
+        detail.confidence ? fillTemplate("topic_ctx_conf", { v: detail.confidence }) : "",
+        detail.form || "",
+      ].filter(Boolean);
+      $detail.innerHTML = `<div class="ctx-detail-inner">
+        ${ctxHero({
+          kicker: ctxKindLabel(kind),
+          title,
+          ident: row.ident,
+          chips,
+        })}
+        ${ctxBlock(t("topic_ctx_sec_says"), ctxSaysHtml(node, detail))}
+        ${ctxBlock(t("topic_ctx_sec_why"), ctxWhyHtml(row))}
+        ${ctxBlock(t("topic_ctx_sec_trust"), ctxTrustHtml(row, node, detail), "trust")}
+      </div>`;
+    }
+
+    function renderTopicContext() {
+      const $map = document.getElementById("ctxMap");
+      const $title = document.getElementById("ctxTitle");
+      const $lede = document.getElementById("ctxLede");
+      if (!$map || !ctxTopic) return;
+      const isRunHub = ctxTopic.kind === "run";
+      $title.textContent = t(isRunHub ? "run_ctx_title" : "topic_ctx_title");
+      $lede.textContent = t(isRunHub ? "run_ctx_lede" : "topic_ctx_lede");
+      const cols = topicContextColumns(ctxTopic);
+      const total = topicContextCount(cols);
+      const constraints = (ctxTopic.constraints || []).filter(Boolean);
+      if (!total && !constraints.length) {
+        stopTopicContextAnim();
+        $map.innerHTML = `<p class="note" style="padding:16px">${esc(t(isRunHub ? "run_ctx_none" : "topic_ctx_none"))}</p>`;
+        renderTopicContextDetail();
+        return;
+      }
+      const legend = ["input", "judgment", "evidence", "craft"]
+        .filter(col => cols[col].length)
+        .map(col => `<span><i style="background:${TOPIC_CTX_ROLE_COLOR[col]}"></i>${esc(t("topic_ctx_col_" + col))}</span>`)
+        .join("");
+      const hubLab = isRunHub ? "Run" : "Topic";
+      const hubColor = isRunHub ? TOPIC_CTX_ROLE_COLOR.run : TOPIC_CTX_ROLE_COLOR.topic;
+      const consHtml = constraints.length
+        ? `<div class="ctx-constraints"><h3>${esc(t("topic_ctx_constraints"))}</h3><ul>${
+            constraints.map(c => `<li>${esc(c)}</li>`).join("")
+          }</ul></div>`
+        : "";
+      $map.innerHTML = `<div class="ctx-graph-host" id="ctxGraphHost"></div>
+        <div class="ctx-legend">${legend}<span><i style="background:${hubColor}"></i>${esc(hubLab)}</span></div>
+        ${consHtml}`;
+      // Wait a frame so host has size after modal display.
+      requestAnimationFrame(() => {
+        const host = document.getElementById("ctxGraphHost");
+        if (host) mountTopicContextGraph(host, ctxTopic);
+      });
+      renderTopicContextDetail();
+    }
+
+    function openTopicContext(n) {
+      ctxTopic = n;
+      ctxSelected = "";
+      document.getElementById("ctxModal").classList.add("open");
+      renderTopicContext();
+    }
+
+    function closeTopicContext() {
+      stopTopicContextAnim();
+      const el = document.getElementById("ctxModal");
+      if (el) el.classList.remove("open");
+      ctxSelected = "";
+    }
+
+
+    function runDetailOf(n) {
+      return (n && n.run_detail && typeof n.run_detail === "object") ? n.run_detail : {};
+    }
+
+    function runStageLabel(name) {
+      return t("run_stage_" + name) || name;
+    }
+
+    function runPillClass(code) {
+      const s = String(code || "").toLowerCase();
+      if (s === "published" || s === "reviewed") return s;
+      if (s === "ready" || s === "scored") return "ready";
+      if (s === "hold" || s === "killed" || s === "overdue" || s === "blocked") return s === "overdue" ? "overdue" : "hold";
+      if (s === "scheduled") return "scheduled";
+      if (s === "draft" || s === "open" || s === "brief" || s === "drafting") return "draft";
+      return "";
+    }
+
+    function runCurrentStage(n) {
+      const d = runDetailOf(n);
+      if (d.current_stage) return d.current_stage;
+      const files = n.stage_files || {};
+      return STAGE_ORDER.find(k => files[k]) || "idea";
+    }
+
+    function runStageSummaryLine(name, info) {
+      if (!info) return t("run_insp_stage_missing");
+      if (!info.exists) return t("run_insp_stage_missing");
+      const bits = [];
+      if (info.summary) bits.push(info.summary);
+      else if (info.status) bits.push(info.status);
+      else if (info.done) bits.push(t("run_insp_stage_done"));
+      else bits.push(t("run_insp_stage_todo"));
+      return bits.join(" · ");
+    }
+
+    function runStagePanelHtml(n, name) {
+      const d = runDetailOf(n);
+      const info = (d.stages || {})[name] || {};
+      const rows = [];
+      const push = (label, val) => {
+        if (val == null || val === "" || (Array.isArray(val) && !val.length)) return;
+        const body = Array.isArray(val) ? val.map(x => `• ${x}`).join("\n") : String(val);
+        rows.push(`<div><dt>${esc(label)}</dt><dd>${esc(body)}</dd></div>`);
+      };
+      if (name === "idea") {
+        push(t("run_insp_thesis"), info.summary || d.thesis);
+        push(t("run_insp_constraints"), d.constraints);
+      } else if (name === "brief") {
+        push(t("run_insp_thesis"), info.thesis || info.summary || d.thesis);
+        push("For whom", info.for_whom);
+        push("Evidence", info.evidence);
+        push(t("run_insp_constraints"), info.boundaries);
+        if (info.gate_score) push("Gate", `${info.gate_score}${info.gate_pass ? " · pass" : ""}`);
+      } else if (name === "packet") {
+        push(t("run_insp_thesis"), info.summary);
+        push("Hard bans", info.bans);
+      } else if (name === "draft") {
+        push("Excerpt", info.excerpt || info.summary || d.draft_excerpt);
+      } else if (name === "editor") {
+        push("Verdict", info.verdict || info.summary);
+        push("Why", info.why);
+        push("Must fix", info.must_fix);
+        push("Optional", info.optional);
+      } else if (name === "rubric") {
+        push("Total", info.total);
+        push("Gate", info.gate);
+        push("Ship", info.ship ? "yes" : (info.done ? "—" : ""));
+      } else if (name === "pack") {
+        push("Status", info.summary || info.status);
+        push("Pages", info.page_count);
+        push("Platform", info.platform);
+      } else if (name === "feedback") {
+        push("Result", info.result || info.summary);
+        push("URL", info.url);
+      }
+      if (!rows.length) {
+        push("Status", runStageSummaryLine(name, info));
+      }
+      const openBtn = info.path
+        ? `<button type="button" data-run-open="${esc(n.id)}" data-run-stage="${esc(name)}">${esc(t("run_insp_open_stage"))}</button>`
+        : "";
+      return `<div class="run-rail-panel">
+        <dl class="run-kv">${rows.join("")}</dl>
+        ${openBtn ? `<div class="run-action-actions">${openBtn}</div>` : ""}
+      </div>`;
+    }
+
+    function runActionBody(n) {
+      const d = runDetailOf(n);
+      const cur = runCurrentStage(n);
+      const info = (d.stages || {})[cur] || {};
+      const st = String(n.status || "").toLowerCase();
+      if (st === "published" || n.is_published) return t("run_action_published");
+      if (cur === "rubric" && String(d.editor_verdict || "").toUpperCase() === "APPROVE") {
+        return t("run_action_editor_ok");
+      }
+      if (cur === "editor" && info.done && String(info.verdict || "").toUpperCase() === "APPROVE") {
+        return t("run_action_editor_ok");
+      }
+      return t("run_action_" + cur) || t("run_action_draft");
+    }
+
+    function runHandoffPrompt(n) {
+      const en = lang !== "zh";
+      const d = runDetailOf(n);
+      const cur = runCurrentStage(n);
+      const thesis = d.thesis || n.label || "";
+      const topic = d.topic_id || n.topic_id || "";
+      const platform = n.platform || n.platforms || "";
+      const profile = n.profile || n.profile_id || "";
+      const stageLab = runStageLabel(cur);
+      const action = runActionBody(n);
+      const constraints = (d.constraints || []).slice(0, 4);
+      if (en) {
+        let body = `Next step: continue this Run from ${stageLab}.\n\nRun: ${n.ident}\nStatus: ${n.status || "draft"}\nCurrent stage: ${stageLab}\nPlatform: ${platform || "(unset)"}\nProfile: ${profile || "(unset)"}\nTopic: ${topic || "(unset)"}\n\nThesis:\n${thesis}\n\nWhat to do now:\n${action}\n\nPlease:\n1. Read the current stage file and upstream stages for this Run.\n2. Advance only the current stage (${cur}); do not skip gates.\n3. Keep topic_id and Core judgment intact; invent no evidence.\n4. Write results back into the Run folder.`;
+        if (constraints.length) body += `\n\nHard limits:\n- ` + constraints.join("\n- ");
+        if (d.next_hint) body += `\n\nIndex note (next): ${d.next_hint}`;
+        return body;
+      }
+      let body = `下一步：从 ${stageLab} 继续这一单。\n\nRun: ${n.ident}\n状态: ${n.status || "draft"}\n当前阶段: ${stageLab}\n平台: ${platform || "（未定）"}\nProfile: ${profile || "（未定）"}\nTopic: ${topic || "（未定）"}\n\n核心命题：\n${thesis}\n\n现在需要你做什么：\n${action}\n\n请执行：\n1. 读取这一单当前阶段文件及上游阶段。\n2. 只推进当前阶段（${cur}），不要跳闸。\n3. 保持 topic_id 与核心判断；不要发明证据。\n4. 把结果写回 Run 文件夹。`;
+      if (constraints.length) body += `\n\n硬边界：\n- ` + constraints.join("\n- ");
+      if (d.next_hint) body += `\n\n索引备注（next）: ${d.next_hint}`;
+      return body;
+    }
+
+    function runProgressRailHtml(n) {
+      const d = runDetailOf(n);
+      const stages = d.stages || {};
+      const cur = runCurrentStage(n);
+      const open = runInspOpenStage || cur;
+      const items = STAGE_ORDER.map(name => {
+        const info = stages[name] || { exists: !!(n.stage_files || {})[name], done: false };
+        let cls = "run-rail-item";
+        if (info.done) cls += " done";
+        else if (!info.exists) cls += " missing";
+        if (name === cur) cls += " current";
+        if (name === open) cls += " open";
+        const sub = name === cur
+          ? t("run_insp_stage_current")
+          : runStageSummaryLine(name, info);
+        const panel = name === open ? runStagePanelHtml(n, name) : "";
+        return `<li class="${cls}">
+          <div class="run-rail-spine"><div class="run-rail-dot"></div></div>
+          <div>
+            <button type="button" class="run-rail-btn" data-run-rail="${esc(name)}">
+              <div class="run-rail-name">${esc(runStageLabel(name))}</div>
+              <div class="run-rail-sub">${esc(sub)}</div>
+            </button>
+            ${panel}
+          </div>
+        </li>`;
+      }).join("");
+      return `<section class="run-section">
+        <h3>${esc(t("run_insp_progress"))}</h3>
+        <ul class="run-rail">${items}</ul>
+      </section>`;
+    }
+
+    function runSayHtml(n) {
+      const d = runDetailOf(n);
+      const thesis = d.thesis || n.label || "";
+      if (!thesis) return "";
+      return `<section class="run-section">
+        <h3>${esc(t("run_insp_say"))}</h3>
+        <p class="run-feature">${esc(thesis)}</p>
+      </section>`;
+    }
+
+    function runCraftIdents(raw) {
+      const out = [];
+      for (const part of String(raw || "").split(/[\s,]+/).filter(Boolean)) {
+        const clean = part.replace(/^(?:hook|process|visual):/i, "");
+        if (clean) out.push(clean);
+      }
+      return out;
+    }
+
+    function runContextProvenance(n) {
+      const d = runDetailOf(n);
+      const sel = d.selection || n.selection || {};
+      const rows = [];
+      const seen = new Set();
+      const push = (ident, role, reasonKey) => {
+        const id = String(ident || "").trim();
+        if (!id || seen.has(id)) return;
+        seen.add(id);
+        const live = topicNodeByIdent(id);
+        rows.push({
+          ident: id,
+          role,
+          kind: live ? live.kind : (
+            id.startsWith("W-") ? "wiki" :
+            id.startsWith("S") ? "swipe" :
+            id.startsWith("A-") ? "atom" :
+            id.startsWith("C-") ? "claim" :
+            id.startsWith("T-") ? "topic" :
+            id.startsWith("P-") ? "product" : "wiki"
+          ),
+          epistemic: "",
+          reason: t(reasonKey),
+        });
+      };
+      const topic = d.topic_id || n.topic_id || "";
+      if (topic) push(topic, "input", "run_ctx_why_topic");
+      for (const wid of (d.w_ids || [])) push(wid, "judgment", "run_ctx_why_wiki");
+      const packW = (((n.pack_chain || {}).meta || {}).w_ids || "");
+      String(packW).split(/[\s,]+/).filter(Boolean).forEach(wid => push(wid, "judgment", "run_ctx_why_wiki"));
+      runCraftIdents(sel.swipe).forEach(id => push(id, "craft", "run_ctx_why_craft"));
+      runCraftIdents(sel.atoms).forEach(id => push(id, "craft", "run_ctx_why_craft"));
+      runCraftIdents(sel.claim).forEach(id => push(id, "claim", "run_ctx_why_claim"));
+      return rows;
+    }
+
+    function runContextHub(n) {
+      const d = runDetailOf(n);
+      return {
+        kind: "run",
+        id: n.id,
+        ident: n.ident,
+        label: n.label || "",
+        status: n.status || "",
+        core_judgment: d.thesis || n.label || "",
+        constraints: d.constraints || [],
+        provenance: runContextProvenance(n),
+      };
+    }
+
+    function runContextHtml(n) {
+      const hub = runContextHub(n);
+      const cols = topicContextColumns(hub);
+      const total = topicContextCount(cols);
+      const bits = ["input", "judgment", "evidence", "craft"]
+        .filter(col => cols[col].length)
+        .map(col => `${t("topic_ctx_col_" + col)} ${cols[col].length}`)
+        .join(" · ");
+      const head = total
+        ? fillTemplate("run_ctx_read", { n: total })
+        : t("run_ctx_none_short");
+      const cons = (hub.constraints || []).filter(Boolean);
+      if (!total && !cons.length) return "";
+      return `<section class="run-section topic-ctx-card">
+        <h3>${esc(t("run_insp_context"))}</h3>
+        <p class="topic-ctx-summary">${esc(head)}</p>
+        ${bits ? `<p class="topic-ctx-bits">${esc(bits)}</p>` : ""}
+        <button type="button" class="topic-ctx-open" id="runCtxOpen">${esc(t("run_ctx_open"))}</button>
+      </section>`;
+    }
+
+    function openRunContext(n) {
+      openTopicContext(runContextHub(n));
+    }
+
+    function runArtifactsHtml(n) {
+      const d = runDetailOf(n);
+      const stages = d.stages || {};
+      const chips = STAGE_ORDER.map(name => {
+        const info = stages[name] || { exists: !!(n.stage_files || {})[name], done: false };
+        let cls = "run-chip";
+        if (info.done) cls += " ok";
+        else if (info.exists) cls += " wait";
+        const mark = info.done ? "✓" : (info.exists ? "●" : "○");
+        const tip = runStageSummaryLine(name, info);
+        return `<button type="button" class="${cls}" data-run-rail="${esc(name)}" title="${esc(tip)}">${mark} ${esc(runStageLabel(name))}</button>`;
+      }).join("");
+      return `<section class="run-section">
+        <h3>${esc(t("run_insp_artifacts"))}</h3>
+        <div class="run-chips">${chips}</div>
+      </section>`;
+    }
+
+    function renderRunInsp(n) {
+      const d = runDetailOf(n);
+      const cur = runCurrentStage(n);
+      if (!runInspOpenStage) runInspOpenStage = cur;
+      const stInfo = getPostStatusInfo(n);
+      const statusCode = stInfo.code || n.status || "draft";
+      const metaBits = [
+        n.platform || n.platforms,
+        n.profile || n.profile_id,
+        (n.lane || "").replace(/_/g, " "),
+      ].filter(Boolean);
+      const handoff = runHandoffPrompt(n);
+      const topic = d.topic_id || n.topic_id || "";
+      const topicNode = topic
+        ? (Object.values(byId).find(x => x.kind === "topic" && x.ident === topic) || null)
+        : null;
+      const nextHint = d.next_hint
+        ? `<p class="run-meta">${esc(d.next_hint)}</p>`
+        : "";
+
+      $insp.innerHTML = `<div class="run-insp">
+        <div class="run-hero">
+          <div class="run-hero-top">
+            <span class="run-pill ${runPillClass(statusCode)}">${esc(stInfo.label || n.status || "draft")}</span>
+            <span class="run-pill stage">${esc(runStageLabel(cur))}</span>
+          </div>
+          <p class="title">${esc(n.label || n.ident)}</p>
+          <p class="run-id">${esc(n.ident)}</p>
+          ${metaBits.length ? `<p class="run-meta">${metaBits.map(esc).join(" · ")}</p>` : ""}
+          ${nextHint}
+        </div>
+
+        <section class="run-section run-action">
+          <h3>${esc(t("run_insp_now"))}</h3>
+          <p class="run-action-body">${esc(runActionBody(n))}</p>
+          <p class="note" style="margin:0">${esc(t("run_insp_handoff_lede"))}</p>
+          <div class="action-prompt-preview">${esc(handoff)}</div>
+          <div class="run-action-actions">
+            <button type="button" class="primary" id="runCopyPromptBtn">${esc(t("run_insp_copy"))}</button>
+            <button type="button" data-run-open="${esc(n.id)}" data-run-stage="${esc(cur)}">${esc(t("run_insp_open_full"))}</button>
+            ${topicNode ? `<button type="button" data-goto="${esc(topicNode.id)}">${esc(t("run_insp_goto_topic"))}</button>` : ""}
+          </div>
+        </section>
+
+        ${runProgressRailHtml(n)}
+        ${runSayHtml(n)}
+        ${runContextHtml(n)}
+        ${runArtifactsHtml(n)}
+        <p class="note">${t("readonly")}</p>
+      </div>`;
+
+      const cp = $insp.querySelector("#runCopyPromptBtn");
+      if (cp) {
+        cp.onclick = () => {
+          navigator.clipboard.writeText(handoff).then(() => {
+            cp.textContent = t("run_insp_copied");
+            setTimeout(() => { cp.textContent = t("run_insp_copy"); }, 2000);
+          });
+        };
+      }
+      const runCtxBtn = $insp.querySelector("#runCtxOpen");
+      if (runCtxBtn) runCtxBtn.onclick = () => openRunContext(n);
+      $insp.querySelectorAll("[data-run-rail]").forEach(btn => {
+        btn.onclick = () => {
+          const name = btn.getAttribute("data-run-rail");
+          runInspOpenStage = (runInspOpenStage === name) ? "" : name;
+          renderRunInsp(n);
+        };
+      });
+      $insp.querySelectorAll("[data-goto]").forEach(btn => {
+        btn.onclick = () => select(btn.getAttribute("data-goto"));
+      });
+    }
+
+    function renderTopicInsp(n) {
+      const verdict = (n.verdict || n.status || "").trim();
+      const usage = (n.usage || "").trim();
+      const opp = n.craft || n.opp || n.total || "";
+      const aud = n.fit || n.aud || "";
+      const metaBits = [
+        n.platform,
+        n.lane,
+        (n.generation_mode || "").replace(/_/g, " "),
+        n.profile || n.profile_id,
+      ].filter(Boolean);
+      const score = (opp || aud)
+        ? fillTemplate("topic_score_line", { opp: opp || "—", aud: aud || "—" })
+        : "";
+      const pillClass = (v) => {
+        const s = String(v || "").toLowerCase();
+        if (s === "ready") return "ready";
+        if (s === "unused") return "unused";
+        if (s === "promoted") return "promoted";
+        if (s === "killed" || s === "discard") return "killed";
+        return "";
+      };
+      const runId = (n.run_id || "").trim();
+      const runNode = runId ? (Object.values(byId).find(x => x.kind === "run" && x.ident === runId) || null) : null;
+      const openRunBtn = runNode
+        ? `<button type="button" class="btn-primary" data-run-open="${esc(runNode.id)}">${esc(t("topic_already_run"))}</button>`
+        : "";
+      const handoff = topicHandoffPrompt(n);
+
+      $insp.innerHTML = `<div class="topic-insp">
+        <div>
+          <p class="kicker">${esc(kindName(n.kind))} · ${esc(n.ident)}</p>
+          <p class="title">${esc(n.label)}</p>
+          <div class="topic-status-row">
+            ${verdict ? `<span class="topic-pill ${pillClass(verdict)}">${esc(verdict)}</span>` : ""}
+            ${usage ? `<span class="topic-pill ${pillClass(usage)}">${esc(usage)}</span>` : ""}
+            ${score ? `<span class="topic-score">${esc(score)}</span>` : ""}
+          </div>
+          ${metaBits.length ? `<p class="topic-meta-line">${metaBits.map(esc).join('<span class="sep">·</span>')}</p>` : ""}
+        </div>
+
+        <div class="action-prompt-card">
+          <div class="action-prompt-head">
+            <span class="action-prompt-title">${esc(t("topic_open_as_run"))}</span>
+            <button type="button" class="action-prompt-btn" id="copyPromptBtn"><span id="copyPromptBtnText">${esc(t("topic_copy_handoff"))}</span></button>
+          </div>
+          <p class="action-prompt-lede">${esc(t("topic_handoff_lede"))}</p>
+          <div class="action-prompt-preview">${esc(handoff)}</div>
+          ${openRunBtn ? `<div class="media-link-actions" style="margin-top:4px">${openRunBtn}</div>` : ""}
+        </div>
+
+        ${topicDecisionHtml(n)}
+        ${topicReadyHtml(n)}
+        ${topicContextSummaryHtml(n)}
+        ${mdActionsHtml(n)}
+        <p class="note">${t("readonly")}</p>
+      </div>`;
+
+      const ctxBtn = $insp.querySelector("#topicCtxOpen");
+      if (ctxBtn) ctxBtn.onclick = () => openTopicContext(n);
+      const cpBtn = $insp.querySelector("#copyPromptBtn");
+      if (cpBtn) {
+        cpBtn.onclick = () => {
+          navigator.clipboard.writeText(handoff).then(() => {
+            const txt = cpBtn.querySelector("#copyPromptBtnText");
+            if (txt) {
+              txt.textContent = t("topic_handoff_copied");
+              setTimeout(() => { txt.textContent = t("topic_copy_handoff"); }, 2000);
+            }
+          });
+        };
+      }
+      $insp.querySelectorAll("[data-copy-ident]").forEach(btn => {
+        btn.onclick = () => {
+          const ident = btn.getAttribute("data-copy-ident");
+          const toCopy = `[[${ident}]]`;
+          navigator.clipboard.writeText(toCopy).then(() => {
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = `<span>✓</span> <span>${t("copy_ident_done")}</span>`;
+            setTimeout(() => { btn.innerHTML = origHtml; }, 1800);
+          });
+        };
+      });
+    }
+
+    function getAiActionPrompt(n) {
+      const en = lang !== "zh";
+      const k = n.kind;
+      const name = `${n.ident}${n.label || n.caption ? " · " + (n.label || n.caption) : ""}`;
+
+      if (k === "media") {
+        const ready = mediaIsReady(n);
+        const links = Array.isArray(n.links) ? n.links.join(" ") : String(n.links || "");
+        const path = n.src || n.path || `media/${n.file || ""}`;
+        if (!ready) {
+          return en
+            ? `Next step: set up this image for the knowledge graph.\n\nImage: ${name}\nFile: ${path}\n\nPlease look at the image, then:\n1. Write a one-line caption of what it shows.\n2. Suggest who it belongs to (P-*/R-*/C-*/RUN-*/W-*) if clear; otherwise ask me.\n3. Write caption + links into media/_index.md.\n4. Do not edit any W- judgment / Parts that fit / Evidence.`
+            : `下一步：完善这张图，让它能进知识图谱。\n\n图片：${name}\n文件：${path}\n\n请先看图，然后：\n1. 用一句话写清画面内容（caption）。\n2. 若能判断属于谁，建议 P-*/R-*/C-*/RUN-*/W-*；不确定就问我。\n3. 把 caption + links 写入 media/_index.md。\n4. 不要改任何 W- 判断 / Parts that fit / Evidence。`;
+        }
+        const nbr = mediaDirectEdges(n.id).map(e => `${e.node.ident} (${e.rel})`).join(", ") || (en ? "none" : "无");
+        return en
+          ? `Next step: use this image.\n\nImage: ${name}\nCaption: ${n.caption || ""}\nHung on: ${nbr}\n\nPlease suggest which Run/page it fits. Do not edit W- judgments unless I confirm.`
+          : `下一步：使用这张图。\n\n图片：${name}\n说明：${n.caption || ""}\n已挂：${nbr}\n\n请建议它适合哪些 Run/页。未经确认不要改 W- 判断。`;
+      }
+
+      if (k === "topic") {
+        return topicHandoffPrompt(n);
+      }
+      if (k === "wiki") {
+        return en
+          ? `Next step: strengthen this judgment.\n\nLesson: ${name}\nConfidence: ${n.confidence || "high"}\n\nPlease write a short memo: 2 counterfactuals, 3 supporting points, 2 topic directions.`
+          : `下一步：加固这条认知判断。\n\n笔记：${name}\n置信度：${n.confidence || "高"}\n\n请写一份短备忘：2 个反事实、3 条支撑、2 个可派生选题。`;
+      }
+      if (k === "run") {
+        return runHandoffPrompt(n);
+      }
+      if (k === "need") {
+        return en
+          ? `Next step: turn this audience quote into topics.\n\nNeed: ${name}\nVerbatim: "${n.quote || n.label || ""}"\n\nPlease propose 3 topic angles, each with a matching W- judgment and action.`
+          : `下一步：把这条听众原话做成选题。\n\n需求：${name}\n原声："${n.quote || n.label || ""}"\n\n请给 3 个选题角度，每个配一条 W- 判断和行动建议。`;
+      }
+      if (k === "hit") {
+        return en
+          ? `Next step: mine craft from this hit.\n\nHit: ${name}\n\nPlease extract the hook structure and formulas worth saving to Swipe/Atom.`
+          : `下一步：从这条命中拆表达零件。\n\nHit：${name}\n\n请拆钩子结构，并提炼可进 Swipe/Atom 的公式。`;
+      }
+      if (k === "swipe" || k === "atom" || k === "claim") {
+        return en
+          ? `Next step: apply this craft piece.\n\nCraft: ${name}\n\nPlease write 2 draft passages that reuse it in the current theme, keeping the voice.`
+          : `下一步：把这个表达零件用起来。\n\n零件：${name}\n\n请按当前主题写 2 段落地文案，保持原有语气。`;
+      }
+      return en
+        ? `Next step: decide what to do with this item.\n\nItem: ${name}\nKind: ${k}\n\nPlease explain its upstream/downstream links and recommend one concrete next action.`
+        : `下一步：决定这条要怎么处理。\n\n条目：${name}\n类型：${k}\n\n请说明上下游关联，并给出一个具体下一步。`;
     }
 
     function renderInsp() {
@@ -10481,6 +12747,14 @@
       const n = byId[selected];
       if (n.kind === "profile") {
         renderProfileInsp(n);
+        return;
+      }
+      if (n.kind === "topic") {
+        renderTopicInsp(n);
+        return;
+      }
+      if (n.kind === "run") {
+        renderRunInsp(n);
         return;
       }
       const ctx = connected(n.id);
@@ -10551,10 +12825,23 @@
       const mediaPreview = mediaSrc
         ? `<div class="insp-media-preview"><img src="${esc(mediaSrc)}" alt="${esc(n.caption || n.label || n.ident)}"></div>`
         : "";
+      const mediaGraphPanel = n.kind === "media" ? mediaGraphPanelHtml(n) : "";
+      const showAgentPrompt = !(n.kind === "media" && mediaIsReady(n));
+      const agentPromptHtml = showAgentPrompt
+        ? `<div class="action-prompt-card">
+          <div class="action-prompt-head">
+            <span class="action-prompt-title">${t("prompt_box_title")}</span>
+            <button type="button" class="action-prompt-btn" id="copyPromptBtn"><span id="copyPromptBtnText">${t("prompt_copy_btn")}</span></button>
+          </div>
+          <p class="action-prompt-lede">${esc(t("prompt_box_lede"))}</p>
+          <div class="action-prompt-preview">${esc(getAiActionPrompt(n))}</div>
+        </div>`
+        : "";
       $insp.innerHTML = `${calBackHtml}<h2>${t("obj")}</h2>
         <p class="kicker">${esc(kindName(n.kind))} · ${esc(n.ident)}</p>
         <p class="title">${n.kind === "run" ? `<button type="button" class="ghost-link title-btn" data-run-open="${esc(n.id)}">${esc(n.label)}</button>` : esc(n.label)}</p>
         ${mediaPreview}
+        ${mediaGraphPanel}
         <dl class="kv">${kv.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
         ${kwBlock}
         ${heatBlock}
@@ -10566,13 +12853,7 @@
         ${n.kind === "run" ? runMetaHtml(n) : ""}
         
         ${mdActionsHtml(n)}
-        <div class="action-prompt-card">
-          <div class="action-prompt-head">
-            <span class="action-prompt-title"><span>🤖</span> <span>${t("prompt_box_title")}</span></span>
-            <button type="button" class="action-prompt-btn" id="copyPromptBtn"><span>📋</span> <span id="copyPromptBtnText">${t("prompt_copy_btn")}</span></button>
-          </div>
-          <div class="action-prompt-preview">${esc(getAiActionPrompt(n))}</div>
-        </div>
+        ${agentPromptHtml}
         <h2>${t("trace")}</h2>
         <div class="trace" id="trace"></div>
         <p class="note">${t("readonly")}</p>`;
@@ -10586,6 +12867,7 @@
       $insp.querySelectorAll("[data-goto]").forEach(btn => {
         btn.onclick = () => select(btn.getAttribute("data-goto"));
       });
+      if (n.kind === "media") bindMediaGraphPanel($insp, n);
       bindKwFilters($insp);
 
       const cpBtn = $insp.querySelector("#copyPromptBtn");

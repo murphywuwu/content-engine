@@ -611,17 +611,28 @@ Triggers: 设置品牌 / 改 logo / 配色 / 字体 / set brand / brand colors.
 
 Triggers: 存图 / 记图 / 加素材 / 找图 / catalog image / find image.
 
-**Model:** `M-*` is a graph node that **illustrates** a subject. Owned offers → `P-*`. Third-party review subjects → `R-*`. Retrieval is by subject link first — not vision search.
+**Model:** Upload creates a catalog row (`M-*` node always exists). **Knowledge-linked** only when `links` names a real `P-*` / `R-*` / `C-*` / `RUN-*` / `W-*`. `brand` is a vault tag only — it does **not** create a knowledge edge. Retrieval is by subject link first — not vision search.
+
+**Card + graph status:**
+
+| status | Meaning |
+|--------|---------|
+| `cataloged` | File row exists; caption is weak/missing (upload leftover) |
+| `described` | Readable `caption` + `role`; not yet hung on semantic nodes |
+| `linked` | At least one semantic `links` target resolves in the graph |
+| `orphaned` | Semantic `links` declared, but none of the targets exist |
+
+Complete the **image card** before trusting it in generation: caption (what it shows) + role (slot) + optional links (who it belongs to). Workbench can save the card; Agent may look at the file once to propose caption/role/links. Vision is for **writing the card**, not for searching the vault. Card writes touch `media/_index.md` only — **never** auto-edit W- judgments / Parts / Evidence.
 
 **When generating content that needs an image** (product review, slideshow slot, cover): lock the subject (`P-*` or `R-*`), then **read `media/_index.md`** and filter by that link + `role`. Only ask for a new file if none fits.
 
 **Add (ingest):**
 
-1. Resolve subject: user names an existing `P-*` / `R-*`, or create `R-*` first for a third-party review target. If `tags` will include `product` or `screenshot` and there is **no** subject → **stop and ask**; do not write a row.
+1. Resolve subject when known: user names an existing `P-*` / `R-*`, or create `R-*` first for a third-party review target. If `tags` will include `product` or `screenshot` and there is **no** subject → **stop and ask**; do not write a row. Quick Brand/Media uploads may start as `cataloged` (`links=brand`) and hang later.
 2. Compute `sha256` of the file. If that hash already has a row, **reuse that id** — never import a duplicate.
 3. Assign `M-YYYYMMDD-XX`; place the file under `media/`.
-4. Append a row: `file`, `sha256`, one-line `caption`, `tags` (closed set), **`role`** (`logo`|`home`|`pricing`|`settings`|`compare`|`proof`|`other`), `links` (must include `P-*` or `R-*` when tags are product/screenshot; may also include `C-*`/`RUN-*`/`brand`), `rights`. Leave `hosted_image_id` empty.
-5. Chat **Media Card**: id · subject · role · caption · tags.
+4. Append a row: `file`, `sha256`, one-line `caption`, `tags` (closed set), **`role`** (`logo`|`home`|`pricing`|`settings`|`compare`|`proof`|`other`), `links` (`P-*`/`R-*` when product/screenshot; may also include `C-*`/`RUN-*`/`W-*`/`brand`), `rights`. Leave `hosted_image_id` empty.
+5. Chat **Media Card**: id · graph status · subject · role · caption · tags.
 
 **Retrieve (reviews / comparison / offer visuals):**
 
@@ -633,7 +644,7 @@ Triggers: 存图 / 记图 / 加素材 / 找图 / catalog image / find image.
 
 **Lint:** `python3 scripts/lint-media.py --engine .` (report only).
 
-**Do not:** upload here (upload is at render only); store binaries in `runs/`; invent tags/roles outside the closed sets; fabricate `rights`; hang `M-` on a `W-` just because a row was added; invent a subject to clear the gate. Wiki cite only if the image is evidence for that lesson or the brand logo it depends on.
+**Do not:** store binaries in `runs/`; invent tags/roles outside the closed sets; fabricate `rights`; treat upload alone as knowledge-linked; hang `M-` on a `W-` judgment just because a row was added (a `links` → `W-*` `reference_for` edge is OK; Parts/Evidence still need deliberate edit); invent a subject to clear the gate. Wiki cite only if the image is evidence for that lesson or the brand logo it depends on.
 
 ---
 

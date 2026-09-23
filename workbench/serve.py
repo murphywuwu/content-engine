@@ -11,6 +11,8 @@ Live APIs (no rebuild required after Markdown edits):
   POST /api/brand          → write brand.md token fields only
   POST /api/media-upload   → multipart image(s) → media/ + index rows
   POST /api/media-delete   → JSON {ids:[M-…]} delete catalog rows + files
+  POST /api/media-card     → JSON {id, caption, role, links} complete image card
+  POST /api/media-link     → alias of media-card (links-only ok)
   GET /api/events          → SSE; fires when vault .md/.json mtimes change
   GET /workbench/          → template.html (UI shell; graph loaded via /api/graph)
 
@@ -190,6 +192,10 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
         if path in ("/api/media-delete", "/workbench/api/media-delete"):
             self._handle_media_delete()
             return
+        if path in ("/api/media-card", "/workbench/api/media-card",
+                    "/api/media-link", "/workbench/api/media-link"):
+            self._handle_media_card()
+            return
         if path not in ("/api/brand", "/workbench/api/brand"):
             self.send_error(404, "not found")
             return
@@ -251,7 +257,31 @@ class EngineHandler(http.server.SimpleHTTPRequestHandler):
             return
         self._send_json({"ok": True, **result})
 
+    def _handle_media_card(self) -> None:
+        length = int(self.headers.get("Content-Length") or 0)
+        if length <= 0 or length > 20_000:
+            self._send_json({"error": "bad body"}, status=400)
+            return
+        try:
+            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        except (UnicodeError, json.JSONDecodeError):
+            self._send_json({"error": "bad json"}, status=400)
+            return
+        if not isinstance(payload, dict):
+            self._send_json({"error": "bad json"}, status=400)
+            return
+        try:
+            result = self._wb_build().update_media_card(self._vault, payload)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, status=400)
+            return
+        except OSError as exc:
+            self._send_json({"error": str(exc)}, status=500)
+            return
+        self._send_json({"ok": True, "media": result})
+
     def _handle_media_upload(self) -> None:
+
         length = int(self.headers.get("Content-Length") or 0)
         if length <= 0 or length > 40_000_000:
             self._send_json({"error": "bad body"}, status=400)

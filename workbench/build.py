@@ -350,6 +350,248 @@ def parse_feedback_metrics(text: str) -> dict:
     return out
 
 
+def _bullet_vals(md: str, *keys: str) -> dict[str, str]:
+    found: dict[str, str] = {}
+    for line in (md or "").splitlines():
+        s = line.strip()
+        for key in keys:
+            if key in found:
+                continue
+            m = re.match(rf"^(?:[-*]\s*)?\*\*{re.escape(key)}:\*\*\s*(.+)$", s, re.I)
+            if not m:
+                m = re.match(rf"^(?:[-*]\s*)?\*\*{re.escape(key)}\*\*\s*:\s*(.+)$", s, re.I)
+            if not m:
+                m = re.match(rf"^(?:[-*]\s*)?{re.escape(key)}\s*:\s*(.+)$", s, re.I)
+            if m:
+                found[key] = m.group(1).strip()
+    return found
+
+
+def _stage_done_flags(name: str, fm: dict, text: str, index_pack: str = "") -> bool:
+    status = str(fm.get("status") or "").strip().upper()
+    if name == "idea":
+        return bool(_plain_snip(text, 40))
+    if name == "brief":
+        return bool(fm.get("gate_pass")) or status in {"DRAFTED", "APPROVED", "DONE"} or bool(_section_body(text, "Thesis"))
+    if name == "packet":
+        return "empty" not in status.lower() and bool(_plain_snip(text, 40))
+    if name == "draft":
+        return bool(re.search(r"^###\s+", text, re.M)) or bool(_plain_snip(_section_body(text, "x") or text, 60))
+    if name == "editor":
+        verdict = str(fm.get("verdict") or "").strip().upper()
+        return verdict in {"APPROVE", "REWRITE", "HOLD", "APPROVED"} or status in {
+            "APPROVED", "APPROVE", "REWRITE", "HOLD", "DONE"
+        }
+    if name == "rubric":
+        total = str(fm.get("total") or "").strip()
+        if total.isdigit() and int(total) > 0:
+            return True
+        if str(fm.get("ship") or "").lower() in {"true", "yes", "1"}:
+            return True
+        m = re.search(r"\*\*Total:\*\*\s*(\d+)", text)
+        return bool(m and int(m.group(1)) > 0)
+    if name == "pack":
+        if str(index_pack or "").lower() in {"yes", "true", "1"}:
+            return True
+        if "NOT_REQUIRED" in status or "N/A" in status or status == "SKIP":
+            return True
+        if status in {"UNUSED", "EMPTY", ""}:
+            return False
+        try:
+            return int(str(fm.get("page_count") or "0")) > 0
+        except ValueError:
+            return status not in {"UNUSED", "EMPTY"}
+    if name == "feedback":
+        vals = _bullet_vals(text, "url", "result")
+        result = str(fm.get("result") or vals.get("result") or "").strip().lower()
+        url = str(vals.get("url") or "").strip()
+        if (
+            result in {"", "unknown", "win | flat | loss | unknown", "|"}
+            or "win | flat" in result
+        ):
+            result = ""
+        if url.startswith("http"):
+            return True
+        return bool(result) and result not in {"empty"}
+    return False
+
+
+def parse_run_detail(
+    folder: Path | None,
+    stage_files: dict[str, str],
+    *,
+    index_status: str = "",
+    index_pack: str = "",
+    index_notes: str = "",
+    topic_id: str = "",
+    published_url: str = "",
+    published_result: str = "",
+) -> dict:
+    """Compact stage summaries for the Run inspector (production console)."""
+    stages: dict[str, dict] = {}
+    thesis = ""
+    constraints: list[str] = []
+    w_ids: list[str] = []
+    draft_excerpt = ""
+    editor_verdict = ""
+    brief_gate = ""
+    selection = {"swipe": "", "atoms": "", "claim": ""}
+
+    for name in STAGE_NAMES:
+        rel = stage_files.get(name) or ""
+        info: dict = {
+            "exists": bool(rel),
+            "done": False,
+            "path": rel,
+            "status": "",
+            "summary": "",
+        }
+        if not rel or not folder:
+            stages[name] = info
+            continue
+        path = ROOT / rel
+        if not path.exists():
+            stages[name] = info
+            continue
+        text = path.read_text(encoding="utf-8")
+        fm = frontmatter(text)
+        info["status"] = str(fm.get("status") or "").strip()
+        info["done"] = _stage_done_flags(name, fm, text, index_pack=index_pack)
+
+        if name == "idea":
+            vals = _bullet_vals(text, "one_liner", "swipe_id", "atoms", "claim_id", "topic_id")
+            info["summary"] = vals.get("one_liner") or _plain_snip(text, 180)
+            if vals.get("swipe_id"):
+                selection["swipe"] = vals["swipe_id"]
+            if vals.get("atoms"):
+                selection["atoms"] = vals["atoms"]
+            if vals.get("claim_id"):
+                selection["claim"] = vals["claim_id"]
+            core = _section_body(text, "Core judgment (from Topic — do not reinvent)") or _section_body(text, "Core judgment")
+            if core and not thesis:
+                thesis = _plain_snip(core, 320)
+            cons = _section_body(text, "Constraints (from Topic)") or _section_body(text, "Constraints")
+            if cons:
+                constraints = _list_snip(cons, 6)
+            nb = _section_body(text, "Notebook")
+            w_ids = sorted(set(WIKI_PAGE_RE.findall(nb or text)))
+
+        elif name == "brief":
+            th = _plain_snip(_section_body(text, "Thesis"), 320)
+            info["summary"] = th
+            info["thesis"] = th
+            if th:
+                thesis = th
+            info["gate_score"] = str(fm.get("gate_score") or "").strip()
+            info["gate_pass"] = bool(fm.get("gate_pass"))
+            brief_gate = info["gate_score"]
+            fw = _section_body(text, "For whom → what changes")
+            info["for_whom"] = _plain_snip(fw, 280)
+            info["boundaries"] = _list_snip(_section_body(text, "Boundaries"), 5)
+            ev = _section_body(text, "Evidence")
+            info["evidence"] = _plain_snip(ev, 240)
+
+        elif name == "packet":
+            info["summary"] = _plain_snip(_section_body(text, "Thesis (from brief — one sentence)") or _section_body(text, "Thesis"), 220)
+            bans = _section_body(text, "Hard bans") or _section_body(text, "Hard bans / Softly")
+            info["bans"] = _list_snip(bans, 5)
+
+        elif name == "draft":
+            # Prefer first platform section body
+            body = ""
+            for plat in ("x", "linkedin", "xiaohongshu", "instagram", "threads", "tiktok"):
+                sec = _section_body(text, plat)
+                if sec.strip():
+                    body = sec
+                    break
+            if not body:
+                body = text
+            draft_excerpt = _plain_snip(body, 420)
+            info["summary"] = draft_excerpt
+            info["excerpt"] = draft_excerpt
+
+        elif name == "editor":
+            verdict = str(fm.get("verdict") or "").strip().upper()
+            editor_verdict = verdict or info["status"]
+            info["verdict"] = editor_verdict
+            info["summary"] = editor_verdict
+            why = _section_body(text, "Why rewrite")
+            info["why"] = _plain_snip(why, 240)
+            info["must_fix"] = _list_snip(_section_body(text, "Must fix"), 5)
+            info["optional"] = _list_snip(_section_body(text, "Optional"), 4)
+
+        elif name == "rubric":
+            total = str(fm.get("total") or "").strip()
+            m = re.search(r"\*\*Total:\*\*\s*([^\n]+)", text)
+            if m and (not total or total == "0"):
+                raw = m.group(1).strip()
+                if re.match(r"^\d+", raw):
+                    total = raw.split()[0]
+            if total == "0":
+                total = ""
+            info["total"] = total
+            info["ship"] = str(fm.get("ship") or "").lower() in {"true", "yes", "1"}
+            gate = ""
+            gm = re.search(r"\*\*Gate:\*\*\s*([^\n]+)", text)
+            if gm:
+                gate = gm.group(1).strip()
+                if "SHIP (≥8) | HOLD" in gate and not total:
+                    gate = ""
+            info["gate"] = gate
+            info["summary"] = " · ".join([x for x in [total and f"score {total}", gate] if x])
+
+        elif name == "pack":
+            info["page_count"] = str(fm.get("page_count") or "").strip()
+            info["platform"] = str(fm.get("platform") or "").strip()
+            if "NOT_REQUIRED" in info["status"].upper():
+                info["summary"] = "not required"
+            else:
+                info["summary"] = info["status"] or ("ready" if info["done"] else "unused")
+
+        elif name == "feedback":
+            vals = _bullet_vals(text, "url", "result", "metrics", "vs claim", "notes")
+            result = vals.get("result") or published_result or str(fm.get("result") or "")
+            if "win | flat" in result.lower():
+                result = ""
+            info["url"] = vals.get("url") or published_url or ""
+            info["result"] = result
+            info["summary"] = result or ("published" if published_url else "")
+
+        stages[name] = info
+
+    # Current stage = first incomplete; published runs land on feedback.
+    current = "idea"
+    st_l = (index_status or "").lower()
+    if st_l == "published":
+        current = "feedback"
+    else:
+        for name in STAGE_NAMES:
+            if not stages.get(name, {}).get("done"):
+                current = name
+                break
+        else:
+            current = "feedback" if st_l == "published" else "pack"
+
+    next_hint = ""
+    m_next = re.search(r"next:\s*([^·|;]+)", index_notes or "", re.I)
+    if m_next:
+        next_hint = m_next.group(1).strip()
+
+    return {
+        "thesis": thesis,
+        "constraints": constraints,
+        "w_ids": w_ids,
+        "topic_id": topic_id,
+        "selection": selection,
+        "current_stage": current,
+        "next_hint": next_hint,
+        "editor_verdict": editor_verdict,
+        "brief_gate": brief_gate,
+        "draft_excerpt": draft_excerpt,
+        "stages": stages,
+    }
+
+
 def _md_section(md: str, name: str) -> str:
     if f"## {name}" not in md:
         return ""
@@ -661,6 +903,448 @@ def parse_wiki_pages() -> list[dict]:
     return out
 
 
+
+def _section_body(md: str, heading: str) -> str:
+    """Return markdown body under ## heading until next ## or end."""
+    pat = re.compile(rf"^##\s+{re.escape(heading)}\s*$", re.M)
+    m = pat.search(md or "")
+    if not m:
+        return ""
+    rest = (md or "")[m.end() :]
+    nxt = re.search(r"^##\s+", rest, re.M)
+    return rest[: nxt.start()] if nxt else rest
+
+
+def _bullet_field(block: str, key: str) -> str:
+    """Parse '- key: value' or '**Key:** value' lines."""
+    for line in (block or "").splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        # - key: value
+        m = re.match(rf"^[-*]\s*{re.escape(key)}\s*:\s*(.*)$", s, re.I)
+        if m:
+            return m.group(1).strip()
+        # **Key:** value  OR  - **Key:** value  (colon inside bold)
+        m = re.match(rf"^(?:[-*]\s*)?\*\*{re.escape(key)}:\*\*\s*(.*)$", s, re.I)
+        if m:
+            return m.group(1).strip()
+        # **Key**: value  OR  - **Key**: value
+        m = re.match(rf"^(?:[-*]\s*)?\*\*{re.escape(key)}\*\*\s*:\s*(.*)$", s, re.I)
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
+def _plain_snip(text: str, limit: int = 360) -> str:
+    """Collapse markdown noise into a short readable snippet."""
+    if not text:
+        return ""
+    lines = []
+    for raw in text.splitlines():
+        s = raw.strip()
+        if not s or s.startswith("#") or s.startswith("|") or s.startswith("```"):
+            continue
+        s = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", s)
+        s = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", s)
+        s = re.sub(r"[*`_]+", "", s)
+        s = re.sub(r"^\s*[-*]\s+", "", s)
+        s = re.sub(r"^\d+\.\s+", "", s)
+        s = s.strip()
+        if s:
+            lines.append(s)
+        if sum(len(x) for x in lines) >= limit:
+            break
+    out = " ".join(lines).strip()
+    if len(out) > limit:
+        out = out[: limit - 1].rstrip() + "…"
+    return out
+
+
+def _list_snip(text: str, limit: int = 3) -> list[str]:
+    items = []
+    for raw in (text or "").splitlines():
+        s = raw.strip()
+        if not s.startswith(("-", "*", "1.", "2.", "3.", "4.", "5.", "6.")):
+            continue
+        s = re.sub(r"^\d+\.\s+", "", s)
+        s = re.sub(r"^[-*]\s+", "", s)
+        s = re.sub(r"\*\*([^*]+)\*\*", r"\1", s)
+        s = re.sub(r"[*`_]+", "", s).strip()
+        if s:
+            items.append(s)
+        if len(items) >= limit:
+            break
+    return items
+
+
+def context_detail_wiki(md: str, meta: dict | None = None) -> dict:
+    meta = meta or frontmatter(md or "")
+    status = _section_body(md, "Judgment status")
+    believe = _plain_snip(_section_body(md, "We believe"), 420)
+    counter = _bullet_field(status, "Counter-evidence") or _bullet_field(status, "Counter evidence")
+    next_test = _bullet_field(status, "Next test")
+    state_line = _bullet_field(status, "State")
+    conf_line = _bullet_field(status, "Confidence")
+    return {
+        "kind": "wiki",
+        "title": (meta.get("title") or "").strip(),
+        "belief": believe,
+        "counter_evidence": _plain_snip(counter, 180),
+        "next_test": _plain_snip(next_test, 180),
+        "state": (meta.get("state") or "").strip() or _plain_snip(state_line, 80),
+        "confidence": (meta.get("confidence") or "").strip() or _plain_snip(conf_line, 40),
+        "status": (meta.get("status") or "").strip(),
+    }
+
+
+def context_detail_product(md: str, meta: dict | None = None, audience: str = "") -> dict:
+    meta = meta or frontmatter(md or "")
+    boundaries = _section_body(md, "Boundaries")
+    do_not = _section_body(md, "Do not say")
+    if not do_not and "### Do not say" in (md or ""):
+        # Nested under Claims
+        m = re.search(r"^###\s+Do not say\s*$", md or "", re.M)
+        if m:
+            rest = (md or "")[m.end() :]
+            nxt = re.search(r"^###\s+|^##\s+", rest, re.M)
+            do_not = rest[: nxt.start()] if nxt else rest
+    return {
+        "kind": "product",
+        "title": (meta.get("name") or "").strip(),
+        "promise": _plain_snip(_section_body(md, "Product promise"), 320),
+        "what_it_is": _plain_snip(_section_body(md, "What it is"), 360),
+        "best_for": _plain_snip(_section_body(md, "Best for"), 240),
+        "not_for": _plain_snip(_section_body(md, "Not for"), 240),
+        "boundaries": _plain_snip(boundaries, 280),
+        "do_not_say": _list_snip(do_not, 4),
+        "audience": audience or "",
+        "status": (meta.get("status") or "").strip(),
+    }
+
+
+def context_detail_capture(md: str, meta: dict | None = None, one_liner: str = "") -> dict:
+    meta = meta or frontmatter(md or "")
+    intent = _section_body(md, "User intent / source")
+    notes = _section_body(md, "Key points (our notes)")
+    steal = ""
+    if "### What to steal / foil" in (notes or ""):
+        steal = notes.split("### What to steal / foil", 1)[1]
+        if "\n### " in steal:
+            steal = steal.split("\n### ", 1)[0]
+    url = _bullet_field(intent, "URL")
+    handle = _bullet_field(intent, "Handle")
+    heat = _bullet_field(intent, "Heat") or _bullet_field(intent, "Heat (2026-09-21)")
+    # Heat line may be "Heat (date): ..." — also try loose match
+    if not heat:
+        for line in (intent or "").splitlines():
+            if "heat" in line.lower() and ":" in line:
+                heat = line.split(":", 1)[1].strip()
+                break
+    return {
+        "kind": "capture",
+        "title": one_liner or "",
+        "one_liner": _plain_snip(_section_body(md, "One-liner") or one_liner, 280),
+        "source_url": url,
+        "handle": handle,
+        "heat": _plain_snip(heat, 120),
+        "notes": _list_snip(steal or notes, 4),
+        "type": (meta.get("type") or "").strip(),
+        "status": "",
+    }
+
+
+def context_detail_claim(md: str, meta: dict | None = None, one_liner: str = "") -> dict:
+    meta = meta or frontmatter(md or "")
+    claim = ""
+    # Body after first H1 (claim files often use "# 主张（Objective）")
+    parts = re.split(r"^#\s+.+$", md or "", maxsplit=1, flags=re.M)
+    if len(parts) > 1:
+        body = parts[1]
+        if "\n## " in body:
+            body = body.split("\n## ", 1)[0]
+        claim = _plain_snip(body, 420)
+    if not claim:
+        for heading in ("主张（Objective）", "主张", "Objective", "Claim"):
+            body = _section_body(md, heading)
+            if body:
+                claim = _plain_snip(body, 420)
+                break
+    if not claim:
+        claim = one_liner
+    return {
+        "kind": "claim",
+        "title": one_liner or (meta.get("id") or ""),
+        "claim": claim,
+        "applies_when": _list_snip(_section_body(md, "Applies when"), 3),
+        "avoid_when": _list_snip(_section_body(md, "Avoid when"), 3),
+        "status": (meta.get("status") or "").strip(),
+        "confidence": (meta.get("confidence") or "").strip(),
+    }
+
+
+def context_detail_swipe(md: str, meta: dict | None = None, one_liner: str = "") -> dict:
+    meta = meta or frontmatter(md or "")
+    return {
+        "kind": "swipe",
+        "title": one_liner or "",
+        "when_to_use": _list_snip(_section_body(md, "When to use"), 3),
+        "when_to_avoid": _list_snip(_section_body(md, "When to avoid"), 3),
+        "beats": _list_snip(_section_body(md, "Beats / pages (argument structure only — no full copy)")
+                            or _section_body(md, "Beats / pages"), 4),
+        "constraints": _list_snip(_section_body(md, "Constraints"), 3),
+        "form": (meta.get("form") or "").strip(),
+        "status": (meta.get("status") or "").strip(),
+        "tags": meta.get("tags") if isinstance(meta.get("tags"), list) else [],
+    }
+
+
+def context_detail_atom(md: str, meta: dict | None = None, one_liner: str = "") -> dict:
+    meta = meta or frontmatter(md or "")
+    body = _section_body(md, "Atom") or _section_body(md, "Text") or ""
+    if not body:
+        # first paragraph after H1
+        parts = (md or "").split("\n# ", 1)
+        chunk = parts[1] if len(parts) > 1 else (md or "")
+        if "\n## " in chunk:
+            chunk = chunk.split("\n## ", 1)[0]
+        body = chunk
+    return {
+        "kind": "atom",
+        "title": one_liner or "",
+        "text": _plain_snip(body, 360) or one_liner,
+        "atom_type": (meta.get("type") or "").strip(),
+        "status": (meta.get("status") or "").strip(),
+    }
+
+
+def context_detail_need(quote: str = "", speaker: str = "", frequency: str = "", status: str = "") -> dict:
+    return {
+        "kind": "need",
+        "title": quote or "",
+        "quote": quote or "",
+        "speaker": speaker or "",
+        "frequency": frequency or "",
+        "status": status or "",
+    }
+
+
+def parse_topic_item(md: str) -> dict:
+    """Extract decision + generation provenance from a Topic item file."""
+    out: dict = {
+        "verdict": "",
+        "why_status": "",
+        "who_for": "",
+        "core_judgment": "",
+        "next_step": "",
+        "problem": "",
+        "believe_now": "",
+        "cut": "",
+        "why_now": "",
+        "change_after": "",
+        "based_on": "",
+        "gaps": "",
+        "suggested_form": "",
+        "trace": {},
+        "context_packet": {},
+        "constraints": [],
+        "provenance": [],
+    }
+    if not md:
+        return out
+
+    # Decision card bold fields
+    decision = md
+    # Prefer content before Score / Trace appendix
+    split = re.search(r"^##\s+Score\b|^##\s+Trace\b|^###\s+Score\b|^###\s+Trace\b", md, re.M)
+    if split:
+        decision = md[: split.start()]
+
+    # Decision fields are written as **Label:** value (colon inside bold).
+    field_map = {
+        "Verdict": "verdict",
+        "Why this status": "why_status",
+        "Who it's for": "who_for",
+        "Who it\u2019s for": "who_for",
+        "Core judgment": "core_judgment",
+        "Next step": "next_step",
+        "Product link": "product_link",
+        "Generation path": "generation_path",
+    }
+    for label, key in field_map.items():
+        m = re.search(rf"\*\*{re.escape(label)}:\*\*\s*(.+)$", decision, re.M)
+        if not m:
+            m = re.search(rf"\*\*{re.escape(label)}\*\*\s*:\s*(.+)$", decision, re.M)
+        if m and not out.get(key):
+            out[key] = m.group(1).strip()
+
+    section_map = {
+        "What problem does this solve?": "problem",
+        "What do they believe now?": "believe_now",
+        "What cut are we making?": "cut",
+        "Why now?": "why_now",
+        "What should change after reading?": "change_after",
+        "What is this based on?": "based_on",
+        "Current gaps": "gaps",
+        "Suggested form": "suggested_form",
+    }
+    for heading, key in section_map.items():
+        body = _section_body(decision, heading).strip()
+        if body:
+            # Keep short: first paragraph / bullets collapsed
+            lines = [ln.strip() for ln in body.splitlines() if ln.strip() and not ln.strip().startswith("#")]
+            out[key] = "\n".join(lines[:8])
+
+    # Trace subsection (## Trace or ### Trace)
+    trace_body = ""
+    for h in ("Trace", "Score / trace appendix"):
+        # Prefer ### Trace inside appendix
+        m = re.search(r"^###\s+Trace\s*$", md, re.M)
+        if m:
+            rest = md[m.end() :]
+            nxt = re.search(r"^###\s+|^##\s+", rest, re.M)
+            trace_body = rest[: nxt.start()] if nxt else rest
+            break
+        body = _section_body(md, h)
+        if body and "source:" in body.lower():
+            # if whole appendix, try to find Trace inside
+            m2 = re.search(r"^###\s+Trace\s*$", body, re.M)
+            if m2:
+                rest = body[m2.end() :]
+                nxt = re.search(r"^###\s+", rest, re.M)
+                trace_body = rest[: nxt.start()] if nxt else rest
+            else:
+                trace_body = body
+            break
+    else:
+        m = re.search(r"^###\s+Trace\s*$", md, re.M)
+        if m:
+            rest = md[m.end() :]
+            nxt = re.search(r"^###\s+|^##\s+", rest, re.M)
+            trace_body = rest[: nxt.start()] if nxt else rest
+
+    trace: dict[str, str] = {}
+    for line in (trace_body or "").splitlines():
+        s = line.strip().lstrip("-").strip()
+        if ":" not in s:
+            continue
+        key, val = s.split(":", 1)
+        key, val = key.strip().lower(), val.strip()
+        if not key or val.lower().startswith("none"):
+            if key:
+                trace[key] = ""
+            continue
+        trace[key] = val
+    out["trace"] = trace
+
+    # Context Packet
+    cp_body = ""
+    m = re.search(r"^###\s+Context Packet\s*$", md, re.M)
+    if m:
+        rest = md[m.end() :]
+        nxt = re.search(r"^###\s+|^##\s+", rest, re.M)
+        cp_body = rest[: nxt.start()] if nxt else rest
+    else:
+        cp_body = _section_body(md, "Context Packet")
+    packet: dict[str, str] = {}
+    for line in (cp_body or "").splitlines():
+        s = line.strip().lstrip("-").strip()
+        if ":" not in s:
+            continue
+        key, val = s.split(":", 1)
+        packet[key.strip().lower()] = val.strip()
+    out["context_packet"] = packet
+
+    # Constraints bullets
+    cons = _section_body(md, "Constraints") or ""
+    if not cons:
+        m = re.search(r"^###\s+Constraints\s*$", md, re.M)
+        if m:
+            rest = md[m.end() :]
+            nxt = re.search(r"^###\s+|^##\s+", rest, re.M)
+            cons = rest[: nxt.start()] if nxt else rest
+    constraints = []
+    for line in cons.splitlines():
+        s = line.strip()
+        if s.startswith("-"):
+            constraints.append(s.lstrip("-").strip())
+    out["constraints"] = constraints[:12]
+
+    # Provenance rows from packet + trace (structured for UI)
+    prov = []
+    role_sources = [
+        ("input", packet.get("input_nodes") or trace.get("source") or ""),
+        ("judgment", packet.get("judgment_nodes") or ""),
+        ("evidence", packet.get("evidence_nodes") or ""),
+        ("counter_evidence", packet.get("counter_evidence") or ""),
+        ("constraint", packet.get("forbidden_claims") or ""),
+    ]
+    # Also pull swipe/atoms/claims from trace
+    for role, blob in [
+        ("craft", trace.get("swipe") or ""),
+        ("craft", trace.get("atoms") or ""),
+        ("claim", trace.get("claim") or ""),
+        ("need", trace.get("need_ids") or ""),
+        ("product", trace.get("product_ids") or ""),
+        ("capture", trace.get("capture_id") or ""),
+        ("wiki", " ".join(WIKI_PAGE_RE.findall(trace.get("source") or ""))),
+    ]:
+        role_sources.append((role, blob))
+
+    seen: set[tuple[str, str]] = set()
+    epistemic = trace.get("epistemic_label") or ""
+    reason = trace.get("retrieval_reason") or ""
+
+    def _ids_from(blob: str) -> list[tuple[str, str]]:
+        found: list[tuple[str, str]] = []
+        for kind, rx in [
+            ("product", PRODUCT_RE),
+            ("recommendation", RECOMMENDATION_RE),
+            ("need", re.compile(r"\bN-\d{8}-\d{2}\b")),
+            ("capture", CAPTURE_RE),
+            ("wiki", WIKI_PAGE_RE),
+            ("swipe", SWIPE_RE),
+            ("atom", ATOM_RE),
+            ("claim", CLAIM_RE),
+            ("run", RUN_RE),
+            ("media", MEDIA_RE),
+            ("topic", re.compile(r"\bT-\d{8}-\d{2}\b")),
+        ]:
+            for ident in rx.findall(blob or ""):
+                found.append((kind, ident))
+        return found
+
+    for role, blob in role_sources:
+        for kind, ident in _ids_from(blob):
+            key = (role, ident)
+            if key in seen:
+                continue
+            seen.add(key)
+            # epistemic snippet mentioning this id
+            epi = ""
+            for part in re.split(r"[;；]", epistemic):
+                if ident in part:
+                    epi = part.strip()
+                    break
+            why = ""
+            for part in re.split(r"[;；]", reason):
+                if ident in part or (role == "input" and "explicit" in part.lower()) or (role == "judgment" and "judgment" in part.lower()):
+                    why = part.strip()
+                    break
+            prov.append(
+                {
+                    "role": role,
+                    "kind": kind,
+                    "ident": ident,
+                    "epistemic": epi,
+                    "reason": why,
+                }
+            )
+    out["provenance"] = prov
+    return out
+
+
+
 def parse_media(md: str | None = None) -> list[dict]:
     if md is None:
         md = read("media/_index.md")
@@ -892,7 +1576,12 @@ def save_media_upload(
     mid = f"M-{today}-{max(nums, default=0) + 1:02d}"
     rel_file = f"{mid}{ext}"
     (media_dir / rel_file).write_bytes(data)
-    cap = (caption or Path(filename).stem or mid).strip().replace("|", " ")[:80]
+    # Keep uploads incomplete until Agent/human writes a real caption.
+    raw_cap = (caption or "").strip().replace("|", " ")[:80]
+    if raw_cap and raw_cap != Path(filename).stem:
+        cap = raw_cap
+    else:
+        cap = "(needs description)"
     tag_s = " ".join(t for t in re.split(r"\s+", tags.strip()) if t) or "logo"
     row = (
         f"| {mid} | {rel_file} | {digest} | {cap} | {tag_s} | {role} | "
@@ -991,6 +1680,120 @@ def delete_media(vault: Path, ids: list[str]) -> dict:
         "deleted_files": deleted,
         "cleared_brand_logos": cleared_brands,
     }
+
+
+
+_MEDIA_ROLES = {"logo", "home", "pricing", "settings", "compare", "proof", "other"}
+
+
+def _normalize_media_links(links: str | list[str] | None) -> list[str]:
+    if isinstance(links, list):
+        tokens = [str(x).strip() for x in links if str(x).strip()]
+    else:
+        tokens = [t for t in re.split(r"[\s,]+", str(links or "").strip()) if t]
+    allowed: list[str] = []
+    for tok in tokens:
+        if tok == "brand" or tok.startswith(("P-", "R-", "C-", "RUN-", "W-")):
+            if tok not in allowed:
+                allowed.append(tok)
+        else:
+            raise ValueError(f"bad link token: {tok}")
+    return allowed
+
+
+def media_is_described(row: dict) -> bool:
+    """True when caption looks intentional (not upload / camera dump leftovers)."""
+    cap = str(row.get("caption") or "").strip()
+    if not cap:
+        return False
+    file_name = str(row.get("file") or "").strip()
+    stem = Path(file_name).stem if file_name else ""
+    if stem and cap == stem:
+        return False
+    mid = str(row.get("id") or "").strip()
+    if mid and cap == mid:
+        return False
+    low = cap.lower()
+    if low in {"image", "photo", "upload", "img", "untitled", "(fill)", "(needs description)", "needs description"}:
+        return False
+    # Camera / messenger export names are not human descriptions.
+    if re.match(r"^(img_|dsc_|screenshot|screen ?shot|photo_|微信图片|截屏|图片)", low):
+        return False
+    if re.search(r"_\d{8,}", cap):
+        return False
+    if re.fullmatch(r"M-\d{8}-\d{2}", cap):
+        return False
+    return True
+
+
+def update_media_card(vault: Path, payload: dict) -> dict:
+    """Update caption / role / links for one media row (complete the image card)."""
+    mid = str((payload or {}).get("id") or "").strip()
+    if not _MEDIA_ID_RE.fullmatch(mid):
+        raise ValueError(f"bad media id: {mid}")
+    media_dir = vault.resolve() / "media"
+    index_path = media_dir / "_index.md"
+    if not index_path.is_file():
+        raise ValueError("media/_index.md missing")
+    index_text = index_path.read_text(encoding="utf-8")
+    catalog = {m["id"]: m for m in parse_media(index_text)}
+    if mid not in catalog:
+        raise ValueError(f"unknown media: {mid}")
+    current = catalog[mid]
+
+    caption = payload.get("caption", current.get("caption") or "")
+    caption = str(caption or "").strip().replace("|", " ")[:120]
+    if not caption:
+        raise ValueError("caption required")
+
+    role = str(payload.get("role", current.get("role") or "other") or "other").strip()
+    if role not in _MEDIA_ROLES:
+        raise ValueError("bad role")
+
+    if "links" in (payload or {}):
+        allowed = _normalize_media_links(payload.get("links"))
+    else:
+        allowed = list(current.get("links") or [])
+    # Keep brand only when no semantic targets — optional leftover from uploads.
+    semantic = [t for t in allowed if t != "brand"]
+    link_cell = " ".join(semantic) if semantic else ("brand" if "brand" in allowed or not allowed else " ".join(allowed))
+    if not semantic and "brand" in allowed:
+        link_cell = "brand"
+    elif semantic:
+        link_cell = " ".join(semantic)
+
+    lines = index_text.splitlines()
+    out: list[str] = []
+    found = False
+    for line in lines:
+        if line.strip().startswith("|"):
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if cells and _MEDIA_ID_RE.fullmatch(cells[0].strip("`")) and cells[0].strip("`") == mid:
+                while len(cells) < 9:
+                    cells.append("")
+                cells[3] = caption
+                cells[5] = role
+                cells[6] = link_cell
+                line = "| " + " | ".join(cells) + " |"
+                found = True
+        out.append(line)
+    if not found:
+        raise ValueError(f"unknown media: {mid}")
+    index_path.write_text("\n".join(out) + ("\n" if index_text.endswith("\n") else ""), encoding="utf-8")
+    row = next(m for m in parse_media(index_path.read_text(encoding="utf-8")) if m["id"] == mid)
+    return {
+        "id": mid,
+        "caption": row["caption"],
+        "role": row.get("role", ""),
+        "links": row["links"],
+        "subjects": row.get("subjects", []),
+        "described": media_is_described(row),
+    }
+
+
+def update_media_links(vault: Path, media_id: str, links: str | list[str]) -> dict:
+    """Back-compat: links-only write."""
+    return update_media_card(vault, {"id": media_id, "links": links})
 
 
 def save_brand(vault: Path, payload: dict) -> dict:
@@ -1094,6 +1897,13 @@ def build_graph() -> dict:
         if not entry.endswith(".md"):
             entry = f"{entry}.md"
         raw_path = wiki_path(row["raw"])
+        cap_detail: dict = {}
+        source_url = ""
+        if entry and (ROOT / entry).exists():
+            cap_md = read(entry)
+            cap_detail = context_detail_capture(cap_md, one_liner=row["one_liner"])
+            cap_detail["status"] = row["status"]
+            source_url = cap_detail.get("source_url") or ""
         add_node(
             node(
                 "capture",
@@ -1110,6 +1920,8 @@ def build_graph() -> dict:
                     "raw_path": raw_path,
                     "has_raw": bool(raw_path),
                     "ingested": row["status"] == "ingested",
+                    "source_url": source_url,
+                    "context_detail": cap_detail,
                 },
             )
         )
@@ -1154,6 +1966,12 @@ def build_graph() -> dict:
                     "frequency": row.get("frequency", "") or "1",
                     "status": row["status"],
                     "topic_ids": topic_ids,
+                    "context_detail": context_detail_need(
+                        quote=quote,
+                        speaker=row.get("speaker", "") or "",
+                        frequency=row.get("frequency", "") or "1",
+                        status=row["status"],
+                    ),
                 },
             )
         )
@@ -1346,6 +2164,9 @@ def build_graph() -> dict:
             fpath = wiki_path(row["file"]) or f"products/entries/{ident}.md"
             if not fpath.endswith(".md"):
                 fpath = f"{fpath}.md"
+            prod_detail: dict = {}
+            if fpath and (ROOT / fpath).exists():
+                prod_detail = context_detail_product(read(fpath), audience=row["audience"])
             add_node(
                 node(
                     "product",
@@ -1357,6 +2178,7 @@ def build_graph() -> dict:
                         "audience": row["audience"],
                         "price": row["price"],
                         "effective_from": row["effective_from"],
+                        "context_detail": prod_detail,
                     },
                 )
             )
@@ -1399,6 +2221,22 @@ def build_graph() -> dict:
                 )
             )
 
+    def _media_declared_targets(links: list[str]) -> list[tuple[str, str]]:
+        """Semantic link targets only. `brand` is a catalog tag, not a graph edge."""
+        out: list[tuple[str, str]] = []
+        for link in links or []:
+            if link.startswith("P-"):
+                out.append(("product", link))
+            elif link.startswith("R-"):
+                out.append(("recommendation", link))
+            elif link.startswith("C-"):
+                out.append(("capture", link))
+            elif link.startswith("RUN-"):
+                out.append(("run", link))
+            elif link.startswith("W-"):
+                out.append(("wiki", link))
+        return out
+
     for m in parse_media():
         add_node(
             node(
@@ -1418,6 +2256,8 @@ def build_graph() -> dict:
                     "rights": m["rights"],
                     "hosted_image_id": m["hosted_image_id"],
                     "hosted": m["hosted"],
+                    "graph_status": "cataloged",
+                    "orphan_links": [],
                 },
             )
         )
@@ -1430,6 +2270,8 @@ def build_graph() -> dict:
                 edge(nid("capture", link), media_id, "has_media")
             elif link.startswith("RUN-"):
                 edge(nid("run", link), media_id, "uses_media")
+            elif link.startswith("W-"):
+                edge(media_id, nid("wiki", link), "reference_for")
 
     for row in table_with(read("raw/_index.md"), "id", "date", "capture_id", "file", "type", "source_url", "one_liner"):
         ident = row["id"]
@@ -1567,6 +2409,9 @@ def build_graph() -> dict:
                 mprof = re.search(r"^profile:\s*(\S+)", fm.group(1), re.M)
                 if mprof:
                     profile = mprof.group(1).strip()
+        card: dict = {}
+        if item and (ROOT / item).exists():
+            card = parse_topic_item(read(item))
         add_node(
             node(
                 "topic",
@@ -1603,6 +2448,22 @@ def build_graph() -> dict:
                     "run_id": row["run"].strip(),
                     "usage": usage,
                     "src_heat_note": "来源帖热度，不是你的帖",
+                    "verdict": card.get("verdict") or row["status"],
+                    "why_status": card.get("why_status") or "",
+                    "who_for": card.get("who_for") or "",
+                    "core_judgment": card.get("core_judgment") or row["one_liner"],
+                    "next_step": card.get("next_step") or "",
+                    "problem": card.get("problem") or "",
+                    "believe_now": card.get("believe_now") or "",
+                    "cut": card.get("cut") or "",
+                    "why_now": card.get("why_now") or "",
+                    "change_after": card.get("change_after") or "",
+                    "gaps": card.get("gaps") or "",
+                    "suggested_form": card.get("suggested_form") or "",
+                    "trace": card.get("trace") or {},
+                    "context_packet": card.get("context_packet") or {},
+                    "constraints": card.get("constraints") or [],
+                    "provenance": card.get("provenance") or [],
                 },
             )
         )
@@ -1683,6 +2544,9 @@ def build_graph() -> dict:
             fpath = f"library/{fpath}"
         if fpath and not fpath.endswith(".md"):
             fpath = f"{fpath}.md"
+        swipe_detail: dict = {}
+        if fpath and (ROOT / fpath).exists():
+            swipe_detail = context_detail_swipe(read(fpath), one_liner=row["one_liner"])
         add_node(
             node(
                 "swipe",
@@ -1700,6 +2564,7 @@ def build_graph() -> dict:
                     "loss": hit_int(row, "loss"),
                     "source_cell": row["source"],
                     "lib": True,
+                    "context_detail": swipe_detail,
                 },
             )
         )
@@ -1728,6 +2593,10 @@ def build_graph() -> dict:
             fpath = f"library/atoms/{fpath.split('/')[-1]}"
         if fpath and not fpath.endswith(".md"):
             fpath = f"{fpath}.md"
+        atom_detail: dict = {}
+        if fpath and (ROOT / fpath).exists():
+            atom_detail = context_detail_atom(read(fpath), one_liner=row["one_liner"])
+            atom_detail["atom_type"] = atom_detail.get("atom_type") or row["type"]
         add_node(
             node(
                 "atom",
@@ -1743,6 +2612,7 @@ def build_graph() -> dict:
                     "win": hit_int(row, "win"),
                     "loss": hit_int(row, "loss"),
                     "lib": True,
+                    "context_detail": atom_detail,
                 },
             )
         )
@@ -1773,8 +2643,10 @@ def build_graph() -> dict:
         if fpath and not fpath.endswith(".md"):
             fpath = f"{fpath}.md"
         evidence_runs = []
+        claim_detail: dict = {}
         if (ROOT / fpath).exists():
             body = read(fpath)
+            claim_detail = context_detail_claim(body, one_liner=row["one_liner"])
             for cid in CAPTURE_RE.findall(body):
                 edge(nid("claim", ident), nid("capture", cid), "sourced_from")
             in_ev = False
@@ -1803,6 +2675,7 @@ def build_graph() -> dict:
                     "evidence_runs": evidence_runs,
                     "has_evidence": bool(evidence_runs),
                     "lib": True,
+                    "context_detail": claim_detail,
                 },
             )
         )
@@ -1879,6 +2752,20 @@ def build_graph() -> dict:
             pack_chain = parse_pack_chain(read(pack_rel))
         is_published = row["status"].lower() == "published"
         is_scheduled = (bool(scheduled_date) and not is_published) or (row["status"].lower() == "scheduled")
+        topic_id = row["topic_id"] if row["topic_id"] != "none" else ""
+        run_detail = parse_run_detail(
+            rdir if rdir and rdir.is_dir() else None,
+            stage_files,
+            index_status=row["status"],
+            index_pack=row.get("pack", "") or "",
+            index_notes=row.get("notes", "") or "",
+            topic_id=topic_id,
+        )
+        # Prefer idea-file selection when richer; keep index/idea scrape as fallback.
+        for k in ("swipe", "atoms", "claim"):
+            got = (run_detail.get("selection") or {}).get(k) or ""
+            if got and got.lower() != "none":
+                selection[k] = got
         add_node(
             node(
                 "run",
@@ -1900,7 +2787,7 @@ def build_graph() -> dict:
                     "profile": row["profile"],
                     "primary_platform": row["primary_platform"],
                     "platforms": row["platforms"],
-                    "topic_id": row["topic_id"] if row["topic_id"] != "none" else "",
+                    "topic_id": topic_id,
                     "pillar": row["pillar"],
                     "pack": row["pack"],
                     "export": row["export"],
@@ -1916,6 +2803,7 @@ def build_graph() -> dict:
                     "ship_urls": ship_urls,
                     "open_file": idea_path,
                     "obsidian": obsidian_uri(idea_path) if idea_path else "",
+                    "run_detail": run_detail,
                 },
             )
         )
@@ -2077,6 +2965,7 @@ def build_graph() -> dict:
                         title = line[2:].strip()
                         break
             rel = path.relative_to(ROOT).as_posix()
+            wiki_detail = context_detail_wiki(text, meta)
             add_node(
                 node(
                     "wiki",
@@ -2090,6 +2979,7 @@ def build_graph() -> dict:
                         "confidence": (meta.get("confidence") or "").strip(),
                         "pillar": (meta.get("pillar") or "").strip(),
                         "updated": (meta.get("updated") or "").strip(),
+                        "context_detail": wiki_detail,
                     },
                 )
             )
@@ -2188,6 +3078,41 @@ def build_graph() -> dict:
         w_blob = ((n.get("pack_chain") or {}).get("meta") or {}).get("w_ids") or ""
         for wid in re.findall(r"\bW-[A-Za-z0-9-]+\b", w_blob):
             edge(nid("wiki", wid), n["id"], "tests")
+
+    # Re-link media after wiki/product/run exist — edge() requires both ends.
+    for n in list(nodes.values()):
+        if n.get("kind") != "media":
+            continue
+        media_id = n["id"]
+        for sub in n.get("subjects") or []:
+            kind = "product" if sub.startswith("P-") else "recommendation"
+            edge(media_id, nid(kind, sub), "illustrates")
+        for link in n.get("links") or []:
+            if link.startswith("C-"):
+                edge(nid("capture", link), media_id, "has_media")
+            elif link.startswith("RUN-"):
+                edge(nid("run", link), media_id, "uses_media")
+            elif link.startswith("W-"):
+                edge(media_id, nid("wiki", link), "reference_for")
+
+    # Media card + graph status after all target nodes exist (wiki is late).
+    for n in nodes.values():
+        if n.get("kind") != "media":
+            continue
+        declared = _media_declared_targets(n.get("links") or [])
+        missing = [ident for kind, ident in declared if nid(kind, ident) not in nodes]
+        resolved = len(declared) - len(missing)
+        described = media_is_described(n)
+        n["described"] = described
+        n["orphan_links"] = missing
+        if declared and resolved == 0:
+            n["graph_status"] = "orphaned"
+        elif resolved > 0:
+            n["graph_status"] = "linked"
+        elif described:
+            n["graph_status"] = "described"
+        else:
+            n["graph_status"] = "cataloged"
 
     # drop edges to missing nodes
     edges = [e for e in edges if e["from"] in nodes and e["to"] in nodes]
