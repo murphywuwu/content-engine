@@ -12,7 +12,11 @@ Agent: before drafting any X post, read this file for craft. For topics/tone/rea
 ## Defaults
 
 - Language: English (unless user asks otherwise)
-- Default unit: **1 short post** (not a thread), unless user asks for a thread
+- No default copy form. Choose `short post` or `thread` from the Topic's
+  Suggested form and Brief. Media is a separate axis: `text_only`,
+  `single_visual`, or `multi_page_pack`. Every combination is valid when the
+  Brief explains the handoff. A short post may be a standalone post or only
+  the Hook for a visual Pack.
 - Assume timeline scroll: **first line** does most of the work
 - Success for easysociable-builder: **qualified replies / DMs**, not raw impressions
 - Pack: **optional**. Text-first; add carousel/images when showing the visual production layer
@@ -22,9 +26,9 @@ Agent: before drafting any X post, read this file for craft. For topics/tone/rea
 | Form | Guidance |
 |------|----------|
 | Single post | Prefer **1–3 short sentences** or tight line breaks. Rarely fill the full character limit. |
-| Thread | Only if user asks. Tweet 1 = hook only; each next tweet = one idea; end without a summary paragraph that restates everything. |
+| Thread | Tweet 1 = hook only; each next tweet = one idea; end without a summary paragraph that restates everything. Use when the Topic's argument needs multiple beats. |
 | Reply | Add information or a precise question. Avoid “Great point!” / empty agreement. |
-| Media | Optional. If used, text should still stand alone if the image fails. Carousel images = proof of system, not the default body. |
+| Media | Optional, but valid for any copy form. A short post can be a single hook plus a visual card or multi-page Pack. For a Pack hook, the pages carry the argument after the opening line. Multi-page images need an explicit pack and arc; they are not implied by choosing X. |
 
 ## Hooks (mechanics only — not your brand story)
 

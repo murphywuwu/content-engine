@@ -33,7 +33,9 @@ One sentence a stranger can understand without any product context.
 ## Platform and expression
 
 - **Platform:** x | linkedin | ig | tiktok
-- **Form:** short post | thread | carousel | …
+- **Copy form:** inherited from Topic Suggested form; resolve before drafting
+- **Copy role:** standalone | pack hook
+- **Media mode:** text-only | single visual | multi-page pack
 - **Hook:** (first line or opening move)
 - **Structure:** (the argument flow in one line, e.g. hook → false belief → mechanism → action)
 

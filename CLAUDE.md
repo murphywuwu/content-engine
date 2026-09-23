@@ -776,6 +776,19 @@ For **each** run, before brief / packet / draft / editor / rubric / pack:
 5. **Do not** paste another platform’s copy unchanged. Sibling runs each re-read their own craft file.
 6. If the craft file is missing → ask user / create stub; **do not draft** from memory.
 
+### Form gate
+
+Platform craft defines quality constraints, not the content form. Resolve the
+copy form from the Topic's `## Suggested form` and carry it into `idea.md`,
+`brief.md`, and `packet.md`. Track `copy_role` separately as `standalone` or
+`pack_hook`, and track media as `text_only`, `single_visual`, or
+`multi_page_pack`. All combinations are valid when the Brief defines the
+handoff. In particular, `short post + pack_hook + multi_page_pack` means the
+post is the opening Hook and the pages carry the argument. If the Topic names
+multiple copy forms (for example `short post or thread`), ask the user to
+choose before Draft. Never infer `short post` or `text_only` solely because
+the platform is X.
+
 ### State machine (do not skip)
 
 ```text
@@ -833,7 +846,8 @@ Swipe / Atoms / Claim. A Run may adapt the inherited strategy to its platform
 format, but must not silently replace the Topic's content decision.
 
 Only Topics without an explicit craft selection use the legacy fallback:
-swipe 0–1 → atoms by role → claim 0–1. **`none` always allowed** with why.
+one primary swipe → atoms by role → one primary claim. **`none` is allowed**
+with why, but a Run may never contain more than one Swipe.
 If a fallback selection is needed, write it into the Topic before opening
 future Runs; do not create a second competing strategy in each Run.
 
@@ -841,14 +855,30 @@ future Runs; do not create a second competing strategy in each Run.
 
 | Field | Required form |
 |-------|----------------|
-| `swipe_id` | inherited Topic selection, or `none` |
-| `atoms` | inherited Topic selection, or `none` |
-| `claim_id` | inherited Topic selection, or `none` — not a one-off hypothesis |
+| `swipe_id` | exactly one inherited Topic selection, or `none` |
+| `atoms` | inherited Topic selection, or `none`; each atom must serve the primary Swipe |
+| `claim_id` | zero or one inherited Topic selection, or `none` — not a one-off hypothesis |
 
 For a Topic-backed Run, these fields are a historical citation of the
 inherited strategy, not a second selection surface. If the Topic strategy is
 wrong, update the Topic and open a new Run; do not silently overwrite the Run
-strategy. Do **not** bump catalog `n`/`win`/`loss` here — that is ship-only
+strategy. Before Brief, hydrate every selected Library body into `packet.md`.
+An index row is discovery only; an ID without a source path, source hash, line
+count, and extracted body constraints is an invalid citation. The packet must
+contain a hydration receipt for the Topic, primary Swipe, selected Atoms, and
+primary Claim. A Run with strategy drift, multiple Swipes, or an unhydrated
+Library node is blocked from Draft.
+
+Materialize the receipt after the selection is locked:
+
+```bash
+python3 scripts/hydrate-run-context.py --run RUN-...
+```
+
+The command refuses strategy drift by default. Use `--allow-drift` only to
+record a historical reconciliation failure; it does not make that Run valid.
+
+Do **not** bump catalog `n`/`win`/`loss` here — that is ship-only
 (§ Catalog evidence).
 
 **引用** = how many **runs** currently name this id in `idea.md` (killed runs still count unless selection was cleared). The workbench derives it by scanning runs; it is not a column the agent increments. Observatory numbers update on `workbench/build.py`, not at the moment of chat.
@@ -894,7 +924,7 @@ Reading surface — fill in this order:
 1. **Thesis** — one sentence a stranger can understand.
 2. **For whom → what changes** — reader, their false belief, the after state.
 3. **Evidence** — named sources, type, quality, and what we cannot prove.
-4. **Platform and expression** — platform, form, hook, structure outline.
+4. **Platform and expression** — platform, Topic-derived form, hook, structure outline.
 5. **Boundaries** — must include / must avoid.
 
 Appendix — fill after the reading surface:
@@ -941,7 +971,7 @@ The agent may reject a brief. "强制继续" overrides the gate (user decision).
 
 ### Packet
 
-After brief OK: short `packet.md` — pillar slice + voice + audience (**core + this platform**) + **craft notes distilled from the loaded `platforms/<platform>.md`** + **thesis sentence from brief**.
+After brief OK: short `packet.md` — pillar slice + voice + audience (**core + this platform**) + **craft notes distilled from the loaded `platforms/<platform>.md`** + **resolved form** + **thesis sentence from brief**.
 
 ### Writer → Editor
 
@@ -1059,6 +1089,12 @@ Viral visual order (hard): **Wiki → Topic → Page Contracts → Media → Tem
 ### When
 
 Planned platform needs multi-page images (linkedin / ig / tiktok), not pure X text.
+
+For X, `media_mode=single_visual` is valid for a short post or thread and
+uses the one-page template flow. `media_mode=multi_page_pack` is also valid:
+with `copy_role=pack_hook`, the short post can be only the opening Hook while
+the pages carry the rest of the argument. It still requires an explicit
+`pack.md` and Arc; it is not implied by choosing X.
 
 ### Preconditions
 

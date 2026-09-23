@@ -107,6 +107,12 @@ Numbers only. Do not repeat the card above in a note column.
 
 Writer must-nots. Keep short. Empty is allowed.
 
+### Generation prompt
+
+<!-- Optional. Paste the final prompt that produced this card. If omitted, the workbench rebuilds one from the Context Packet and labels it reconstructed. -->
+
+(fill)
+
 ### Context Packet
 
 - task:

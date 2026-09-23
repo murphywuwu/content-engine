@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -436,6 +437,96 @@ def _stage_done_flags(name: str, fm: dict, text: str, index_pack: str = "") -> b
     return False
 
 
+def _library_source(kind: str, ident: str) -> Path | None:
+    folder = {"swipe": "swipe", "atom": "atoms", "claim": "claims"}.get(kind)
+    if not folder:
+        return None
+    base = ROOT / "library" / folder
+    for path in base.glob("*.md"):
+        if path.name.startswith("_"):
+            continue
+        meta = frontmatter(path.read_text(encoding="utf-8"))
+        if str(meta.get("id") or "").strip() == ident:
+            return path
+    return None
+
+
+def _hydrated_entry(kind: str, ident: str) -> dict:
+    path = _library_source(kind, ident)
+    if not path:
+        return {"id": ident, "role": kind, "status": "missing"}
+    body = path.read_text(encoding="utf-8")
+    detail_fn = {
+        "swipe": context_detail_swipe,
+        "atom": context_detail_atom,
+        "claim": context_detail_claim,
+    }[kind]
+    return {
+        "id": ident,
+        "role": kind,
+        "source": str(path.relative_to(ROOT)),
+        "status": "loaded",
+        "line_count": len(body.splitlines()),
+        "source_hash": hashlib.sha256(body.encode("utf-8")).hexdigest(),
+        "extracted": detail_fn(body),
+    }
+
+
+def _topic_hydrated_entry(ident: str) -> dict:
+    path = ROOT / "topics" / "items" / f"{ident}.md"
+    if not path.exists():
+        return {"id": ident, "role": "topic", "status": "missing"}
+    body = path.read_text(encoding="utf-8")
+    return {
+        "id": ident,
+        "role": "topic",
+        "source": str(path.relative_to(ROOT)),
+        "status": "loaded",
+        "line_count": len(body.splitlines()),
+        "source_hash": hashlib.sha256(body.encode("utf-8")).hexdigest(),
+    }
+
+
+def hydrate_run_context(
+    *, topic_id: str, selection: dict[str, list[str]], topic_strategy: dict
+) -> dict:
+    """Build a durable, checkable receipt for the Run's actual inputs."""
+    errors: list[str] = []
+    expected = {
+        "swipes": sorted(topic_strategy.get("swipes") or []),
+        "atoms": sorted(topic_strategy.get("atoms") or []),
+        "claims": sorted(topic_strategy.get("claims") or []),
+    }
+    actual = {key: sorted(selection.get(key) or []) for key in expected}
+    if topic_strategy.get("explicit") and len(expected["swipes"]) != 1:
+        errors.append("Topic must declare exactly one primary Swipe.")
+    if len(actual["swipes"]) != 1:
+        errors.append("Run must have exactly one primary Swipe.")
+    if topic_strategy.get("explicit") and actual != expected:
+        errors.append(f"Run strategy differs from Topic strategy: expected {expected}, got {actual}.")
+    entries = [_topic_hydrated_entry(topic_id)] if topic_id else []
+    entries += [_hydrated_entry("swipe", ident) for ident in actual["swipes"]]
+    entries += [_hydrated_entry("atom", ident) for ident in actual["atoms"]]
+    entries += [_hydrated_entry("claim", ident) for ident in actual["claims"]]
+    errors.extend(
+        f"{entry['role']} {entry['id']} source is missing."
+        for entry in entries
+        if entry["status"] != "loaded"
+    )
+    primary_swipe = actual["swipes"][0] if len(actual["swipes"]) == 1 else ""
+    for entry in entries:
+        related = entry.get("extracted", {}).get("related_swipe") or []
+        if entry["role"] == "claim" and primary_swipe and related and primary_swipe not in related:
+            errors.append(f"Claim {entry['id']} is not scoped to primary Swipe {primary_swipe}.")
+    return {
+        "topic_id": topic_id,
+        "expected_strategy": expected,
+        "actual_strategy": actual,
+        "entries": entries,
+        "errors": errors,
+    }
+
+
 def parse_run_detail(
     folder: Path | None,
     stage_files: dict[str, str],
@@ -636,6 +727,20 @@ def parse_run_detail(
     }
     selected = {"swipes": run_swipes, "atoms": run_atoms, "claims": run_claims}
     drift = any(inherited[key] != selected[key] for key in inherited) if topic_strategy.get("explicit") else False
+    hydration = hydrate_run_context(
+        topic_id=topic_id,
+        selection=selected,
+        topic_strategy=topic_strategy,
+    )
+    packet_rel = stage_files.get("packet") or ""
+    packet_text = (ROOT / packet_rel).read_text(encoding="utf-8") if packet_rel and (ROOT / packet_rel).exists() else ""
+    if not packet_text or "Context Hydration Receipt" not in packet_text:
+        hydration["errors"].append("packet.md has no Context Hydration Receipt.")
+    for entry in hydration["entries"]:
+        if entry["status"] != "loaded":
+            continue
+        if entry["id"] not in packet_text or entry.get("source_hash", "") not in packet_text:
+            hydration["errors"].append(f"{entry['role']} {entry['id']} is not materialized in packet.md.")
 
     return {
         "thesis": thesis,
@@ -646,6 +751,8 @@ def parse_run_detail(
         "topic_strategy": topic_strategy or {},
         "inherited_strategy": inherited,
         "strategy_drift": drift,
+        "hydration": hydration,
+        "hydration_valid": not hydration["errors"],
         "current_stage": current,
         "next_hint": next_hint,
         "editor_verdict": editor_verdict,
@@ -1476,7 +1583,75 @@ def parse_topic_item(md: str) -> dict:
                 }
             )
     out["provenance"] = prov
+    prompt, source = topic_generation_prompt(md, out)
+    out["generation_prompt"] = prompt
+    out["generation_prompt_source"] = source
     return out
+
+
+def topic_generation_prompt(md: str, card: dict) -> tuple[str, str]:
+    """Logged prompt if the Topic file stored one; otherwise rebuild it from the packet."""
+    logged = (_section_body(md, "Generation prompt") or "").strip()
+    if not logged:
+        m = re.search(r"^###\s+Generation prompt\s*$", md, re.M)
+        if m:
+            rest = md[m.end() :]
+            nxt = re.search(r"^###\s+|^##\s+", rest, re.M)
+            logged = (rest[: nxt.start()] if nxt else rest).strip()
+    if logged and "(fill)" not in logged.lower() and len(logged) > 80:
+        return logged, "logged"
+    fm = re.match(r"^---\n(.*?)\n---", md, re.S)
+    head = fm.group(1) if fm else ""
+
+    def fm_field(key: str) -> str:
+        hit = re.search(rf"^{key}:\s*(.+)$", head, re.M)
+        return hit.group(1).strip() if hit else ""
+
+    packet = card.get("context_packet") or {}
+    trace = card.get("trace") or {}
+    lines = [
+        "Write one Topic decision card. Do not invent quotes, metrics, customers, or proof.",
+        "",
+        f"Profile: {fm_field('profile') or 'unspecified'}",
+        f"Account: {fm_field('account') or 'unspecified'}",
+        f"Platform: {fm_field('platform') or 'unspecified'}",
+        f"Pillar: {fm_field('pillar') or 'unspecified'}",
+        f"Lane: {fm_field('lane') or 'unspecified'}",
+        f"Generation mode: {fm_field('generation_mode') or trace.get('generation_mode') or 'unspecified'}",
+        f"Language: match profiles/<id>/voice.md Language.",
+        "",
+        "Task:",
+        packet.get("task") or card.get("core_judgment") or "(no task recorded)",
+        "",
+        "Context packet (these are the only nodes you may treat as inputs):",
+    ]
+    for key in (
+        "input_nodes",
+        "judgment_nodes",
+        "evidence_nodes",
+        "counter_evidence",
+        "product_facts",
+        "platform_constraints",
+        "forbidden_claims",
+        "unresolved_questions",
+    ):
+        val = (packet.get(key) or "").strip()
+        if val:
+            lines.append(f"- {key}: {val}")
+    constraints = card.get("constraints") or []
+    if constraints:
+        lines.append("")
+        lines.append("Constraints:")
+        lines.extend(f"- {c}" for c in constraints)
+    lines.extend(
+        [
+            "",
+            "Output a decision card with: verdict, who it is for, one core judgment,",
+            "false belief, cut, why now, what changes after reading, evidence gaps, suggested form.",
+            "Do not turn source heat into a Topic. Do not reuse a lookalike cut that already has a win or loss.",
+        ]
+    )
+    return "\n".join(lines).strip(), "reconstructed"
 
 
 
@@ -2599,6 +2774,8 @@ def build_graph() -> dict:
                     "context_packet": card.get("context_packet") or {},
                     "constraints": card.get("constraints") or [],
                     "provenance": card.get("provenance") or [],
+                    "generation_prompt": card.get("generation_prompt") or "",
+                    "generation_prompt_source": card.get("generation_prompt_source") or "",
                     "craft_selection": card.get("craft_selection") or {},
                 },
             )
@@ -3510,6 +3687,12 @@ def _self_check() -> None:
     assert craft["swipes"] == ["S8", "S9"], craft
     assert craft["atoms"] == ["A-hook-one", "A-process-two"], craft
     assert craft["claims"] == ["C-claim-one"], craft
+    hydration = hydrate_run_context(
+        topic_id="T-demo",
+        selection={"swipes": ["S8", "S9"], "atoms": [], "claims": []},
+        topic_strategy={"swipes": ["S8"], "atoms": [], "claims": [], "explicit": True},
+    )
+    assert any("exactly one" in error for error in hydration["errors"]), hydration
     print("parse_engagement_snapshot self-check ok")
     print("parse_pack_chain self-check ok")
     print("parse_topic_craft_selection self-check ok")

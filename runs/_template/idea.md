@@ -14,6 +14,9 @@ created: YYYY-MM-DD
 - **platforms:** x
   <!-- must equal primary_platform (one platform per run) -->
 - **topic_id:** none | T-…
+- **form:** inherit from Topic Suggested form; ask if ambiguous
+- **copy_role:** standalone | pack_hook
+- **media_mode:** text_only | single_visual | multi_page_pack
 - **capture_ids:** none | C-…
 - **swipe_id:** none | S1
 - **atoms:** none | hook:A-… cta:A-…

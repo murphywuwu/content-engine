@@ -3341,6 +3341,30 @@
       font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
     }
     .topic-ctx-open:hover { border-color: var(--accent); }
+    .ctx-tabs {
+      display: flex; gap: 6px; padding: 0 18px 10px;
+    }
+    .ctx-tabs[hidden] { display: none; }
+    .ctx-tab {
+      font: inherit; font-size: 13px; font-weight: 650;
+      border: 1px solid var(--line); background: transparent; color: var(--muted);
+      border-radius: 999px; padding: 6px 12px; cursor: pointer;
+    }
+    .ctx-tab.on { color: var(--text); border-color: var(--text); background: var(--paper); }
+    .ctx-prompt { padding: 0 18px 18px; display: grid; gap: 10px; min-height: 0; overflow: auto; }
+    .ctx-prompt[hidden] { display: none; }
+    .ctx-prompt-note { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+    .ctx-prompt pre {
+      margin: 0; white-space: pre-wrap; word-break: break-word;
+      font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--bg-3); border: 1px solid var(--line); border-radius: 10px;
+      padding: 14px; color: var(--text);
+    }
+    .ctx-prompt-copy {
+      justify-self: start; font: inherit; font-size: 13px; font-weight: 650;
+      border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px;
+      background: var(--paper); color: var(--text); cursor: pointer;
+    }
 
     .ctx-modal {
       position: fixed; inset: 0; z-index: 110;
@@ -4762,10 +4786,15 @@
         </div>
         <button type="button" id="ctxClose" aria-label="Close">✕</button>
       </div>
-      <div class="ctx-body">
+      <div class="ctx-tabs" id="ctxTabs" hidden>
+        <button type="button" class="ctx-tab on" data-ctx-tab="graph" id="ctxTabGraph"></button>
+        <button type="button" class="ctx-tab" data-ctx-tab="prompt" id="ctxTabPrompt"></button>
+      </div>
+      <div class="ctx-body" id="ctxBodyGraph">
         <div class="ctx-map" id="ctxMap"></div>
         <aside class="ctx-detail" id="ctxDetail"></aside>
       </div>
+      <div class="ctx-prompt" id="ctxPrompt" hidden></div>
     </div>
   </div>
   <div class="md-modal" id="mdModal" role="dialog" aria-modal="true" aria-labelledby="mdTitle">
@@ -5185,6 +5214,13 @@
         topic_ctx_open: "查看这次用了什么",
         topic_ctx_title: "这个 Topic 是怎么来的",
         topic_ctx_lede: "中心是这份 Topic。周围节点是生成时写进 Context Packet 的依据，不是当前全库邻居。",
+        topic_ctx_tab_graph: "依据",
+        topic_ctx_tab_prompt: "Prompt",
+        topic_ctx_prompt_logged: "生成时记下的最终 prompt",
+        topic_ctx_prompt_rebuilt: "当时没有把原文 prompt 写进文件。下面是根据 Context Packet、模式和约束还原的最终指令。",
+        topic_ctx_prompt_empty: "这份 Topic 没有足够字段来还原 prompt。",
+        topic_ctx_prompt_copy: "复制",
+        topic_ctx_prompt_copied: "已复制",
         topic_ctx_none: "这份 Topic 没有写生成引用。",
         topic_ctx_pick: "点周围的节点，读它本身说了什么，以及为什么出现在这次生成里。",
         topic_ctx_this: "这份 Topic",
@@ -5417,6 +5453,20 @@
         cal_no_day_tasks: "该日期无生产或排期任务",
         cal_quick_inspect: "点击任一任务可在右侧快速巡检：",
         cal_more_tasks: "项任务",
+        cal_open_run: "打开这一单",
+        cal_day_title: "当日安排",
+        cal_day_empty: "这天没有排期",
+        cal_day_empty_hint: "选其他日期，或去选题库安排新的一单。",
+        cal_day_total: "{n} 项",
+        cal_prev_month: "上个月",
+        cal_next_month: "下个月",
+        cal_all_plats: "全部平台",
+        cal_more_posts: "还有 {n} 项",
+        status_published: "已发布",
+        status_reviewed: "已复盘",
+        status_scheduled: "待发布",
+        status_overdue: "已逾期",
+        status_draft: "草稿",
         gh_sub_30d: "最近 30 天",
         gh_sub_90d: "最近 90 天",
         gh_sub_180d: "最近半年",
@@ -5885,6 +5935,13 @@
         topic_ctx_open: "See what was used",
         topic_ctx_title: "How this topic was made",
         topic_ctx_lede: "The Topic is at the center. Surrounding nodes are what the Context Packet recorded — not every neighbor in the vault graph.",
+        topic_ctx_tab_graph: "Sources",
+        topic_ctx_tab_prompt: "Prompt",
+        topic_ctx_prompt_logged: "Final prompt logged when this Topic was written.",
+        topic_ctx_prompt_rebuilt: "The original prompt was not saved in the file. This is the final instruction rebuilt from the Context Packet, mode, and constraints.",
+        topic_ctx_prompt_empty: "This Topic does not have enough fields to rebuild a prompt.",
+        topic_ctx_prompt_copy: "Copy",
+        topic_ctx_prompt_copied: "Copied",
         topic_ctx_none: "This Topic has no recorded generation references.",
         topic_ctx_pick: "Select a surrounding node to read what it says and why it was used here.",
         topic_ctx_this: "This topic",
@@ -6118,6 +6175,20 @@
         cal_no_day_tasks: "No production or scheduled runs on this date",
         cal_quick_inspect: "Click any task to inspect details:",
         cal_more_tasks: "tasks",
+        cal_open_run: "Open this Run",
+        cal_day_title: "Day schedule",
+        cal_day_empty: "Nothing scheduled this day",
+        cal_day_empty_hint: "Pick another day, or plan a new Run from Topics.",
+        cal_day_total: "{n} items",
+        cal_prev_month: "Previous month",
+        cal_next_month: "Next month",
+        cal_all_plats: "All platforms",
+        cal_more_posts: "+{n} more",
+        status_published: "Published",
+        status_reviewed: "Reviewed",
+        status_scheduled: "Scheduled",
+        status_overdue: "Overdue",
+        status_draft: "Draft",
         gh_sub_30d: "Last 30 Days",
         gh_sub_90d: "Last 90 Days",
         gh_sub_180d: "Last 180 Days",
@@ -6884,9 +6955,11 @@
       if (runBtn && !runBtn.closest("#mdModal")) {
         e.preventDefault();
         e.stopPropagation();
-        const node = byId[runBtn.getAttribute("data-run-open")];
+        const rid = runBtn.getAttribute("data-run-open");
+        const node = findRunNode(rid) || byId[rid];
         const stage = runBtn.getAttribute("data-run-stage") || "";
-        if (node) openRun(node, stage || undefined);
+        if (node && node.kind === "run") openRun(node, stage || undefined);
+        else if (rid) select(rid);
         return;
       }
       const acctBtn = e.target.closest("[data-account-open]");
@@ -6907,6 +6980,9 @@
     });
 
     document.getElementById("ctxClose").onclick = closeTopicContext;
+    document.querySelectorAll(".ctx-tab").forEach(btn => {
+      btn.onclick = () => setTopicContextTab(btn.getAttribute("data-ctx-tab"));
+    });
     document.getElementById("ctxModal").addEventListener("click", (e) => {
       if (e.target.id === "ctxModal") closeTopicContext();
     });
@@ -6978,6 +7054,8 @@
       if (!targetView) return;
       // legacy stage ids redirect to the new pipeline tabs
       if (targetView === "foundation" || targetView === "discover") targetView = "select";
+      // Context modal is global; leaving a surface must not keep a stale Topic/Run graph open.
+      if (targetView !== view) closeTopicContext();
       view = targetView;
       if (opts.runTab && (targetView === "runs" || targetView === "content")) runTab = opts.runTab;
       closeMoreMenu();
@@ -7238,6 +7316,9 @@
     function select(id) {
       if (byId[id] && byId[id].kind === "run" && id !== selected) runInspOpenStage = "";
       const n = byId[id];
+      // If the context modal is open, remount it for the new hub (Topic→Run etc.)
+      // instead of leaving the previous graph on screen.
+      if (id !== selected) syncContextModalToNode(n);
       if (view === "overview" && n && n.kind === "account") {
         openAccount(n);
         return;
@@ -11042,8 +11123,8 @@
               ${item.notes ? `<div style="background:var(--bg-2); border:1px solid var(--line); border-radius:6px; padding:6px 9px; font-size:11px; color:var(--text); line-height:1.4; margin-bottom:8px; word-break:break-word;">${esc(item.notes)}</div>` : ""}
 
               <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px solid var(--bg-3);">
-                <button type="button" class="ghost-link" data-open-run="${esc(runId)}" style="font-size:11px; font-weight:600; color:var(--accent); padding:2px 0;">
-                  ${esc(t("cal_view_details"))} →
+                <button type="button" class="ghost-link" data-cal-open-run="${esc(runId)}" style="font-size:11px; font-weight:600; color:var(--accent); padding:2px 0;">
+                  ${esc(t("cal_open_run"))} →
                 </button>
                 ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noreferrer" class="ghost-link" style="font-size:11px; color:var(--muted);" onclick="event.stopPropagation();">打开原帖 ↗</a>` : ""}
               </div>
@@ -11082,16 +11163,20 @@
 
       $insp.querySelectorAll(".cal-sidebar-card").forEach(card => {
         card.onclick = (e) => {
-          if (e.target.closest("a")) return;
+          if (e.target.closest("a, button")) return;
           const rid = card.dataset.runId;
           if (rid) select(rid);
         };
       });
-      $insp.querySelectorAll("[data-open-run]").forEach(btn => {
+      // Open Run inspector (includes "See what was used"), not the stage markdown modal.
+      $insp.querySelectorAll("[data-cal-open-run]").forEach(btn => {
         btn.onclick = (e) => {
+          e.preventDefault();
           e.stopPropagation();
-          const rid = btn.dataset.openRun;
-          if (rid) select(rid);
+          const rid = btn.getAttribute("data-cal-open-run");
+          const node = findRunNode(rid) || byId[rid];
+          if (node) select(node.id);
+          else if (rid) select(rid);
         };
       });
     }
@@ -11884,6 +11969,8 @@
 
     let ctxTopic = null;
     let ctxSelected = "";
+    let ctxTab = "graph";
+    let ctxMountGen = 0;
 
     const TOPIC_CTX_ROLE_COLOR = {
       input: "#7a6b9e",
@@ -11962,6 +12049,7 @@
 
     function mountTopicContextGraph(host, topic) {
       stopTopicContextAnim();
+      const mountGen = ctxMountGen;
       ctxTransform = { x: 0, y: 0, k: 1 };
       const graph = buildTopicContextGraph(topic);
       const width = Math.max(host.clientWidth || 640, 420);
@@ -12202,6 +12290,8 @@
 
       function tick() {
         ctxAnim = null;
+        // Drop frames from a previous Topic/Run mount after the hub switched.
+        if (mountGen !== ctxMountGen) return;
         if (alpha < alphaMin) {
           paint();
           return;
@@ -12476,6 +12566,48 @@
       </div>`;
     }
 
+    function renderTopicPrompt() {
+      const box = document.getElementById("ctxPrompt");
+      if (!box || !ctxTopic || ctxTopic.kind !== "topic") return;
+      const text = String(ctxTopic.generation_prompt || "").trim();
+      const source = ctxTopic.generation_prompt_source || "";
+      const note = !text
+        ? t("topic_ctx_prompt_empty")
+        : (source === "logged" ? t("topic_ctx_prompt_logged") : t("topic_ctx_prompt_rebuilt"));
+      box.innerHTML = `
+        <p class="ctx-prompt-note">${esc(note)}</p>
+        ${text ? `<button type="button" class="ctx-prompt-copy" id="ctxPromptCopy">${esc(t("topic_ctx_prompt_copy"))}</button>` : ""}
+        ${text ? `<pre id="ctxPromptText">${esc(text)}</pre>` : ""}
+      `;
+      const btn = document.getElementById("ctxPromptCopy");
+      if (btn) btn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = t("topic_ctx_prompt_copied");
+        } catch (err) {
+          btn.textContent = String(err.message || err);
+        }
+      };
+    }
+
+    function setTopicContextTab(tab) {
+      ctxTab = tab === "prompt" ? "prompt" : "graph";
+      const graph = document.getElementById("ctxBodyGraph");
+      const prompt = document.getElementById("ctxPrompt");
+      const showPrompt = ctxTopic && ctxTopic.kind === "topic" && ctxTab === "prompt";
+      if (graph) graph.hidden = !!showPrompt;
+      if (prompt) prompt.hidden = !showPrompt;
+      document.querySelectorAll(".ctx-tab").forEach(btn => {
+        btn.classList.toggle("on", btn.getAttribute("data-ctx-tab") === ctxTab);
+      });
+      if (showPrompt) {
+        stopTopicContextAnim();
+        renderTopicPrompt();
+      } else if (ctxTopic) {
+        renderTopicContext();
+      }
+    }
+
     function renderTopicContext() {
       const $map = document.getElementById("ctxMap");
       const $title = document.getElementById("ctxTitle");
@@ -12483,6 +12615,27 @@
       if (!$map || !ctxTopic) return;
       const isRunHub = ctxTopic.kind === "run";
       const isCraftHub = ctxTopic.kind === "swipe" || ctxTopic.kind === "atom" || ctxTopic.kind === "claim";
+      const tabs = document.getElementById("ctxTabs");
+      const showTabs = ctxTopic.kind === "topic";
+      if (tabs) tabs.hidden = !showTabs;
+      const tabGraph = document.getElementById("ctxTabGraph");
+      const tabPrompt = document.getElementById("ctxTabPrompt");
+      if (tabGraph) tabGraph.textContent = t("topic_ctx_tab_graph");
+      if (tabPrompt) tabPrompt.textContent = t("topic_ctx_tab_prompt");
+      if (showTabs && ctxTab === "prompt") {
+        const graph = document.getElementById("ctxBodyGraph");
+        const prompt = document.getElementById("ctxPrompt");
+        if (graph) graph.hidden = true;
+        if (prompt) prompt.hidden = false;
+        $title.textContent = t("topic_ctx_title");
+        $lede.textContent = t("topic_ctx_lede");
+        renderTopicPrompt();
+        return;
+      }
+      const graph = document.getElementById("ctxBodyGraph");
+      const prompt = document.getElementById("ctxPrompt");
+      if (graph) graph.hidden = false;
+      if (prompt) prompt.hidden = true;
       $title.textContent = t(isCraftHub ? "lib_ctx_title" : (isRunHub ? "run_ctx_title" : "topic_ctx_title"));
       $lede.textContent = t(isCraftHub ? "lib_ctx_lede" : (isRunHub ? "run_ctx_lede" : "topic_ctx_lede"));
       const cols = topicContextColumns(ctxTopic);
@@ -12509,25 +12662,87 @@
         <div class="ctx-legend">${legend}<span><i style="background:${hubColor}"></i>${esc(hubLab)}</span></div>
         ${consHtml}`;
       // Wait a frame so host has size after modal display.
+      // Capture hub key + generation so a stale Topic open cannot paint over a newer Run open.
+      const hub = ctxTopic;
+      const hubKey = String(hub.id || hub.ident || "");
+      const gen = ctxMountGen;
       requestAnimationFrame(() => {
+        if (gen !== ctxMountGen) return;
+        if (!ctxTopic || String(ctxTopic.id || ctxTopic.ident || "") !== hubKey) return;
         const host = document.getElementById("ctxGraphHost");
-        if (host) mountTopicContextGraph(host, ctxTopic);
+        if (host) mountTopicContextGraph(host, hub);
       });
       renderTopicContextDetail();
     }
 
+    function contextHubForNode(n) {
+      if (!n) return null;
+      if (n.kind === "run") return runContextHub(n);
+      if (n.kind === "topic") return n;
+      if (n.kind === "swipe" || n.kind === "atom" || n.kind === "claim") return libContextHub(n);
+      return null;
+    }
+
+    function syncContextModalToNode(n) {
+      const ctx = document.getElementById("ctxModal");
+      if (!ctx || !ctx.classList.contains("open")) return;
+      const hub = contextHubForNode(n);
+      if (hub) openTopicContext(hub);
+      else closeTopicContext();
+    }
+
     function openTopicContext(n) {
+      if (!n) return;
+      stopTopicContextAnim();
+      ctxMountGen += 1;
       ctxTopic = n;
       ctxSelected = "";
-      document.getElementById("ctxModal").classList.add("open");
+      ctxTab = "graph";
+      const $map = document.getElementById("ctxMap");
+      const $detail = document.getElementById("ctxDetail");
+      const $title = document.getElementById("ctxTitle");
+      const $lede = document.getElementById("ctxLede");
+      const prompt = document.getElementById("ctxPrompt");
+      const graph = document.getElementById("ctxBodyGraph");
+      if ($map) $map.innerHTML = "";
+      if ($detail) $detail.innerHTML = "";
+      if ($title) $title.textContent = "";
+      if ($lede) $lede.textContent = "";
+      if (prompt) {
+        prompt.hidden = true;
+        prompt.innerHTML = "";
+      }
+      if (graph) graph.hidden = false;
+      const modal = document.getElementById("ctxModal");
+      if (modal) {
+        modal.dataset.ctxHub = `${n.kind || ""}:${n.ident || n.id || ""}`;
+        modal.classList.add("open");
+      }
       renderTopicContext();
     }
 
     function closeTopicContext() {
       stopTopicContextAnim();
+      ctxMountGen += 1;
       const el = document.getElementById("ctxModal");
-      if (el) el.classList.remove("open");
+      if (el) {
+        el.classList.remove("open");
+        delete el.dataset.ctxHub;
+      }
       ctxSelected = "";
+      ctxTopic = null;
+      ctxTab = "graph";
+      const $map = document.getElementById("ctxMap");
+      const $detail = document.getElementById("ctxDetail");
+      const prompt = document.getElementById("ctxPrompt");
+      const graph = document.getElementById("ctxBodyGraph");
+      if ($map) $map.innerHTML = "";
+      if ($detail) $detail.innerHTML = "";
+      if (prompt) {
+        prompt.hidden = true;
+        prompt.innerHTML = "";
+      }
+      if (graph) graph.hidden = false;
     }
 
 
@@ -13155,6 +13370,7 @@
     }
 
     function runContextHtml(n) {
+      const d = runDetailOf(n);
       const hub = runContextHub(n);
       const cols = topicContextColumns(hub);
       const total = topicContextCount(cols);
@@ -13169,12 +13385,17 @@
       const drift = d.strategy_drift
         ? `<p class="topic-gap"><span>${esc(t("run_ctx_drift"))}</span>${esc(t("run_ctx_drift_desc"))}</p>`
         : "";
-      if (!total && !cons.length) return "";
+      const hydration = d.hydration || {};
+      const hydrationError = (hydration.errors || []).length
+        ? `<p class="topic-gap"><span>Context blocked</span>${esc(hydration.errors.join(" "))}</p>`
+        : "";
+      if (!total && !cons.length && !hydrationError) return "";
       return `<section class="run-section topic-ctx-card">
         <h3>${esc(t("run_insp_context"))}</h3>
         <p class="topic-ctx-summary">${esc(head)}</p>
         ${bits ? `<p class="topic-ctx-bits">${esc(bits)}</p>` : ""}
         ${drift}
+        ${hydrationError}
         <button type="button" class="topic-ctx-open" id="runCtxOpen">${esc(t("run_ctx_open"))}</button>
       </section>`;
     }
@@ -13217,8 +13438,15 @@
       const nextHint = d.next_hint
         ? `<p class="run-meta">${esc(d.next_hint)}</p>`
         : "";
+      const calBackHtml = (isProduceRunsSurface() && runTab === "calendar" && calSelectedDate)
+        ? `<div style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--line);">
+            <button type="button" class="ghost-link" id="calBackToDayBtn" style="font-size:12px; font-weight:600; color:var(--accent); display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:6px; background:var(--bg-2); border:1px solid var(--line); cursor:pointer;">
+              ← ${esc(t("cal_back_to_day"))} ${esc(calSelectedDate)} ${esc(t("cal_day_list"))}
+            </button>
+          </div>`
+        : "";
 
-      $insp.innerHTML = `<div class="run-insp">
+      $insp.innerHTML = `${calBackHtml}<div class="run-insp">
         <div class="run-hero">
           <div class="run-hero-top">
             <span class="run-pill ${runPillClass(statusCode)}">${esc(stInfo.label || n.status || "draft")}</span>
@@ -13248,6 +13476,13 @@
         <p class="note">${t("readonly")}</p>
       </div>`;
 
+      const calBackBtn = $insp.querySelector("#calBackToDayBtn");
+      if (calBackBtn) {
+        calBackBtn.onclick = () => {
+          selected = null;
+          renderInsp();
+        };
+      }
       const cp = $insp.querySelector("#runCopyPromptBtn");
       if (cp) {
         cp.onclick = () => {
