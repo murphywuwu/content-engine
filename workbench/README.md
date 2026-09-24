@@ -4,7 +4,11 @@ Read-only observatory. Source of truth remains the markdown indexes.
 
 | File | Role |
 |------|------|
-| `template.html` | UI shell (served live by `serve.py`) |
+| `template.html` | UI shell (served live by `serve.py`); GRAPH bootstrap only |
+| `css/workbench.css` | Observatory styles |
+| `js/i18n.js` | `STR` / `t()` / language |
+| `js/utils.js` | Shared helpers (`esc`, `fillTemplate`) |
+| `js/app.js` | Observatory app logic |
 | `build.py` | Parser + optional offline bake → `index.html` |
 | `serve.py` | `http://127.0.0.1:8765/workbench/` + live `/api/graph` |
 | `index.html` | Optional baked snapshot for `file://` — safe to rebuild |
